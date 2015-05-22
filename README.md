@@ -28,7 +28,7 @@ content := db.Sql(sql, 2).FindAll().Result[0]["content"]
 
 ```go
 paramMap := map[string]interface{}{"1": 2, "2": 5}
-rows, err := db.SqlMapClient("selectAllArticle", &amp;paramMap).FindAllByParamMap().Xml()
+rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().Xml()
 ```
 同时提供动态SQL支持，使用pongo2模板引擎</br></br>
 例如配置文件名：select.example.stpl</br>
