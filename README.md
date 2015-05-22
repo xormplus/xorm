@@ -30,8 +30,8 @@ content := db.Sql(sql, 2).FindAll().Result[0]["content"]</br>
 paramMap := map[string]interface{}{"1": 2, "2": 5}</br>
 rows, err := db.SqlMapClient("selectAllArticle", &amp;paramMap).FindAllByParamMap().Xml()
 </pre>
-同时提供动态SQL支持，使用pongo2模板引擎
-例如配置文件名：select.example.stpl
+同时提供动态SQL支持，使用pongo2模板引擎</br></br>
+例如配置文件名：select.example.stpl</br>
 配置内容如下：
 <pre>
 select id,userid,title,createdatetime,content 
