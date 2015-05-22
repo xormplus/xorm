@@ -88,6 +88,14 @@ func Test_FindAll_Json(t *testing.T) {
 	t.Log("[Test_FindAll_Json]->rows:\n" + rows)
 }
 
+func Test_FindAll_ID(t *testing.T) {
+	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll()
+	if rows.Err != nil {
+		t.Fatal(rows.Err)
+	}
+	t.Log("[Test_FindAll_Json]->rows[0][\"id\"]:\n" , rows.Result[0]["id"])
+}
+
 func Test_FindAll_Xml(t *testing.T) {
 	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll().Xml()
 	if err != nil {
