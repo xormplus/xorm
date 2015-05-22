@@ -15,16 +15,7 @@ createdatetime := db.Sql(sql, 2).FindAll().Result[0]["createdatetime"]</br>
 content := db.Sql(sql, 2).FindAll().Result[0]["content"]</br>
 </pre>
 
-也支持SqlMa配置，配置文件样例</br>
-    <sqlMap>
-        <sql id="selectAllArticle">
-            select id,title,createdatetime,content 
-            from article where id in (?1,?2)
-        </sql>
-        <sql id="selectStudentById1">
-            select * from article where id=?id
-        </sql>
-    </sqlMap>
+也支持SqlMa配置，配置文件样例 <a href="">dd</a>
 
 <pre>
 paramMap := map[string]interface{}{"1": 2, "2": 5}</br>
