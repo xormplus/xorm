@@ -16,15 +16,15 @@ content := db.Sql(sql, 2).FindAll().Result[0]["content"]</br>
 </pre>
 
 也支持SqlMa配置，配置文件样例</br>
-`<sqlMap>`</br>
-`	<sql id="selectAllArticle">`</br>
-		select id,title,createdatetime,content </br>
-		from article where id in (?1,?2)</br>
-`	</sql>`</br>
-`	<sql id="selectStudentById1">`</br>
-		select * from article where id=?id</br>
-`	</sql>`</br>
-`</sqlMap>`</br>
+    <sqlMap>
+        <sql id="selectAllArticle">
+            select id,title,createdatetime,content 
+            from article where id in (?1,?2)
+        </sql>
+        <sql id="selectStudentById1">
+            select * from article where id=?id
+        </sql>
+    </sqlMap>
 
 <pre>
 paramMap := map[string]interface{}{"1": 2, "2": 5}</br>
