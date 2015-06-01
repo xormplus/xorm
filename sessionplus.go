@@ -20,12 +20,12 @@ import (
 type ResultBean struct {
 	Has bool
 	Result interface{}
-	Err    error
+	Error    error
 }
 
 func (resultBean ResultBean) Json() (bool,string, error) {
-	if resultBean.Err != nil {
-		return resultBean.Has,"", resultBean.Err
+	if resultBean.Error != nil {
+		return resultBean.Has,"", resultBean.Error
 	}
 	if !resultBean.Has{
 		return resultBean.Has,"", nil
@@ -36,14 +36,14 @@ func (resultBean ResultBean) Json() (bool,string, error) {
 
 func (session *Session) GetFirst(bean interface{}) ResultBean {
 	has, err := session.Get(bean)
-	r := ResultBean{Has: has,Result:bean, Err: err}
+	r := ResultBean{Has: has,Result:bean, Error: err}
 	return r
 }
 
 func (resultBean ResultBean) Xml() (bool,string, error) {
 	
-	if resultBean.Err != nil {
-		return false,"", resultBean.Err
+	if resultBean.Error != nil {
+		return false,"", resultBean.Error
 	}
 	if !resultBean.Has{
 		return resultBean.Has,"", nil
@@ -70,8 +70,8 @@ func (resultBean ResultBean) Xml() (bool,string, error) {
 }
 
 func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool,string, error) {
-	if resultBean.Err != nil {
-		return false,"", resultBean.Err
+	if resultBean.Error != nil {
+		return false,"", resultBean.Error
 	}
 	if !resultBean.Has{
 		return resultBean.Has,"", nil
@@ -99,20 +99,20 @@ func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag s
 
 type ResultMap struct {
 	Result []map[string]interface{}
-	Err    error
+	Error    error
 }
 
 func (resultMap ResultMap) Json() (string, error) {
 
-	if resultMap.Err != nil {
-		return "", resultMap.Err
+	if resultMap.Error != nil {
+		return "", resultMap.Error
 	}
 	return JSONString(resultMap.Result, true)
 }
 
 func (resultMap ResultMap) Xml() (string, error) {
-	if resultMap.Err != nil {
-		return "", resultMap.Err
+	if resultMap.Error != nil {
+		return "", resultMap.Error
 	}
 	results, err := anyxml.Xml(resultMap.Result)
 	if err != nil {
@@ -122,8 +122,8 @@ func (resultMap ResultMap) Xml() (string, error) {
 }
 
 func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
-	if resultMap.Err != nil {
-		return "", resultMap.Err
+	if resultMap.Error != nil {
+		return "", resultMap.Error
 	}
 
 	results, err := anyxml.XmlIndent(resultMap.Result, prefix, indent, recordTag)
@@ -138,7 +138,7 @@ func (session *Session) FindAll() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
 	result, err := session.QueryAll(sql, params...)
-	r := ResultMap{Result: result, Err: err}
+	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
@@ -147,7 +147,7 @@ func (session *Session) FindAllWithDateFormat(dateFormat string) ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
 	result, err := session.QueryAllWithDateFormat(dateFormat, sql, params...)
-	r := ResultMap{Result: result, Err: err}
+	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
@@ -156,7 +156,7 @@ func (session *Session) FindAllByParamMap() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
 	result, err := session.QueryAllByMap(sql, params[0])
-	r := ResultMap{Result: result, Err: err}
+	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
@@ -164,7 +164,7 @@ func (session *Session) FindAllByParamMapWithDateFormat(dateFormat string) Resul
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
 	results, err := session.QueryAllByMapWithDateFormat(dateFormat, sql, params[0])
-	r := ResultMap{Result: results, Err: err}
+	r := ResultMap{Result: results, Error: err}
 	return r
 }
 

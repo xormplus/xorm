@@ -49,9 +49,6 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		return nil, err
 	}
 
-	sqlMap := SqlMap{}
-	err = sqlMap.Init()
-
 	engine := &Engine{
 		db:            db,
 		dialect:       dialect,
@@ -60,7 +57,6 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		TagIdentifier: "xorm",
 		Logger:        NewSimpleLogger(os.Stdout),
 		TZLocation:    time.Local,
-		SqlMap:        sqlMap,
 	}
 
 	if err != nil {

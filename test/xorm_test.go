@@ -42,15 +42,24 @@ func Test_InitDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = db.InitSqlMap()
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.InitSqlTemplate()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func Test_GetFirst_Json(t *testing.T) {
 	var article Article
-	has,rows, err := db.Id(2).GetFirst(&article).Json()
+	has, rows, err := db.Id(2).GetFirst(&article).Json()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !has{
+	if !has {
 		t.Log("[Test_GetFirst_Json]->rows: not exist\n")
 	}
 	t.Log("[Test_GetFirst_Json]->rows:\n" + rows)
@@ -58,11 +67,11 @@ func Test_GetFirst_Json(t *testing.T) {
 
 func Test_GetFirst_Xml(t *testing.T) {
 	var article Article
-	has,rows, err := db.Where("userid =?",3).GetFirst(&article).Xml()
+	has, rows, err := db.Where("userid =?", 3).GetFirst(&article).Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !has{
+	if !has {
 		t.Log("[Test_GetFirst_Xml]->rows: not exist\n")
 	}
 	t.Log("[Test_GetFirst_Xml]->rows:\n" + rows)
@@ -70,11 +79,11 @@ func Test_GetFirst_Xml(t *testing.T) {
 
 func Test_GetFirst_XmlIndent(t *testing.T) {
 	var article Article
-	has,rows, err := db.Where("userid =?",3).GetFirst(&article).XmlIndent("","  ","article")
+	has, rows, err := db.Where("userid =?", 3).GetFirst(&article).XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !has{
+	if !has {
 		t.Log("[Test_GetFirst_XmlIndent]->rows: not exist\n")
 	}
 	t.Log("[Test_GetFirst_XmlIndent]->rows:\n" + rows)
@@ -90,10 +99,10 @@ func Test_FindAll_Json(t *testing.T) {
 
 func Test_FindAll_ID(t *testing.T) {
 	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll()
-	if rows.Err != nil {
-		t.Fatal(rows.Err)
+	if rows.Error != nil {
+		t.Fatal(rows.Error)
 	}
-	t.Log("[Test_FindAll_Json]->rows[0][\"id\"]:\n" , rows.Result[0]["id"])
+	t.Log("[Test_FindAll_Json]->rows[0][\"id\"]:\n", rows.Result[0]["id"])
 }
 
 func Test_FindAll_Xml(t *testing.T) {

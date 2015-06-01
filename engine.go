@@ -33,6 +33,7 @@ type Engine struct {
 	TagIdentifier string
 	Tables        map[reflect.Type]*core.Table
 	SqlMap  SqlMap
+	SqlTemplate  SqlTemplate
 	mutex  *sync.RWMutex
 	Cacher core.Cacher
 

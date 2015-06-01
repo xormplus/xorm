@@ -16,10 +16,10 @@ func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) 
 	session := engine.NewSession()
 	session.IsAutoClose = true
 	map1:=args[0].(map[string]interface{})
-	if engine.SqlMap.SqlTemplate[sqlTagName]==nil{
+	if engine.SqlTemplate.Template[sqlTagName]==nil{
 		return session.Sql("", &map1)
 	}
-	sql, err := engine.SqlMap.SqlTemplate[sqlTagName].Execute(map1)
+	sql, err := engine.SqlTemplate.Template[sqlTagName].Execute(map1)
 	if err != nil {
 		engine.Logger.Err(err)
 	}
