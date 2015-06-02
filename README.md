@@ -1,6 +1,7 @@
 # xorm
 
 ###优化xorm的查询API，并提供类似ibatis的配置文件及动态SQL功能
+<a href="https://github.com/xormplus/xorm/blob/master/test/xorm_test.go">测试用例</a>，<a href="https://github.com/xormplus/xorm/blob/master/test/测试结果.txt">测试结果</a>
 
 ```go
 var err error
