@@ -20,7 +20,7 @@ func (engine *Engine) InitSqlTemplate() error {
 		return err
 	}
 	var sqlMapRootDir string
-	sqlMapRootDir, err = cfg.GetValue("", "sqlMapRootDir")
+	sqlMapRootDir, err = cfg.GetValue("", "SqlTemplateRootDir")
 	if err != nil {
 		return err
 	}
