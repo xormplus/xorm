@@ -2,9 +2,9 @@ package xorm
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
-"reflect"
 
 	"github.com/xormplus/xorm"
 
@@ -103,7 +103,7 @@ func Test_FindAll_ID(t *testing.T) {
 	if rows.Error != nil {
 		t.Fatal(rows.Error)
 	}
-	
+
 	t.Log("[Test_FindAll_Json]->rows[0][\"id\"]:\n", rows.Result[0]["id"])
 	t.Log("[Test_FindAll_Json]->reflect.TypeOf(rows.Result[0][\"id\"]):\n", reflect.TypeOf(rows.Result[0]["id"]))
 	t.Log("[Test_FindAll_Json]->rows[0][\"title\"]:\n", rows.Result[0]["title"])
@@ -294,4 +294,34 @@ func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_XmlIndent(t *testing
 		t.Fatal(err)
 	}
 	t.Log("[Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_XmlIndent]->rows:\n" + rows)
+}
+
+func Test_Find_Structs_Json(t *testing.T) {
+	articles := make([]Article, 0)
+	json,err := db.Where("id=?", 6).Find(&articles).Json()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Find_Structs_Json]->rows:\n" + json)
+}
+
+func Test_Find_Structs_Xml(t *testing.T) {
+	articles := make([]Article, 0)
+	xml,err := db.Where("id=?", 6).Find(&articles).Xml()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Find_Structs_Xml]->rows:\n" + xml)
+}
+
+func Test_Find_Structs_XmlIndent(t *testing.T) {
+	articles := make([]Article, 0)
+	xml,err := db.Where("id=?", 6).Find(&articles).XmlIndent("","  ","Article")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Find_Structs_XmlIndent]->rows:\n" + xml)
 }

@@ -133,6 +133,73 @@ func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag str
 	return string(results), nil
 }
 
+type ResultStructs struct {
+	Result interface{}
+	Error    error
+}
+
+func (resultStructs ResultStructs) Json() (string, error) {
+
+	if resultStructs.Error != nil {
+		return "", resultStructs.Error
+	}
+	return JSONString(resultStructs.Result, true)
+}
+
+func (resultStructs ResultStructs) Xml() (string, error) {
+	if resultStructs.Error != nil {
+		return "", resultStructs.Error
+	}
+
+	result,err:=resultStructs.Json()
+	if err != nil {
+		return "", err
+	}
+
+	var anydata = []byte(result)
+	var i interface{}
+	err = json.Unmarshal(anydata, &i)
+	if err != nil {
+		return "", err
+	}
+	resultByte, err := anyxml.Xml(i)
+	if err != nil {
+		return "", err
+	}
+
+	return string(resultByte), nil
+}
+
+func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
+	if resultStructs.Error != nil {
+		return "", resultStructs.Error
+	}
+
+	result,err:=resultStructs.Json()
+	if err != nil {
+		return "", err
+	}
+
+	var anydata = []byte(result)
+	var i interface{}
+	err = json.Unmarshal(anydata, &i)
+	if err != nil {
+		return "", err
+	}
+	resultByte, err := anyxml.XmlIndent(i, prefix, indent, recordTag)
+	if err != nil {
+		return "", err
+	}
+
+	return string(resultByte), nil
+}
+
+func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs{
+	err := session.find(rowsSlicePtr, condiBean...)
+	r := ResultStructs{Result: rowsSlicePtr, Error: err}
+	return r
+}
+
 // Exec a raw sql and return records as []map[string]interface{}
 func (session *Session) Query() ResultMap {
 	sql := session.Statement.RawSQL

@@ -1340,7 +1340,7 @@ func (engine *Engine) Get(bean interface{}) (bool, error) {
 func (engine *Engine) Find(beans interface{}, condiBeans ...interface{}) error {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Find(beans, condiBeans...)
+	return session.find(beans, condiBeans...)
 }
 
 // Iterate record by record handle records from table, bean's non-empty fields

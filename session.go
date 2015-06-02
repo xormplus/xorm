@@ -864,7 +864,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			}
 		}
 
-		err = newSession.NoCache().Find(beans)
+		err = newSession.NoCache().find(beans)
 		if err != nil {
 			return err
 		}
@@ -1255,7 +1255,7 @@ func Atot(s string, tp reflect.Type) (interface{}, error) {
 // Find retrieve records from table, condiBeans's non-empty fields
 // are conditions. beans could be []Struct, []*Struct, map[int64]Struct
 // map[int64]*Struct
-func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
+func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
