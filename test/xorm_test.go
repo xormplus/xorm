@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+"reflect"
 
 	"github.com/xormplus/xorm"
 
@@ -102,7 +103,13 @@ func Test_FindAll_ID(t *testing.T) {
 	if rows.Error != nil {
 		t.Fatal(rows.Error)
 	}
+	
 	t.Log("[Test_FindAll_Json]->rows[0][\"id\"]:\n", rows.Result[0]["id"])
+	t.Log("[Test_FindAll_Json]->reflect.TypeOf(rows.Result[0][\"id\"]):\n", reflect.TypeOf(rows.Result[0]["id"]))
+	t.Log("[Test_FindAll_Json]->rows[0][\"title\"]:\n", rows.Result[0]["title"])
+	t.Log("[Test_FindAll_Json]->reflect.TypeOf(rows.Result[0][\"title\"]):\n", reflect.TypeOf(rows.Result[0]["title"]))
+	t.Log("[Test_FindAll_Json]->rows[0][\"createdatetime\"]:\n", rows.Result[0]["createdatetime"])
+	t.Log("[Test_FindAll_Json]->reflect.TypeOf(rows.Result[0][\"createdatetime\"]):\n", reflect.TypeOf(rows.Result[0]["createdatetime"]))
 }
 
 func Test_FindAll_Xml(t *testing.T) {
