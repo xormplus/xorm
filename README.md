@@ -20,12 +20,12 @@ if err != nil {
 }
 ```
 ####db.InitSqlMap()过程
-* err = db.InitSqlMap()读取程序所在目下的sql/xormcfg.ini配置文件中的SqlMapRootDir配置项
+* err = db.InitSqlMap()读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项
 * 遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件，<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>
 * 解析xml配置文件
 
 ####db.InitSqlTemplate()过程
-* err = db.InitSqlTemplate()读取程序所在目下的sql/xormcfg.ini配置文件中的SqlTemplateRootDir配置项
+* err = db.InitSqlTemplate()读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlTemplateRootDir配置项
 * 遍历SqlTemplateRootDir所配置的目录及其子目录下的所有stpl模板文件，<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>
 * 解析stpl模板文件
 
