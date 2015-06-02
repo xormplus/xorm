@@ -92,3 +92,6 @@ rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamM
 rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("2006/01/02").Json()
 rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article")
 ```
+
+###讨论
+请加入QQ群：280360085 进行讨论。API设计相关建议可联系本人QQ：50892683
