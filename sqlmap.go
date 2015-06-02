@@ -30,7 +30,7 @@ func (engine *Engine) InitSqlMap() error {
 		return err
 	}
 	var sqlMapRootDir string
-	sqlMapRootDir, err = cfg.GetValue("", "sqlMapRootDir")
+	sqlMapRootDir, err = cfg.GetValue("", "SqlMapRootDir")
 	if err != nil {
 		return err
 	}
