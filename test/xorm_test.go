@@ -54,6 +54,19 @@ func Test_InitDB(t *testing.T) {
 	}
 }
 
+func Test_Get_Struct(t *testing.T) {
+	var article Article
+	has, err := db.Id(3).Get(&article)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Get_Struct]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Get_Struct]->rows:\n" , article)
+}
+
 func Test_GetFirst_Json(t *testing.T) {
 	var article Article
 	has, rows, err := db.Id(2).GetFirst(&article).Json()
