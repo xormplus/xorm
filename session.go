@@ -2080,7 +2080,7 @@ func (session *Session) innerQuery(db *core.DB, sqlStr string, params ...interfa
 }
 
 // Exec a raw sql and return records as []map[string][]byte
-func (session *Session) Query(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string][]byte, err error) {
+func (session *Session) query1(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string][]byte, err error) {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -2092,7 +2092,7 @@ func (session *Session) Query(sqlStr string, paramStr ...interface{}) (resultsSl
 // =============================
 // for string
 // =============================
-func (session *Session) Query2(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]string, err error) {
+func (session *Session) query2(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]string, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
 	if session.IsAutoCommit {

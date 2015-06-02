@@ -90,7 +90,7 @@ func Test_GetFirst_XmlIndent(t *testing.T) {
 }
 
 func Test_FindAll_Json(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll().Json()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func Test_FindAll_Json(t *testing.T) {
 }
 
 func Test_FindAll_ID(t *testing.T) {
-	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll()
+	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query()
 	if rows.Error != nil {
 		t.Fatal(rows.Error)
 	}
@@ -106,7 +106,7 @@ func Test_FindAll_ID(t *testing.T) {
 }
 
 func Test_FindAll_Xml(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll().Xml()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func Test_FindAll_Xml(t *testing.T) {
 }
 
 func Test_FindAll_XmlIndent(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAll().XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ func Test_FindAll_XmlIndent(t *testing.T) {
 }
 
 func Test_FindAllWithDateFormat_Json(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAllWithDateFormat("20060102").Json()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).QueryWithDateFormat("20060102").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func Test_FindAllWithDateFormat_Json(t *testing.T) {
 }
 
 func Test_FindAllWithDateFormat_Xml(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).FindAllWithDateFormat("20060102").Xml()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).QueryWithDateFormat("20060102").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func Test_FindAllWithDateFormat_Xml(t *testing.T) {
 }
 
 func Test_FindAllWithDateFormat_XmlIndent(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id in (?,?)", 2, 5).FindAllWithDateFormat("20060102").XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id in (?,?)", 2, 5).QueryWithDateFormat("20060102").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func Test_FindAllWithDateFormat_XmlIndent(t *testing.T) {
 
 func Test_FindAllByParamMap_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 4, "userid": 1}
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).FindAllByParamMap().Json()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMap().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +156,7 @@ func Test_FindAllByParamMap_Json(t *testing.T) {
 
 func Test_FindAllByParamMap_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 6, "userid": 1}
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).FindAllByParamMap().Xml()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMap().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +165,7 @@ func Test_FindAllByParamMap_Xml(t *testing.T) {
 
 func Test_FindAllByParamMap_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 6, "userid": 1}
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).FindAllByParamMap().XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMap().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func Test_FindAllByParamMap_XmlIndent(t *testing.T) {
 
 func Test_FindAllByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 5, "userid": 1}
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).FindAllByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +183,7 @@ func Test_FindAllByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMap_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().Json()
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMap().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func Test_SqlMapClient_FindAllByParamMap_Json(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMapWithDateFormat_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMapWithDateFormat("2006-01-02 15:04").Json()
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMapWithDateFormat("2006-01-02 15:04").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +201,7 @@ func Test_SqlMapClient_FindAllByParamMapWithDateFormat_Json(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMap_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().Xml()
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMap().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func Test_SqlMapClient_FindAllByParamMap_Xml(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMapWithDateFormat_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMapWithDateFormat("2006-01-02 15:04").Xml()
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMapWithDateFormat("2006-01-02 15:04").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func Test_SqlMapClient_FindAllByParamMapWithDateFormat_Xml(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMap_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().XmlIndent("", "  ", "article")
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMap().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -228,7 +228,7 @@ func Test_SqlMapClient_FindAllByParamMap_XmlIndent(t *testing.T) {
 
 func Test_SqlMapClient_FindAllByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMapWithDateFormat("2006-01-02 15:04").XmlIndent("", "  ", "article")
+	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMapWithDateFormat("2006-01-02 15:04").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -237,7 +237,7 @@ func Test_SqlMapClient_FindAllByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMap_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 1}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMap().Json()
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMap().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -246,7 +246,7 @@ func Test_SqlTemplateClient_FindAllByParamMap_Json(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 1}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMapWithDateFormat("01/02/2006").Json()
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("01/02/2006").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +255,7 @@ func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_Json(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMap_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMap().Xml()
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMap().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +264,7 @@ func Test_SqlTemplateClient_FindAllByParamMap_Xml(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMapWithDateFormat("01/02/2006").Xml()
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("01/02/2006").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +273,7 @@ func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_Xml(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMap_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMap().XmlIndent("", "  ", "article")
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMap().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -282,7 +282,7 @@ func Test_SqlTemplateClient_FindAllByParamMap_XmlIndent(t *testing.T) {
 
 func Test_SqlTemplateClient_FindAllByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).FindAllByParamMapWithDateFormat("01/02/2006").XmlIndent("", "  ", "article")
+	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("01/02/2006").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}

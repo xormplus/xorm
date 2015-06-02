@@ -134,36 +134,36 @@ func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag str
 }
 
 // Exec a raw sql and return records as []map[string]interface{}
-func (session *Session) FindAll() ResultMap {
+func (session *Session) Query() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	result, err := session.QueryAll(sql, params...)
+	result, err := session.queryAll(sql, params...)
 	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
 // Exec a raw sql and return records as []map[string]interface{}
-func (session *Session) FindAllWithDateFormat(dateFormat string) ResultMap {
+func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	result, err := session.QueryAllWithDateFormat(dateFormat, sql, params...)
+	result, err := session.queryAllWithDateFormat(dateFormat, sql, params...)
 	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
 // Exec a raw sql and return records as []map[string]interface{}
-func (session *Session) FindAllByParamMap() ResultMap {
+func (session *Session) QueryByParamMap() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	result, err := session.QueryAllByMap(sql, params[0])
+	result, err := session.queryAllByMap(sql, params[0])
 	r := ResultMap{Result: result, Error: err}
 	return r
 }
 
-func (session *Session) FindAllByParamMapWithDateFormat(dateFormat string) ResultMap {
+func (session *Session) QueryByParamMapWithDateFormat(dateFormat string) ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	results, err := session.QueryAllByMapWithDateFormat(dateFormat, sql, params[0])
+	results, err := session.queryAllByMapWithDateFormat(dateFormat, sql, params[0])
 	r := ResultMap{Result: results, Error: err}
 	return r
 }
@@ -171,7 +171,7 @@ func (session *Session) FindAllByParamMapWithDateFormat(dateFormat string) Resul
 // =============================
 // for Object
 // =============================
-func (session *Session) QueryAll(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
+func (session *Session) queryAll(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
 	if session.IsAutoCommit {
@@ -180,7 +180,7 @@ func (session *Session) QueryAll(sqlStr string, paramStr ...interface{}) (result
 	return txQuery3(session.Tx, sqlStr, paramStr...)
 }
 
-func (session *Session) QueryAllByMap(sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
+func (session *Session) queryAllByMap(sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
 	sqlStr1, param, _ := core.MapToSlice(sqlStr, paramMap)
 
 	session.queryPreprocess(&sqlStr1, param...)
@@ -191,7 +191,7 @@ func (session *Session) QueryAllByMap(sqlStr string, paramMap interface{}) (resu
 	return txQuery3(session.Tx, sqlStr1, param...)
 }
 
-func (session *Session) QueryAllByMapWithDateFormat(dateFormat string, sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
+func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
 	sqlStr1, param, _ := core.MapToSlice(sqlStr, paramMap)
 	session.queryPreprocess(&sqlStr1, param...)
 
@@ -201,7 +201,7 @@ func (session *Session) QueryAllByMapWithDateFormat(dateFormat string, sqlStr st
 	return txQuery3WithDateFormat(session.Tx, dateFormat, sqlStr1, param...)
 }
 
-func (session *Session) QueryAllWithDateFormat(dateFormat string, sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
+func (session *Session) queryAllWithDateFormat(dateFormat string, sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
 	if session.IsAutoCommit {
@@ -210,16 +210,16 @@ func (session *Session) QueryAllWithDateFormat(dateFormat string, sqlStr string,
 	return txQuery3WithDateFormat(session.Tx, dateFormat, sqlStr, paramStr...)
 }
 
-func (session *Session) QueryAllToJsonString(sql string, paramStr ...interface{}) (string, error) {
-	results, err := session.QueryAll(sql, paramStr...)
+func (session *Session) queryAllToJsonString(sql string, paramStr ...interface{}) (string, error) {
+	results, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
 	return JSONString(results, true)
 }
 
-func (session *Session) QueryAllToXmlString(sql string, paramStr ...interface{}) (string, error) {
-	resultMap, err := session.QueryAll(sql, paramStr...)
+func (session *Session) queryAllToXmlString(sql string, paramStr ...interface{}) (string, error) {
+	resultMap, err := session.queryAll(sql, paramStr...)
 
 	if err != nil {
 		return "", err
@@ -231,8 +231,8 @@ func (session *Session) QueryAllToXmlString(sql string, paramStr ...interface{})
 	return string(results), nil
 }
 
-func (session *Session) QueryAllToXmlIndentString(sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+func (session *Session) queryAllToXmlIndentString(sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -243,8 +243,8 @@ func (session *Session) QueryAllToXmlIndentString(sql string, prefix string, ind
 	return string(results), nil
 }
 
-func (session *Session) QueryAllToXmlStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+func (session *Session) queryAllToXmlStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -255,8 +255,8 @@ func (session *Session) QueryAllToXmlStringWithDateFormat(dateFormat string, sql
 	return string(results), nil
 }
 
-func (session *Session) QueryAllToXmlIndentStringWithDateFormat(dateFormat string, sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+func (session *Session) queryAllToXmlIndentStringWithDateFormat(dateFormat string, sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -268,24 +268,24 @@ func (session *Session) QueryAllToXmlIndentStringWithDateFormat(dateFormat strin
 	return string(results), nil
 }
 
-func (session *Session) QueryAllByMapToJsonString(sql string, paramMap interface{}) (string, error) {
-	results, err := session.QueryAllByMap(sql, paramMap)
+func (session *Session) queryAllByMapToJsonString(sql string, paramMap interface{}) (string, error) {
+	results, err := session.queryAllByMap(sql, paramMap)
 	if err != nil {
 		return "", err
 	}
 	return JSONString(results, true)
 }
 
-func (session *Session) QueryAllByMapToJsonStringWithDateFormat(dateFormat string, sql string, paramMap interface{}) (string, error) {
-	results, err := session.QueryAllByMapWithDateFormat(dateFormat, sql, paramMap)
+func (session *Session) queryAllByMapToJsonStringWithDateFormat(dateFormat string, sql string, paramMap interface{}) (string, error) {
+	results, err := session.queryAllByMapWithDateFormat(dateFormat, sql, paramMap)
 	if err != nil {
 		return "", err
 	}
 	return JSONString(results, true)
 }
 
-func (session *Session) QueryAllToJsonStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
-	results, err := session.QueryAllWithDateFormat(dateFormat, sql, paramStr...)
+func (session *Session) queryAllToJsonStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
+	results, err := session.queryAllWithDateFormat(dateFormat, sql, paramStr...)
 	if err != nil {
 		return "", err
 	}

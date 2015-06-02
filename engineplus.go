@@ -39,20 +39,20 @@ func (engine *Engine) GetFirst(bean interface{}) ResultBean {
 func (engine *Engine) QueryAll(sql string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryAll(sql, paramStr...)
+	return session.queryAll(sql, paramStr...)
 }
 
 // Exec a raw sql and return records as []map[string]interface{}
 func (engine *Engine) QueryAllByMap(sql string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryAllByMap(sql, paramMap)
+	return session.queryAllByMap(sql, paramMap)
 }
 
 func (engine *Engine) QueryAllByMapToJsonString(sql string, paramMap interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	results, err := session.QueryAllByMap(sql, paramMap)
+	results, err := session.queryAllByMap(sql, paramMap)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +62,7 @@ func (engine *Engine) QueryAllByMapToJsonString(sql string, paramMap interface{}
 func (engine *Engine) QueryAllByMapToJsonStringWithDateFormat(dateFormat string, sql string, paramMap interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	results, err := session.QueryAllByMapWithDateFormat(dateFormat, sql, paramMap)
+	results, err := session.queryAllByMapWithDateFormat(dateFormat, sql, paramMap)
 	if err != nil {
 		return "", err
 	}
@@ -72,7 +72,7 @@ func (engine *Engine) QueryAllByMapToJsonStringWithDateFormat(dateFormat string,
 func (engine *Engine) QueryAllToJsonString(sql string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	results, err := session.QueryAll(sql, paramStr...)
+	results, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -82,17 +82,17 @@ func (engine *Engine) QueryAllToJsonString(sql string, paramStr ...interface{}) 
 func (engine *Engine) QueryAllToJsonStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	results, err := session.QueryAllWithDateFormat(dateFormat, sql, paramStr...)
+	results, err := session.queryAllWithDateFormat(dateFormat, sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
 	return JSONString(results, true)
 }
 
-func (engine *Engine) QueryAllToXmlString(sql string, paramStr ...interface{}) (string, error) {
+func (engine *Engine) queryAllToXmlString(sql string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -104,10 +104,10 @@ func (engine *Engine) QueryAllToXmlString(sql string, paramStr ...interface{}) (
 	return string(results), nil
 }
 
-func (engine *Engine) QueryAllToXmlIndentString(sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
+func (engine *Engine) queryAllToXmlIndentString(sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -118,10 +118,10 @@ func (engine *Engine) QueryAllToXmlIndentString(sql string, prefix string, inden
 	return string(results), nil
 }
 
-func (engine *Engine) QueryAllToXmlStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
+func (engine *Engine) queryAllToXmlStringWithDateFormat(dateFormat string, sql string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}
@@ -135,7 +135,7 @@ func (engine *Engine) QueryAllToXmlStringWithDateFormat(dateFormat string, sql s
 func (engine *Engine) QueryAllToXmlIndentStringWithDateFormat(dateFormat string, sql string, prefix string, indent string, paramStr ...interface{}) (string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	resultSlice, err := session.QueryAll(sql, paramStr...)
+	resultSlice, err := session.queryAll(sql, paramStr...)
 	if err != nil {
 		return "", err
 	}

@@ -1262,14 +1262,14 @@ func (engine *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) 
 func (engine *Engine) Query(sql string, paramStr ...interface{}) (resultsSlice []map[string][]byte, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Query(sql, paramStr...)
+	return session.query(sql, paramStr...)
 }
 
 // Exec a raw sql and return records as []map[string][]byte
 func (engine *Engine) Query2(sql string, paramStr ...interface{}) (resultsSlice []map[string]string, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Query2(sql, paramStr...)
+	return session.query2(sql, paramStr...)
 }
 
 //func XMLString(v interface{}, IndentXML bool) (string, error) {
