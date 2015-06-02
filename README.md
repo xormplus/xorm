@@ -32,13 +32,23 @@ if err != nil {
 
 ###支持类似这样的链式读取数据操作
 ```go
-sql：="select id,title,createdatetime,content from article where id = ?"
-rows, err := db.Sql(sql, 2).Query().Json() //返回查询数据的json字符串
+sql := "select id,title,createdatetime,content from article where id = ?"
+rows, err := db.Sql(sql, 2).Query().Json() //返回查询结果的json字符串
+rows, err := db.Sql("sql", 2).QueryWithDateFormat("20060102").Json() //返回查询结果的json字符串，并支持格式化日期
+rows, err := db.Sql("sql", 2).QueryWithDateFormat("20060102").Xml() //返回查询结果的xml字符串，并支持格式化日期
 
-id := db.Sql(sql, 2).Query().Result[0]["id"] //返回查询数据的第一条数据的id列的值
+id := db.Sql(sql, 2).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
 title := db.Sql(sql, 2).Query().Result[0]["title"]
 createdatetime := db.Sql(sql, 2).Query().Result[0]["createdatetime"]
 content := db.Sql(sql, 2).Query().Result[0]["content"]
+
+articles := make([]Article, 0)
+xml,err := db.Where("id=?", 6).Find(&articles).Xml() //返回查询结果的xml字符串
+json,err := db.Where("id=?", 6).Find(&articles).Json() //返回查询结果的json字符串
+
+sql := "select id,title,createdatetime,content from article where id = ?id and userid=?userid"
+paramMap := map[string]interface{}{"id": 6, "userid": 1} //支持参数使用map存放
+rows, err := db.Sql(sql, &paramMap).QueryByParamMap().XmlIndent("", "  ", "article")
 ```
 
 ###支持SqlMap配置，<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>
@@ -57,6 +67,8 @@ content := db.Sql(sql, 2).Query().Result[0]["content"]
 ```go
 paramMap := map[string]interface{}{"1": 2, "2": 5} //支持参数使用map存放
 rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMap().Xml() //返回查询结果的xml字符串
+rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMap().Json() //返回查询结果的json字符串
+rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article") //返回查询结果格式化的xml字符串，并支持格式化日期
 ```
 ###提供动态SQL支持，使用pongo2模板引擎
 例如配置文件名：select.example.stpl</br>
@@ -73,4 +85,6 @@ userid=?userid
 ```go
 paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 1}
 rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMap().Json()
+rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("2006/01/02").Json()
+rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article")
 ```
