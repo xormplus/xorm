@@ -2,18 +2,36 @@
 
 优化xorm的查询API，并提供类似ibatis的配置文件及动态SQL功能
 
-支持类似这样的链式操作
+```go
+var err error
+db, err = xorm.NewPostgreSQL("postgres://postgres:root@localhost:5432/testdb?sslmode=disable")
+
+if err != nil {
+	t.Fatal(err)
+}
+
+err = db.InitSqlMap() //初始化SqlMap配置，可选功能
+if err != nil {
+	t.Fatal(err)
+}
+err = db.InitSqlTemplate() //初始化动态SQL模板配置，可选功能
+if err != nil {
+	t.Fatal(err)
+}
+```
+
+支持类似这样的链式读取数据操作
 ```go
 sql：="select id,title,createdatetime,content from article where id = ?"
-rows, err := db.Sql(sql, 2).FindAll().Json()
+rows, err := db.Sql(sql, 2).FindAll().Json() //返回查询数据的json字符串
 
-id := db.Sql(sql, 2).FindAll().Result[0]["id"]
+id := db.Sql(sql, 2).FindAll().Result[0]["id"] //返回查询数据的第一条数据的id列的值
 title := db.Sql(sql, 2).FindAll().Result[0]["title"]
 createdatetime := db.Sql(sql, 2).FindAll().Result[0]["createdatetime"]
 content := db.Sql(sql, 2).FindAll().Result[0]["content"]
 ```
 
-也支持SqlMap配置，<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>
+支持SqlMap配置，<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>
 ```xml
 <sqlMap>
 	<sql id="selectAllArticle">
@@ -27,8 +45,8 @@ content := db.Sql(sql, 2).FindAll().Result[0]["content"]
 ```
 
 ```go
-paramMap := map[string]interface{}{"1": 2, "2": 5}
-rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().Xml()
+paramMap := map[string]interface{}{"1": 2, "2": 5} //支持参数使用map存放
+rows, err := db.SqlMapClient("selectAllArticle", &paramMap).FindAllByParamMap().Xml() //返回查询结果的xml字符串
 ```
 同时提供动态SQL支持，使用pongo2模板引擎</br></br>
 例如配置文件名：select.example.stpl</br>
