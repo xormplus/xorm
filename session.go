@@ -237,6 +237,12 @@ func (session *Session) Limit(limit int, start ...int) *Session {
 	return session
 }
 
+// Method Limit provide limit and offset query condition
+func (session *Session) Top(limit int) *Session {
+	session.Statement.Top(limit)
+	return session
+}
+
 // Method OrderBy provide order by query condition, the input parameter is the content
 // after order by on a sql statement.
 func (session *Session) OrderBy(order string) *Session {
