@@ -72,24 +72,19 @@ engine可以通过engine.Close来手动关闭，但是一般情况下可以不�
 
 NewEngine传入的参数和sql.Open传入的参数完全相同，因此，在使用某个驱动前，请查看此驱动中关于传入参数的说明文档。以下为各个驱动的连接符对应的文档链接：
 
-
-
 - <a href="http://godoc.org/github.com/mattn/go-sqlite3#SQLiteDriver.Open">sqlite3</a>
-
 - <a href="https://github.com/go-sql-driver/mysql#dsn-data-source-name">mysql dsn</a>
-
 - <a href="http://godoc.org/github.com/ziutek/mymysql/godrv#Driver.Open">mymysql</a>
-
 - <a href="http://godoc.org/github.com/lib/pq">postgres</a>
 
 在engine创建完成后可以进行一些设置，如：
 
 
 1. 调试，警告以及错误等显示设置，默认如下均为false
-- engine.ShowSQL = true，则会在控制台打印出生成的SQL语句；
-- engine.ShowDebug = true，则会在控制台打印调试信息；
-- engine.ShowError = true，则会在控制台打印错误信息；
-- engine.ShowWarn = true，则会在控制台打印警告信息；
+ - engine.ShowSQL = true，则会在控制台打印出生成的SQL语句；
+ - engine.ShowDebug = true，则会在控制台打印调试信息；
+ - engine.ShowError = true，则会在控制台打印错误信息；
+ - engine.ShowWarn = true，则会在控制台打印警告信息；
 
 2. 如果希望将信息不仅打印到控制台，而是保存为文件，那么可以通过类似如下的代码实现，NewSimpleLogger(w io.Writer)接收一个io.Writer接口来将数据写入到对应的设施中。
 ```go
