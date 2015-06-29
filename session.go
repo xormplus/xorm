@@ -4005,6 +4005,7 @@ func (s *Session) Sync2(beans ...interface{}) error {
 			}
 
 			var foundIndexNames = make(map[string]bool)
+			var addedNames = make(map[string]*core.Index)
 
 			for name, index := range table.Indexes {
 				var oriIndex *core.Index
@@ -4028,20 +4029,7 @@ func (s *Session) Sync2(beans ...interface{}) error {
 				}
 
 				if oriIndex == nil {
-					if index.Type == core.UniqueType {
-						session := engine.NewSession()
-						session.Statement.RefTable = table
-						defer session.Close()
-						err = session.addUnique(table.Name, name)
-					} else if index.Type == core.IndexType {
-						session := engine.NewSession()
-						session.Statement.RefTable = table
-						defer session.Close()
-						err = session.addIndex(table.Name, name)
-					}
-					if err != nil {
-						return err
-					}
+					addedNames[name] = index
 				}
 			}
 
@@ -4052,6 +4040,23 @@ func (s *Session) Sync2(beans ...interface{}) error {
 					if err != nil {
 						return err
 					}
+				}
+			}
+
+			for name, index := range addedNames {
+				if index.Type == core.UniqueType {
+					session := engine.NewSession()
+					session.Statement.RefTable = table
+					defer session.Close()
+					err = session.addUnique(table.Name, name)
+				} else if index.Type == core.IndexType {
+					session := engine.NewSession()
+					session.Statement.RefTable = table
+					defer session.Close()
+					err = session.addIndex(table.Name, name)
+				}
+				if err != nil {
+					return err
 				}
 			}
 		}
