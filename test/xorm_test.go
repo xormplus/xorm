@@ -39,7 +39,8 @@ var db *xorm.Engine
 func Test_InitDB(t *testing.T) {
 	var err error
 	db, err = xorm.NewPostgreSQL("postgres://postgres:root@localhost:5432/mblog?sslmode=disable")
-
+	db.SqlMap.SqlMapRootDir="./sql/oracle"
+	db.SqlTemplate.SqlTemplateRootDir="./sql/oracle"
 	if err != nil {
 		t.Fatal(err)
 	}

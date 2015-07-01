@@ -11,7 +11,8 @@ import (
 )
 
 type SqlMap struct {
-	Sql map[string]string
+	SqlMapRootDir string
+	Sql           map[string]string
 }
 
 type Result struct {
@@ -25,18 +26,19 @@ type Sql struct {
 
 func (engine *Engine) InitSqlMap() error {
 	var err error
-	cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
-	if err != nil {
-		return err
+	if engine.SqlMap.SqlMapRootDir == "" {
+		cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
+		if err != nil {
+			return err
+		}
+		engine.SqlMap.SqlMapRootDir, err = cfg.GetValue("", "SqlMapRootDir")
+		if err != nil {
+			return err
+		}
 	}
-	var sqlMapRootDir string
-	sqlMapRootDir, err = cfg.GetValue("", "SqlMapRootDir")
-	if err != nil {
-		return err
-	}
-	
+
 	engine.SqlMap.Sql = make(map[string]string)
-	err = filepath.Walk(sqlMapRootDir, engine.SqlMap.walkFunc)
+	err = filepath.Walk(engine.SqlMap.SqlMapRootDir, engine.SqlMap.walkFunc)
 	if err != nil {
 		return err
 	}

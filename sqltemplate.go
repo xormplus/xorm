@@ -10,23 +10,25 @@ import (
 )
 
 type SqlTemplate struct {
-	Template map[string]*pongo2.Template
+	SqlTemplateRootDir string
+	Template           map[string]*pongo2.Template
 }
 
 func (engine *Engine) InitSqlTemplate() error {
 	var err error
-	cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
-	if err != nil {
-		return err
+	if engine.SqlTemplate.SqlTemplateRootDir == "" {
+		cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
+		if err != nil {
+			return err
+		}
+		engine.SqlTemplate.SqlTemplateRootDir, err = cfg.GetValue("", "SqlTemplateRootDir")
+		if err != nil {
+			return err
+		}
 	}
-	var sqlMapRootDir string
-	sqlMapRootDir, err = cfg.GetValue("", "SqlTemplateRootDir")
-	if err != nil {
-		return err
-	}
-	
+
 	engine.SqlTemplate.Template = make(map[string]*pongo2.Template)
-	err = filepath.Walk(sqlMapRootDir, engine.SqlTemplate.walkFunc)
+	err = filepath.Walk(engine.SqlTemplate.SqlTemplateRootDir, engine.SqlTemplate.walkFunc)
 	if err != nil {
 		return err
 	}
