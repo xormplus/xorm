@@ -5,101 +5,103 @@
 package xorm
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
-//	"fmt"
+	"fmt"
+	//	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/xormplus/core"
 	"github.com/Chronokeeper/anyxml"
+	"github.com/xormplus/core"
 )
 
 type ResultBean struct {
-	Has bool
+	Has    bool
 	Result interface{}
-	Error    error
+	Error  error
 }
 
-func (resultBean ResultBean) Json() (bool,string, error) {
+func (resultBean ResultBean) Json() (bool, string, error) {
 	if resultBean.Error != nil {
-		return resultBean.Has,"", resultBean.Error
+		return resultBean.Has, "", resultBean.Error
 	}
-	if !resultBean.Has{
-		return resultBean.Has,"", nil
+	if !resultBean.Has {
+		return resultBean.Has, "", nil
 	}
-	result,err:= JSONString(resultBean.Result, true)
-	return resultBean.Has,result,err
+	result, err := JSONString(resultBean.Result, true)
+	return resultBean.Has, result, err
 }
 
 func (session *Session) GetFirst(bean interface{}) ResultBean {
 	has, err := session.Get(bean)
-	r := ResultBean{Has: has,Result:bean, Error: err}
+	r := ResultBean{Has: has, Result: bean, Error: err}
 	return r
 }
 
-func (resultBean ResultBean) Xml() (bool,string, error) {
-	
+func (resultBean ResultBean) Xml() (bool, string, error) {
+
 	if resultBean.Error != nil {
-		return false,"", resultBean.Error
+		return false, "", resultBean.Error
 	}
-	if !resultBean.Has{
-		return resultBean.Has,"", nil
+	if !resultBean.Has {
+		return resultBean.Has, "", nil
 	}
-	has,result,err:=resultBean.Json()
+	has, result, err := resultBean.Json()
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
-	if !has{
-		return has,"", nil
+	if !has {
+		return has, "", nil
 	}
 	var anydata = []byte(result)
 	var i interface{}
 	err = json.Unmarshal(anydata, &i)
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
 	resultByte, err := anyxml.Xml(i)
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
 
-	return resultBean.Has,string(resultByte),err
+	return resultBean.Has, string(resultByte), err
 }
 
-func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool,string, error) {
+func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool, string, error) {
 	if resultBean.Error != nil {
-		return false,"", resultBean.Error
+		return false, "", resultBean.Error
 	}
-	if !resultBean.Has{
-		return resultBean.Has,"", nil
+	if !resultBean.Has {
+		return resultBean.Has, "", nil
 	}
-	has,result,err:=resultBean.Json()
+	has, result, err := resultBean.Json()
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
-	if !has{
-		return has,"", nil
+	if !has {
+		return has, "", nil
 	}
 	var anydata = []byte(result)
 	var i interface{}
 	err = json.Unmarshal(anydata, &i)
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
-	resultByte, err := anyxml.XmlIndent(i,prefix,indent,recordTag)
+	resultByte, err := anyxml.XmlIndent(i, prefix, indent, recordTag)
 	if err != nil {
-		return false,"", err
+		return false, "", err
 	}
 
-	return resultBean.Has,string(resultByte),err
+	return resultBean.Has, string(resultByte), err
 }
 
 type ResultMap struct {
 	Result []map[string]interface{}
-	Error    error
+	Error  error
 }
 
 func (resultMap ResultMap) Json() (string, error) {
@@ -135,7 +137,7 @@ func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag str
 
 type ResultStructs struct {
 	Result interface{}
-	Error    error
+	Error  error
 }
 
 func (resultStructs ResultStructs) Json() (string, error) {
@@ -151,7 +153,7 @@ func (resultStructs ResultStructs) Xml() (string, error) {
 		return "", resultStructs.Error
 	}
 
-	result,err:=resultStructs.Json()
+	result, err := resultStructs.Json()
 	if err != nil {
 		return "", err
 	}
@@ -175,7 +177,7 @@ func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recor
 		return "", resultStructs.Error
 	}
 
-	result,err:=resultStructs.Json()
+	result, err := resultStructs.Json()
 	if err != nil {
 		return "", err
 	}
@@ -194,7 +196,7 @@ func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recor
 	return string(resultByte), nil
 }
 
-func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs{
+func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs {
 	err := session.find(rowsSlicePtr, condiBean...)
 	r := ResultStructs{Result: rowsSlicePtr, Error: err}
 	return r
@@ -385,6 +387,14 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 		}
 	}
 
+	defer func() {
+		if b, hasAfterSet := bean.(AfterSetProcessor); hasAfterSet {
+			for ii, key := range fields {
+				b.AfterSet(key, Cell(scanResults[ii].(*interface{})))
+			}
+		}
+	}()
+
 	var tempMap = make(map[string]int)
 	for ii, key := range fields {
 		var idx int
@@ -434,12 +444,20 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 			hasAssigned := false
 
 			switch fieldType.Kind() {
-
 			case reflect.Complex64, reflect.Complex128:
 				if rawValueType.Kind() == reflect.String {
 					hasAssigned = true
 					x := reflect.New(fieldType)
 					err := json.Unmarshal([]byte(vv.String()), x.Interface())
+					if err != nil {
+						session.Engine.LogError(err)
+						return err
+					}
+					fieldValue.Set(x.Elem())
+				} else if rawValueType.Kind() == reflect.Slice {
+					hasAssigned = true
+					x := reflect.New(fieldType)
+					err := json.Unmarshal(vv.Bytes(), x.Interface())
 					if err != nil {
 						session.Engine.LogError(err)
 						return err
@@ -489,6 +507,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					fieldValue.SetUint(uint64(vv.Int()))
 				}
 			case reflect.Struct:
+				col := table.GetColumn(key)
 				if fieldType.ConvertibleTo(core.TimeType) {
 					if rawValueType == core.TimeType {
 						hasAssigned = true
@@ -496,7 +515,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
 						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
-							session.Engine.LogDebug("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
+							session.Engine.LogDebugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
 								t.Minute(), t.Second(), t.Nanosecond(), time.Local)
 						}
@@ -518,13 +537,42 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						vv = reflect.ValueOf(t)
 						fieldValue.Set(vv)
 					}
+				} else if nulVal, ok := fieldValue.Addr().Interface().(sql.Scanner); ok {
+					// !<winxxp>! 增加支持sql.Scanner接口的结构，如sql.NullString
+					hasAssigned = true
+					if err := nulVal.Scan(vv.Interface()); err != nil {
+						//fmt.Println("sql.Sanner error:", err.Error())
+						session.Engine.LogError("sql.Sanner error:", err.Error())
+						hasAssigned = false
+					}
+				} else if col.SQLType.IsJson() {
+					if rawValueType.Kind() == reflect.String {
+						hasAssigned = true
+						x := reflect.New(fieldType)
+						err := json.Unmarshal([]byte(vv.String()), x.Interface())
+						if err != nil {
+							session.Engine.LogError(err)
+							return err
+						}
+						fieldValue.Set(x.Elem())
+					} else if rawValueType.Kind() == reflect.Slice {
+						hasAssigned = true
+						x := reflect.New(fieldType)
+						err := json.Unmarshal(vv.Bytes(), x.Interface())
+						if err != nil {
+							session.Engine.LogError(err)
+							return err
+						}
+						fieldValue.Set(x.Elem())
+					}
 				} else if session.Statement.UseCascade {
 					table := session.Engine.autoMapType(*fieldValue)
 					if table != nil {
-						if len(table.PrimaryKeys) > 1 {
-							panic("unsupported composited primary key cascade")
+						if len(table.PrimaryKeys) != 1 {
+							panic("unsupported non or composited primary key cascade")
 						}
 						var pk = make(core.PK, len(table.PrimaryKeys))
+
 						switch rawValueType.Kind() {
 						case reflect.Int64:
 							pk[0] = vv.Int()

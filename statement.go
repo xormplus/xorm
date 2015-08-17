@@ -219,6 +219,7 @@ func buildUpdates(engine *Engine, table *core.Table, bean interface{},
 		requiredField := useAllCols
 		includeNil := useAllCols
 		lColName := strings.ToLower(col.Name)
+
 		if b, ok := mustColumnMap[lColName]; ok {
 			if b {
 				requiredField = true
@@ -320,6 +321,8 @@ func buildUpdates(engine *Engine, table *core.Table, bean interface{},
 					continue
 				}
 				val = engine.FormatTime(col.SQLType.Name, t)
+			} else if nulType, ok := fieldValue.Interface().(driver.Valuer); ok {
+				val, _ = nulType.Value()
 			} else {
 				engine.autoMapType(fieldValue)
 				if table, ok := engine.Tables[fieldValue.Type()]; ok {
@@ -413,10 +416,13 @@ func buildConditions(engine *Engine, table *core.Table, bean interface{},
 		if engine.dialect.DBType() == core.MSSQL && col.SQLType.Name == core.Text {
 			continue
 		}
+		if col.SQLType.IsJson() {
+			continue
+		}
 
 		var colName string
 		if addedTableName {
-			colName = engine.Quote(tableName)+"."+engine.Quote(col.Name)
+			colName = engine.Quote(tableName) + "." + engine.Quote(col.Name)
 		} else {
 			colName = engine.Quote(col.Name)
 		}
@@ -428,7 +434,7 @@ func buildConditions(engine *Engine, table *core.Table, bean interface{},
 		}
 
 		if col.IsDeleted && !unscoped { // tag "deleted" is enabled
-			colNames = append(colNames, fmt.Sprintf("(%v IS NULL or %v = '0001-01-01 00:00:00')", 
+			colNames = append(colNames, fmt.Sprintf("(%v IS NULL or %v = '0001-01-01 00:00:00')",
 				colName, colName))
 		}
 
@@ -509,24 +515,49 @@ func buildConditions(engine *Engine, table *core.Table, bean interface{},
 				val = engine.FormatTime(col.SQLType.Name, t)
 			} else if _, ok := reflect.New(fieldType).Interface().(core.Conversion); ok {
 				continue
+			} else if valNul, ok := fieldValue.Interface().(driver.Valuer); ok {
+				val, _ = valNul.Value()
+				if val == nil {
+					continue
+				}
 			} else {
-				engine.autoMapType(fieldValue)
-				if table, ok := engine.Tables[fieldValue.Type()]; ok {
-					if len(table.PrimaryKeys) == 1 {
-						pkField := reflect.Indirect(fieldValue).FieldByName(table.PKColumns()[0].FieldName)
-						// fix non-int pk issues
-						//if pkField.Int() != 0 {
-						if pkField.IsValid() && !isZero(pkField.Interface()) {
-							val = pkField.Interface()
-						} else {
+				if col.SQLType.IsJson() {
+					if col.SQLType.IsText() {
+						bytes, err := json.Marshal(fieldValue.Interface())
+						if err != nil {
+							engine.LogError(err)
 							continue
 						}
-					} else {
-						//TODO: how to handler?
-						panic(fmt.Sprintln("not supported", fieldValue.Interface(), "as", table.PrimaryKeys))
+						val = string(bytes)
+					} else if col.SQLType.IsBlob() {
+						var bytes []byte
+						var err error
+						bytes, err = json.Marshal(fieldValue.Interface())
+						if err != nil {
+							engine.LogError(err)
+							continue
+						}
+						val = bytes
 					}
 				} else {
-					val = fieldValue.Interface()
+					engine.autoMapType(fieldValue)
+					if table, ok := engine.Tables[fieldValue.Type()]; ok {
+						if len(table.PrimaryKeys) == 1 {
+							pkField := reflect.Indirect(fieldValue).FieldByName(table.PKColumns()[0].FieldName)
+							// fix non-int pk issues
+							//if pkField.Int() != 0 {
+							if pkField.IsValid() && !isZero(pkField.Interface()) {
+								val = pkField.Interface()
+							} else {
+								continue
+							}
+						} else {
+							//TODO: how to handler?
+							panic(fmt.Sprintln("not supported", fieldValue.Interface(), "as", table.PrimaryKeys))
+						}
+					} else {
+						val = fieldValue.Interface()
+					}
 				}
 			}
 		case reflect.Array, reflect.Slice, reflect.Map:
@@ -786,6 +817,7 @@ func (statement *Statement) Cols(columns ...string) *Statement {
 	if strings.Contains(statement.ColumnStr, ".") {
 		statement.ColumnStr = strings.Replace(statement.ColumnStr, ".", statement.Engine.Quote("."), -1)
 	}
+	statement.ColumnStr = strings.Replace(statement.ColumnStr, statement.Engine.Quote("*"), "*", -1)
 	return statement
 }
 
