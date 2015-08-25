@@ -5,6 +5,7 @@
 package xorm
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,7 +50,7 @@ type Statement struct {
 	GroupByStr    string
 	HavingStr     string
 	ColumnStr     string
-	selectStr string
+	selectStr     string
 	columnMap     map[string]bool
 	useAllCols    bool
 	OmitStr       string
