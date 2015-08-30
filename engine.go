@@ -32,10 +32,10 @@ type Engine struct {
 	TableMapper   core.IMapper
 	TagIdentifier string
 	Tables        map[reflect.Type]*core.Table
-	SqlMap  SqlMap
-	SqlTemplate  SqlTemplate
-	mutex  *sync.RWMutex
-	Cacher core.Cacher
+	SqlMap        SqlMap
+	SqlTemplate   SqlTemplate
+	mutex         *sync.RWMutex
+	Cacher        core.Cacher
 
 	ShowSQL bool
 
