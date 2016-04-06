@@ -8,10 +8,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	//	"fmt"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/Chronokeeper/anyxml"
@@ -398,12 +399,13 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 	for ii, key := range fields {
 		var idx int
 		var ok bool
-		if idx, ok = tempMap[strings.ToLower(key)]; !ok {
+		var lKey = strings.ToLower(key)
+		if idx, ok = tempMap[lKey]; !ok {
 			idx = 0
 		} else {
 			idx = idx + 1
 		}
-		tempMap[strings.ToLower(key)] = idx
+		tempMap[lKey] = idx
 
 		if fieldValue := session.getField(dataStruct, key, table, idx); fieldValue != nil {
 			rawValue := reflect.Indirect(reflect.ValueOf(scanResults[ii]))
@@ -418,7 +420,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					if data, err := value2Bytes(&rawValue); err == nil {
 						structConvert.FromDB(data)
 					} else {
-						session.Engine.LogError(err)
+						session.Engine.logger.Error(err)
 					}
 					continue
 				}
@@ -431,7 +433,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 					fieldValue.Interface().(core.Conversion).FromDB(data)
 				} else {
-					session.Engine.LogError(err)
+					session.Engine.logger.Error(err)
 				}
 				continue
 			}
@@ -441,24 +443,61 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 			fieldType := fieldValue.Type()
 			hasAssigned := false
+			col := table.GetColumnIdx(key, idx)
 
-			switch fieldType.Kind() {
-			case reflect.Complex64, reflect.Complex128:
+			if col.SQLType.IsJson() {
+				var bs []byte
 				if rawValueType.Kind() == reflect.String {
-					hasAssigned = true
-					x := reflect.New(fieldType)
-					err := json.Unmarshal([]byte(vv.String()), x.Interface())
+					bs = []byte(vv.String())
+				} else if rawValueType.ConvertibleTo(reflect.SliceOf(reflect.TypeOf(uint8(1)))) {
+					bs = vv.Bytes()
+				} else {
+					return errors.New("unsupported database data type")
+				}
+
+				hasAssigned = true
+
+				if fieldValue.CanAddr() {
+					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
 					if err != nil {
-						session.Engine.LogError(err)
+						session.Engine.logger.Error(err)
+						return err
+					}
+				} else {
+					x := reflect.New(fieldType)
+					err := json.Unmarshal(bs, x.Interface())
+					if err != nil {
+						session.Engine.logger.Error(err)
 						return err
 					}
 					fieldValue.Set(x.Elem())
+				}
+
+				continue
+			}
+
+			switch fieldType.Kind() {
+			case reflect.Complex64, reflect.Complex128:
+				// TODO: reimplement this
+				var bs []byte
+				if rawValueType.Kind() == reflect.String {
+					bs = []byte(vv.String())
 				} else if rawValueType.Kind() == reflect.Slice {
-					hasAssigned = true
-					x := reflect.New(fieldType)
-					err := json.Unmarshal(vv.Bytes(), x.Interface())
+					bs = vv.Bytes()
+				}
+
+				hasAssigned = true
+				if fieldValue.CanAddr() {
+					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
 					if err != nil {
-						session.Engine.LogError(err)
+						session.Engine.logger.Error(err)
+						return err
+					}
+				} else {
+					x := reflect.New(fieldType)
+					err := json.Unmarshal(bs, x.Interface())
+					if err != nil {
+						session.Engine.logger.Error(err)
 						return err
 					}
 					fieldValue.Set(x.Elem())
@@ -506,7 +545,6 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					fieldValue.SetUint(uint64(vv.Int()))
 				}
 			case reflect.Struct:
-				col := table.GetColumn(key)
 				if fieldType.ConvertibleTo(core.TimeType) {
 					if rawValueType == core.TimeType {
 						hasAssigned = true
@@ -514,34 +552,62 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
 						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
-							session.Engine.LogDebugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
+							session.Engine.logger.Debugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
 								t.Minute(), t.Second(), t.Nanosecond(), time.Local)
 						}
 						// !nashtsai! convert to engine location
-						t = t.In(session.Engine.TZLocation)
+						if col.TimeZone == nil {
+							t = t.In(session.Engine.TZLocation)
+						} else {
+							t = t.In(col.TimeZone)
+						}
 						// dateFormat to string
 						loc, _ := time.LoadLocation("Local") //重要：获取时区  rawValue.Interface().(time.Time).Format(dateFormat)
 						t, _ = time.ParseInLocation(dateFormat, t.Format(dateFormat), loc)
-						//						fieldValue.Set(reflect.ValueOf(t).Convert(core.StringType))
-						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 
-						// t = fieldValue.Interface().(time.Time)
-						// z, _ = t.Zone()
-						// session.Engine.LogDebug("fieldValue key[%v]: %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
+						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 					} else if rawValueType == core.IntType || rawValueType == core.Int64Type ||
 						rawValueType == core.Int32Type {
 						hasAssigned = true
-						t := time.Unix(vv.Int(), 0).In(session.Engine.TZLocation)
-						vv = reflect.ValueOf(t)
-						fieldValue.Set(vv)
+						var tz *time.Location
+						if col.TimeZone == nil {
+							tz = session.Engine.TZLocation
+						} else {
+							tz = col.TimeZone
+						}
+						t := time.Unix(vv.Int(), 0).In(tz)
+						//vv = reflect.ValueOf(t)
+						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
+					} else {
+						if d, ok := vv.Interface().([]uint8); ok {
+							hasAssigned = true
+							t, err := session.byte2Time(col, d)
+							if err != nil {
+								session.Engine.logger.Error("byte2Time error:", err.Error())
+								hasAssigned = false
+							} else {
+								fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
+							}
+						} else if d, ok := vv.Interface().(string); ok {
+							hasAssigned = true
+							t, err := session.str2Time(col, d)
+							if err != nil {
+								session.Engine.logger.Error("byte2Time error:", err.Error())
+								hasAssigned = false
+							} else {
+								fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
+							}
+						} else {
+							panic(fmt.Sprintf("rawValueType is %v, value is %v", rawValueType, vv.Interface()))
+						}
 					}
 				} else if nulVal, ok := fieldValue.Addr().Interface().(sql.Scanner); ok {
 					// !<winxxp>! 增加支持sql.Scanner接口的结构，如sql.NullString
 					hasAssigned = true
 					if err := nulVal.Scan(vv.Interface()); err != nil {
 						//fmt.Println("sql.Sanner error:", err.Error())
-						session.Engine.LogError("sql.Sanner error:", err.Error())
+						session.Engine.logger.Error("sql.Sanner error:", err.Error())
 						hasAssigned = false
 					}
 				} else if col.SQLType.IsJson() {
@@ -550,7 +616,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						x := reflect.New(fieldType)
 						err := json.Unmarshal([]byte(vv.String()), x.Interface())
 						if err != nil {
-							session.Engine.LogError(err)
+							session.Engine.logger.Error(err)
 							return err
 						}
 						fieldValue.Set(x.Elem())
@@ -559,7 +625,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						x := reflect.New(fieldType)
 						err := json.Unmarshal(vv.Bytes(), x.Interface())
 						if err != nil {
-							session.Engine.LogError(err)
+							session.Engine.logger.Error(err)
 							return err
 						}
 						fieldValue.Set(x.Elem())
@@ -595,8 +661,10 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 							pk[0] = uint8(vv.Uint())
 						case reflect.String:
 							pk[0] = vv.String()
+						case reflect.Slice:
+							pk[0], _ = strconv.ParseInt(string(rawValue.Interface().([]byte)), 10, 64)
 						default:
-							panic("unsupported primary key type cascade")
+							panic(fmt.Sprintf("unsupported primary key type: %v, %v", rawValueType, fieldValue))
 						}
 
 						if !isPKZero(pk) {
@@ -618,7 +686,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 							}
 						}
 					} else {
-						session.Engine.LogError("unsupported struct type in Scan: ", fieldValue.Type().String())
+						session.Engine.logger.Error("unsupported struct type in Scan: ", fieldValue.Type().String())
 					}
 				}
 			case reflect.Ptr:
@@ -641,7 +709,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 				case core.PtrTimeType:
 					if rawValueType == core.PtrTimeType {
 						hasAssigned = true
-						var x time.Time = rawValue.Interface().(time.Time)
+						var x = rawValue.Interface().(time.Time)
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrFloat64Type:
@@ -652,7 +720,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 				case core.PtrUint64Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x uint64 = uint64(vv.Int())
+						var x = uint64(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
@@ -664,55 +732,55 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 				case core.PtrFloat32Type:
 					if rawValueType.Kind() == reflect.Float64 {
-						var x float32 = float32(vv.Float())
+						var x = float32(vv.Float())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrIntType:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x int = int(vv.Int())
+						var x = int(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrInt32Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x int32 = int32(vv.Int())
+						var x = int32(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrInt8Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x int8 = int8(vv.Int())
+						var x = int8(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrInt16Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x int16 = int16(vv.Int())
+						var x = int16(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrUintType:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x uint = uint(vv.Int())
+						var x = uint(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.PtrUint32Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x uint32 = uint32(vv.Int())
+						var x = uint32(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.Uint8Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x uint8 = uint8(vv.Int())
+						var x = uint8(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
 				case core.Uint16Type:
 					if rawValueType.Kind() == reflect.Int64 {
-						var x uint16 = uint16(vv.Int())
+						var x = uint16(vv.Int())
 						hasAssigned = true
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
@@ -720,7 +788,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					var x complex64
 					err := json.Unmarshal([]byte(vv.String()), &x)
 					if err != nil {
-						session.Engine.LogError(err)
+						session.Engine.logger.Error(err)
 					} else {
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
@@ -729,7 +797,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					var x complex128
 					err := json.Unmarshal([]byte(vv.String()), &x)
 					if err != nil {
-						session.Engine.LogError(err)
+						session.Engine.logger.Error(err)
 					} else {
 						fieldValue.Set(reflect.ValueOf(&x))
 					}
@@ -743,9 +811,9 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 			if !hasAssigned {
 				data, err := value2Bytes(&rawValue)
 				if err == nil {
-					session.bytes2Value(table.GetColumn(key), fieldValue, data)
+					session.bytes2Value(col, fieldValue, data)
 				} else {
-					session.Engine.LogError(err.Error())
+					session.Engine.logger.Error(err.Error())
 				}
 			}
 		}

@@ -21,7 +21,7 @@ func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) 
 	}
 	sql, err := engine.SqlTemplate.Template[sqlTagName].Execute(map1)
 	if err != nil {
-		engine.Logger.Err(err)
+		engine.logger.Error(err)
 	}
 
 	return session.Sql(sql, &map1)

@@ -31,9 +31,7 @@ func reflect2objectWithDateFormat(rawValue *reflect.Value, dateFormat string) (v
 	//时间类型
 	case reflect.Struct:
 		if aa.ConvertibleTo(core.TimeType) {
-			//			loc, _ := time.LoadLocation("Local")                            //重要：获取时区
-			//			value, _ = time.ParseInLocation(dateFormat, rawValue.Interface().(time.Time).Format(dateFormat), loc)
-			value = rawValue.Interface().(time.Time).Format(dateFormat)
+			value = vv.Convert(core.TimeType).Interface().(time.Time).Format(dateFormat)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
@@ -180,7 +178,7 @@ func reflect2object(rawValue *reflect.Value) (value interface{}, err error) {
 	//时间类型
 	case reflect.Struct:
 		if aa.ConvertibleTo(core.TimeType) {
-			value = rawValue.Interface().(time.Time)
+			value = vv.Convert(core.TimeType).Interface().(time.Time)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
