@@ -961,7 +961,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			keyType := sliceValue.Type().Key()
 			var ikey interface{}
 			if len(key) == 1 {
-				ikey, err = Atot(fmt.Sprintf("%v", key[0]), keyType)
+				ikey, err = str2PK(fmt.Sprintf("%v", key[0]), keyType)
 				if err != nil {
 					return err
 				}
@@ -1124,75 +1124,6 @@ func (session *Session) Count(bean interface{}) (int64, error) {
 	return int64(total), err
 }
 
-func Atot(s string, tp reflect.Type) (interface{}, error) {
-	var err error
-	var result interface{}
-	switch tp.Kind() {
-	case reflect.Int:
-		result, err = strconv.Atoi(s)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as int: " + err.Error())
-		}
-	case reflect.Int8:
-		x, err := strconv.Atoi(s)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as int16: " + err.Error())
-		}
-		result = int8(x)
-	case reflect.Int16:
-		x, err := strconv.Atoi(s)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as int16: " + err.Error())
-		}
-		result = int16(x)
-	case reflect.Int32:
-		x, err := strconv.Atoi(s)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as int32: " + err.Error())
-		}
-		result = int32(x)
-	case reflect.Int64:
-		result, err = strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as int64: " + err.Error())
-		}
-	case reflect.Uint:
-		x, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as uint: " + err.Error())
-		}
-		result = uint(x)
-	case reflect.Uint8:
-		x, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as uint8: " + err.Error())
-		}
-		result = uint8(x)
-	case reflect.Uint16:
-		x, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as uint16: " + err.Error())
-		}
-		result = uint16(x)
-	case reflect.Uint32:
-		x, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as uint32: " + err.Error())
-		}
-		result = uint32(x)
-	case reflect.Uint64:
-		result, err = strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return nil, errors.New("convert " + s + " as uint64: " + err.Error())
-		}
-	case reflect.String:
-		result = s
-	default:
-		panic("unsupported convert type")
-	}
-	return result, nil
-}
-
 // Find retrieve records from table, condiBeans's non-empty fields
 // are conditions. beans could be []Struct, []*Struct, map[int64]Struct
 // map[int64]*Struct
@@ -1237,7 +1168,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 		// !oinume! Add "<col> IS NULL" to WHERE whatever condiBean is given.
 		// See https://github.com/go-xorm/xorm/issues/179
 		if col := table.DeletedColumn(); col != nil && !session.Statement.unscoped { // tag "deleted" is enabled
-			var colName string = session.Engine.Quote(col.Name)
+			var colName = session.Engine.Quote(col.Name)
 			if addedTableName {
 				var nm = session.Statement.TableName()
 				if len(session.Statement.TableAlias) > 0 {
@@ -1326,8 +1257,6 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			return err
 		}
 
-		fieldsCount := len(fields)
-
 		var newElemFunc func() reflect.Value
 		if sliceElementType.Kind() == reflect.Ptr {
 			newElemFunc = func() reflect.Value {
@@ -1353,67 +1282,67 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			}
 		}
 
-		var newValue reflect.Value = newElemFunc()
+		var newValue = newElemFunc()
 		dataStruct := rValue(newValue.Interface())
 		if dataStruct.Kind() != reflect.Struct {
 			return errors.New("Expected a pointer to a struct")
 		}
 
-		table := session.Engine.autoMapType(dataStruct)
-		return session.rows2Beans(rawRows, fields, fieldsCount, table, newElemFunc, sliceValueSetFunc)
-	} else {
-		resultsSlice, err := session.query(sqlStr, args...)
+		return session.rows2Beans(rawRows, fields, len(fields), session.Engine.autoMapType(dataStruct), newElemFunc, sliceValueSetFunc)
+	}
+
+	resultsSlice, err := session.query(sqlStr, args...)
+	if err != nil {
+		return err
+	}
+
+	keyType := sliceValue.Type().Key()
+
+	for _, results := range resultsSlice {
+		var newValue reflect.Value
+		if sliceElementType.Kind() == reflect.Ptr {
+			newValue = reflect.New(sliceElementType.Elem())
+		} else {
+			newValue = reflect.New(sliceElementType)
+		}
+		err := session.scanMapIntoStruct(newValue.Interface(), results)
 		if err != nil {
 			return err
 		}
-
-		keyType := sliceValue.Type().Key()
-
-		for _, results := range resultsSlice {
-			var newValue reflect.Value
-			if sliceElementType.Kind() == reflect.Ptr {
-				newValue = reflect.New(sliceElementType.Elem())
-			} else {
-				newValue = reflect.New(sliceElementType)
-			}
-			err := session.scanMapIntoStruct(newValue.Interface(), results)
+		var key interface{}
+		// if there is only one pk, we can put the id as map key.
+		if len(table.PrimaryKeys) == 1 {
+			key, err = str2PK(string(results[table.PrimaryKeys[0]]), keyType)
 			if err != nil {
 				return err
 			}
-			var key interface{}
-			// if there is only one pk, we can put the id as map key.
-			if len(table.PrimaryKeys) == 1 {
-				key, err = Atot(string(results[table.PrimaryKeys[0]]), keyType)
-				if err != nil {
-					return err
-				}
+		} else {
+			if keyType.Kind() != reflect.Slice {
+				panic("don't support multiple primary key's map has non-slice key type")
 			} else {
-				if keyType.Kind() != reflect.Slice {
-					panic("don't support multiple primary key's map has non-slice key type")
-				} else {
-					keys := core.PK{}
-					for _, pk := range table.PrimaryKeys {
-						skey, err := Atot(string(results[pk]), keyType)
-						if err != nil {
-							return err
-						}
-						keys = append(keys, skey)
+				var keys core.PK = make([]interface{}, 0, len(table.PrimaryKeys))
+				for _, pk := range table.PrimaryKeys {
+					skey, err := str2PK(string(results[pk]), keyType)
+					if err != nil {
+						return err
 					}
-					key = keys
+					keys = append(keys, skey)
 				}
-			}
-
-			if sliceElementType.Kind() == reflect.Ptr {
-				sliceValue.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(newValue.Interface()))
-			} else {
-				sliceValue.SetMapIndex(reflect.ValueOf(key), reflect.Indirect(reflect.ValueOf(newValue.Interface())))
+				key = keys
 			}
 		}
+
+		if sliceElementType.Kind() == reflect.Ptr {
+			sliceValue.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(newValue.Interface()))
+		} else {
+			sliceValue.SetMapIndex(reflect.ValueOf(key), reflect.Indirect(reflect.ValueOf(newValue.Interface())))
+		}
 	}
+
 	return nil
 }
 
-// Test if database is ok
+// Ping test if database is ok
 func (session *Session) Ping() error {
 	defer session.resetStatement()
 	if session.IsAutoClose {
@@ -1434,6 +1363,7 @@ func (engine *Engine) tableName(beanOrTableName interface{}) (string, error) {
 	return "", errors.New("bean should be a struct or struct's point")
 }
 
+// IsTableExist if a table is exist
 func (session *Session) IsTableExist(beanOrTableName interface{}) (bool, error) {
 	tableName, err := session.Engine.tableName(beanOrTableName)
 	if err != nil {
@@ -1453,6 +1383,7 @@ func (session *Session) isTableExist(tableName string) (bool, error) {
 	return len(results) > 0, err
 }
 
+// IsTableEmpty if table have any records
 func (session *Session) IsTableEmpty(bean interface{}) (bool, error) {
 	v := rValue(bean)
 	t := v.Type()
@@ -2600,76 +2531,16 @@ func (session *Session) bytes2Value(col *core.Column, fieldValue *reflect.Value,
 			} else if session.Statement.UseCascade {
 				table := session.Engine.autoMapType(*fieldValue)
 				if table != nil {
+					// TODO: current only support 1 primary key
 					if len(table.PrimaryKeys) > 1 {
 						panic("unsupported composited primary key cascade")
 					}
 					var pk = make(core.PK, len(table.PrimaryKeys))
 					rawValueType := table.ColumnType(table.PKColumns()[0].FieldName)
-					switch rawValueType.Kind() {
-					case reflect.Int64:
-						x, err := strconv.ParseInt(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = x
-					case reflect.Int:
-						x, err := strconv.ParseInt(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = int(x)
-					case reflect.Int32:
-						x, err := strconv.ParseInt(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = int32(x)
-					case reflect.Int16:
-						x, err := strconv.ParseInt(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = int16(x)
-					case reflect.Int8:
-						x, err := strconv.ParseInt(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = int8(x)
-					case reflect.Uint64:
-						x, err := strconv.ParseUint(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = x
-					case reflect.Uint:
-						x, err := strconv.ParseUint(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = uint(x)
-					case reflect.Uint32:
-						x, err := strconv.ParseUint(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = uint32(x)
-					case reflect.Uint16:
-						x, err := strconv.ParseUint(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = uint16(x)
-					case reflect.Uint8:
-						x, err := strconv.ParseUint(string(data), 10, 64)
-						if err != nil {
-							return fmt.Errorf("arg %v as int: %s", key, err.Error())
-						}
-						pk[0] = uint8(x)
-					case reflect.String:
-						pk[0] = string(data)
-					default:
-						panic("unsupported primary key type cascade")
+					var err error
+					pk[0], err = str2PK(string(data), rawValueType)
+					if err != nil {
+						return err
 					}
 
 					if !isPKZero(pk) {
@@ -2943,82 +2814,11 @@ func (session *Session) bytes2Value(col *core.Column, fieldValue *reflect.Value,
 							panic("unsupported composited primary key cascade")
 						}
 						var pk = make(core.PK, len(table.PrimaryKeys))
+						var err error
 						rawValueType := table.ColumnType(table.PKColumns()[0].FieldName)
-						switch rawValueType.Kind() {
-						case reflect.Int64:
-							x, err := strconv.ParseInt(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = x
-						case reflect.Int:
-							x, err := strconv.ParseInt(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = int(x)
-						case reflect.Int32:
-							x, err := strconv.ParseInt(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = int32(x)
-						case reflect.Int16:
-							x, err := strconv.ParseInt(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = int16(x)
-						case reflect.Int8:
-							x, err := strconv.ParseInt(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = x
-						case reflect.Uint64:
-							x, err := strconv.ParseUint(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = x
-						case reflect.Uint:
-							x, err := strconv.ParseUint(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = uint(x)
-						case reflect.Uint32:
-							x, err := strconv.ParseUint(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = uint32(x)
-						case reflect.Uint16:
-							x, err := strconv.ParseUint(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = uint16(x)
-						case reflect.Uint8:
-							x, err := strconv.ParseUint(string(data), 10, 64)
-							if err != nil {
-								return fmt.Errorf("arg %v as int: %s", key, err.Error())
-							}
-
-							pk[0] = uint8(x)
-						case reflect.String:
-							pk[0] = string(data)
-						default:
-							panic("unsupported primary key type cascade")
+						pk[0], err = str2PK(string(data), rawValueType)
+						if err != nil {
+							return err
 						}
 
 						if !isPKZero(pk) {
@@ -3299,8 +3099,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 			return 1, nil
 		}
 
-		v := int64ToInt(id, aiValue.Type().Kind())
-		aiValue.Set(reflect.ValueOf(v))
+		aiValue.Set(int64ToIntValue(id, aiValue.Type()))
 
 		return 1, nil
 	} else if session.Engine.dialect.DBType() == core.POSTGRES && len(table.AutoIncrement) > 0 {
@@ -3345,8 +3144,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 			return 1, nil
 		}
 
-		v := int64ToInt(id, aiValue.Type().Kind())
-		aiValue.Set(reflect.ValueOf(v))
+		aiValue.Set(int64ToIntValue(id, aiValue.Type()))
 
 		return 1, nil
 	} else {
@@ -3388,7 +3186,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 			return res.RowsAffected()
 		}
 
-		v := int64ToInt(id, aiValue.Type().Kind())
+		v := int64ToInt(id, aiValue.Type())
 		aiValue.Set(reflect.ValueOf(v))
 
 		return res.RowsAffected()
