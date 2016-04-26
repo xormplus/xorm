@@ -674,10 +674,10 @@ func (statement *Statement) TableName() string {
 	}
 
 	if statement.RefTable != nil {
-		schema := statement.Engine.dialect.URI().Schema
+		/*schema := statement.Engine.dialect.URI().Schema
 		if len(schema) > 0 {
 			return schema + "." + statement.RefTable.Name
-		}
+		}*/
 		return statement.RefTable.Name
 	}
 	return ""
@@ -1009,7 +1009,7 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 
 	fmt.Fprintf(&buf, " ON %v", condition)
 	statement.JoinStr = buf.String()
-	statement.joinArgs = args
+	statement.joinArgs = append(statement.joinArgs, args...)
 	return statement
 }
 

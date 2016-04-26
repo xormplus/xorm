@@ -15,10 +15,6 @@ import (
 	"github.com/xormplus/core"
 )
 
-// func init() {
-// 	RegisterDialect("mysql", &mysql{})
-// }
-
 var (
 	mysqlReservedWords = map[string]bool{
 		"ADD":               true,

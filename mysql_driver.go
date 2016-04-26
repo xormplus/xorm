@@ -11,10 +11,6 @@ import (
 	"github.com/xormplus/core"
 )
 
-// func init() {
-// 	core.RegisterDriver("mysql", &mysqlDriver{})
-// }
-
 type mysqlDriver struct {
 }
 

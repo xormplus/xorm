@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"reflect"
-
 	"strconv"
 	"strings"
 	"time"
