@@ -90,20 +90,11 @@ func Test_GetFirst_Xml(t *testing.T) {
 		t.Log("[Test_GetFirst_Xml]->rows: not exist\n")
 	}
 	t.Log("[Test_GetFirst_Xml]->rows:\n" + rows)
-
-	has, rows, err = db.Where("userid =?", 3).GetFirst(&article).Xml()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !has {
-		t.Log("[Test_GetFirst_Xml]->rows: not exist\n")
-	}
-	t.Log("[Test_GetFirst_Xml]->rows:\n" + rows)
 }
 
 func Test_GetFirst_XmlIndent(t *testing.T) {
 	var article Article
-	has, rows, err := db.Where("userid =?", 3).GetFirst(&article).XmlIndent("", "  ", "article")
+	has, rows, err := db.Where("userid =?", 2).GetFirst(&article).XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +106,7 @@ func Test_GetFirst_XmlIndent(t *testing.T) {
 
 func Test_Find(t *testing.T) {
 	var article []Article
-	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Find(&article)
+	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Find(&article)
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}
@@ -141,7 +132,7 @@ func Test_Find(t *testing.T) {
 }
 
 func Test_Query_Json(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().Json()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Query().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +140,7 @@ func Test_Query_Json(t *testing.T) {
 }
 
 func Test_Query_Result(t *testing.T) {
-	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query()
+	rows := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Query()
 	if rows.Error != nil {
 		t.Fatal(rows.Error)
 	}
@@ -163,7 +154,7 @@ func Test_Query_Result(t *testing.T) {
 }
 
 func Test_Query_Xml(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().Xml()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Query().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +162,7 @@ func Test_Query_Xml(t *testing.T) {
 }
 
 func Test_Query_XmlIndent(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).Query().XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 33).Query().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +170,7 @@ func Test_Query_XmlIndent(t *testing.T) {
 }
 
 func Test_QueryWithDateFormat_Json(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).QueryWithDateFormat("20060102").Json()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 33).QueryWithDateFormat("20060102").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +178,7 @@ func Test_QueryWithDateFormat_Json(t *testing.T) {
 }
 
 func Test_QueryWithDateFormat_Xml(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 2).QueryWithDateFormat("20060102").Xml()
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?", 33).QueryWithDateFormat("20060102").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +186,7 @@ func Test_QueryWithDateFormat_Xml(t *testing.T) {
 }
 
 func Test_QueryWithDateFormat_XmlIndent(t *testing.T) {
-	rows, err := db.Sql("select id,title,createdatetime,content from article where id in (?,?)", 2, 5).QueryWithDateFormat("20060102").XmlIndent("", "  ", "article")
+	rows, err := db.Sql("select id,title,createdatetime,content from article where id in (?,?)", 27, 33).QueryWithDateFormat("20060102").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +194,7 @@ func Test_QueryWithDateFormat_XmlIndent(t *testing.T) {
 }
 
 func Test_QueryByParamMap_Json(t *testing.T) {
-	paramMap := map[string]interface{}{"id": 4, "userid": 1}
+	paramMap := map[string]interface{}{"id": 32, "userid": 1}
 	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMap().Json()
 	if err != nil {
 		t.Fatal(err)
@@ -230,7 +221,7 @@ func Test_QueryByParamMap_XmlIndent(t *testing.T) {
 }
 
 func Test_QueryByParamMapWithDateFormat_XmlIndent(t *testing.T) {
-	paramMap := map[string]interface{}{"id": 5, "userid": 1}
+	paramMap := map[string]interface{}{"id": 6, "userid": 1}
 	rows, err := db.Sql("select id,title,createdatetime,content from article where id = ?id and userid=?userid", &paramMap).QueryByParamMapWithDateFormat("2006/01/02").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
