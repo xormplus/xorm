@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Chronokeeper/anyxml"
@@ -194,6 +194,23 @@ func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recor
 	}
 
 	return string(resultByte), nil
+}
+
+func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
+	return session.Sql(session.Engine.SqlMap.Sql[sqlTagName], args...)
+}
+
+func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
+	map1 := args[0].(map[string]interface{})
+	if session.Engine.SqlTemplate.Template[sqlTagName] == nil {
+		return session.Sql("", &map1)
+	}
+	sql, err := session.Engine.SqlTemplate.Template[sqlTagName].Execute(map1)
+	if err != nil {
+		session.Engine.logger.Error(err)
+	}
+
+	return session.Sql(sql, &map1)
 }
 
 func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs {

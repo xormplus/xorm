@@ -33,20 +33,6 @@ func (engine *Engine) GetFirst(bean interface{}) ResultBean {
 	return session.GetFirst(bean)
 }
 
-// Exec a raw sql and return records as []map[string]interface{}
-func (engine *Engine) QueryAll(sql string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
-	session := engine.NewSession()
-	defer session.Close()
-	return session.queryAll(sql, paramStr...)
-}
-
-// Exec a raw sql and return records as []map[string]interface{}
-func (engine *Engine) QueryAllByMap(sql string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
-	session := engine.NewSession()
-	defer session.Close()
-	return session.queryAllByMap(sql, paramMap)
-}
-
 func JSONString(v interface{}, IndentJSON bool) (string, error) {
 	var result []byte
 	var err error
