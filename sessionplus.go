@@ -223,7 +223,19 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 func (session *Session) Query() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	result, err := session.queryAll(sql, params...)
+	i := len(params)
+	var result []map[string]interface{}
+	var err error
+	if i == 1  {
+		vv := reflect.ValueOf(params[0])
+		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+			result, err = session.queryAll(sql, params...)
+		}else{
+			result, err = session.queryAllByMap(sql, params[0])
+		}
+	} else {
+		result, err = session.queryAll(sql, params...)
+	}
 	r := ResultMap{Result: result, Error: err}
 	return r
 }
@@ -232,25 +244,20 @@ func (session *Session) Query() ResultMap {
 func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
-	result, err := session.queryAllWithDateFormat(dateFormat, sql, params...)
+	i := len(params)
+	var result []map[string]interface{}
+	var err error
+	if i == 1  {
+		vv := reflect.ValueOf(params[0])
+		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+			result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
+		}else{
+			result, err = session.queryAllByMapWithDateFormat(dateFormat, sql, params[0])
+		}
+	} else {
+		result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
+	}
 	r := ResultMap{Result: result, Error: err}
-	return r
-}
-
-// Exec a raw sql and return records as []map[string]interface{}
-func (session *Session) QueryByParamMap() ResultMap {
-	sql := session.Statement.RawSQL
-	params := session.Statement.RawParams
-	result, err := session.queryAllByMap(sql, params[0])
-	r := ResultMap{Result: result, Error: err}
-	return r
-}
-
-func (session *Session) QueryByParamMapWithDateFormat(dateFormat string) ResultMap {
-	sql := session.Statement.RawSQL
-	params := session.Statement.RawParams
-	results, err := session.queryAllByMapWithDateFormat(dateFormat, sql, params[0])
-	r := ResultMap{Result: results, Error: err}
 	return r
 }
 
@@ -568,7 +575,8 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
-						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
+						if len(z) == 0 || t.Year() == 0 {
+							// !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
 							session.Engine.logger.Debugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
 								t.Minute(), t.Second(), t.Nanosecond(), time.Local)
@@ -585,7 +593,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 					} else if rawValueType == core.IntType || rawValueType == core.Int64Type ||
-						rawValueType == core.Int32Type {
+					rawValueType == core.Int32Type {
 						hasAssigned = true
 						var tz *time.Location
 						if col.TimeZone == nil {
@@ -820,8 +828,8 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 					hasAssigned = true
 				} // switch fieldType
-				// default:
-				// 	session.Engine.LogError("unsupported type in Scan: ", reflect.TypeOf(v).String())
+			// default:
+			// 	session.Engine.LogError("unsupported type in Scan: ", reflect.TypeOf(v).String())
 			} // switch fieldType.Kind()
 
 			// !nashtsai! for value can't be assigned directly fallback to convert to []byte then back to value
