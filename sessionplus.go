@@ -226,11 +226,11 @@ func (session *Session) Query() ResultMap {
 	i := len(params)
 	var result []map[string]interface{}
 	var err error
-	if i == 1  {
+	if i == 1 {
 		vv := reflect.ValueOf(params[0])
 		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
 			result, err = session.queryAll(sql, params...)
-		}else{
+		} else {
 			result, err = session.queryAllByMap(sql, params[0])
 		}
 	} else {
@@ -247,11 +247,11 @@ func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	i := len(params)
 	var result []map[string]interface{}
 	var err error
-	if i == 1  {
+	if i == 1 {
 		vv := reflect.ValueOf(params[0])
 		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
 			result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
-		}else{
+		} else {
 			result, err = session.queryAllByMapWithDateFormat(dateFormat, sql, params[0])
 		}
 	} else {
@@ -259,6 +259,29 @@ func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	}
 	r := ResultMap{Result: result, Error: err}
 	return r
+}
+
+// Execute raw sql
+func (session *Session) Execute() (sql.Result, error) {
+	sqlStr := session.Statement.RawSQL
+	params := session.Statement.RawParams
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
+	i := len(params)
+	if i == 1 {
+		vv := reflect.ValueOf(params[0])
+		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+			return session.exec(sqlStr, params...)
+		} else {
+			sqlStr1, args, _ := core.MapToSlice(sqlStr, params[0])
+			return session.exec(sqlStr1, args...)
+		}
+	} else {
+		return session.exec(sqlStr, params...)
+	}
 }
 
 // =============================
@@ -593,7 +616,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 					} else if rawValueType == core.IntType || rawValueType == core.Int64Type ||
-					rawValueType == core.Int32Type {
+						rawValueType == core.Int32Type {
 						hasAssigned = true
 						var tz *time.Location
 						if col.TimeZone == nil {
@@ -828,8 +851,8 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 					hasAssigned = true
 				} // switch fieldType
-			// default:
-			// 	session.Engine.LogError("unsupported type in Scan: ", reflect.TypeOf(v).String())
+				// default:
+				// 	session.Engine.LogError("unsupported type in Scan: ", reflect.TypeOf(v).String())
 			} // switch fieldType.Kind()
 
 			// !nashtsai! for value can't be assigned directly fallback to convert to []byte then back to value
