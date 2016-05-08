@@ -1477,21 +1477,6 @@ func (engine *Engine) Query2(sql string, paramStr ...interface{}) (resultsSlice 
 	return session.query2(sql, paramStr...)
 }
 
-//func XMLString(v interface{}, IndentXML bool) (string, error) {
-//	var result []byte
-//	var err error
-//	if IndentXML {
-//		result, err = xml.MarshalIndent(v, "", "  ")
-//	} else {
-//		result, err = xml.Marshal(v)
-//	}
-//	if err != nil {
-//		return "", err
-//	}
-
-//	return string(result), nil
-//}
-
 // Insert one or more records
 func (engine *Engine) Insert(beans ...interface{}) (int64, error) {
 	session := engine.NewSession()
