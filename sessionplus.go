@@ -457,7 +457,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 		if fieldValue := session.getField(dataStruct, key, table, idx); fieldValue != nil {
 			rawValue := reflect.Indirect(reflect.ValueOf(scanResults[ii]))
 
-			//if row is null then ignore
+			// if row is null then ignore
 			if rawValue.Interface() == nil {
 				continue
 			}
@@ -496,28 +496,30 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 				var bs []byte
 				if rawValueType.Kind() == reflect.String {
 					bs = []byte(vv.String())
-				} else if rawValueType.ConvertibleTo(reflect.SliceOf(reflect.TypeOf(uint8(1)))) {
+				} else if rawValueType.ConvertibleTo(core.BytesType) {
 					bs = vv.Bytes()
 				} else {
-					return errors.New("unsupported database data type")
+					return fmt.Errorf("unsupported database data type: %s %v", key, rawValueType.Kind())
 				}
 
 				hasAssigned = true
 
-				if fieldValue.CanAddr() {
-					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
-					if err != nil {
-						session.Engine.logger.Error(err)
-						return err
+				if len(bs) > 0 {
+					if fieldValue.CanAddr() {
+						err := json.Unmarshal(bs, fieldValue.Addr().Interface())
+						if err != nil {
+							session.Engine.logger.Error(key, err)
+							return err
+						}
+					} else {
+						x := reflect.New(fieldType)
+						err := json.Unmarshal(bs, x.Interface())
+						if err != nil {
+							session.Engine.logger.Error(key, err)
+							return err
+						}
+						fieldValue.Set(x.Elem())
 					}
-				} else {
-					x := reflect.New(fieldType)
-					err := json.Unmarshal(bs, x.Interface())
-					if err != nil {
-						session.Engine.logger.Error(err)
-						return err
-					}
-					fieldValue.Set(x.Elem())
 				}
 
 				continue
@@ -529,25 +531,27 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 				var bs []byte
 				if rawValueType.Kind() == reflect.String {
 					bs = []byte(vv.String())
-				} else if rawValueType.Kind() == reflect.Slice {
+				} else if rawValueType.ConvertibleTo(core.BytesType) {
 					bs = vv.Bytes()
 				}
 
 				hasAssigned = true
-				if fieldValue.CanAddr() {
-					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
-					if err != nil {
-						session.Engine.logger.Error(err)
-						return err
+				if len(bs) > 0 {
+					if fieldValue.CanAddr() {
+						err := json.Unmarshal(bs, fieldValue.Addr().Interface())
+						if err != nil {
+							session.Engine.logger.Error(err)
+							return err
+						}
+					} else {
+						x := reflect.New(fieldType)
+						err := json.Unmarshal(bs, x.Interface())
+						if err != nil {
+							session.Engine.logger.Error(err)
+							return err
+						}
+						fieldValue.Set(x.Elem())
 					}
-				} else {
-					x := reflect.New(fieldType)
-					err := json.Unmarshal(bs, x.Interface())
-					if err != nil {
-						session.Engine.logger.Error(err)
-						return err
-					}
-					fieldValue.Set(x.Elem())
 				}
 			case reflect.Slice, reflect.Array:
 				switch rawValueType.Kind() {
@@ -662,21 +666,25 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					if rawValueType.Kind() == reflect.String {
 						hasAssigned = true
 						x := reflect.New(fieldType)
-						err := json.Unmarshal([]byte(vv.String()), x.Interface())
-						if err != nil {
-							session.Engine.logger.Error(err)
-							return err
+						if len([]byte(vv.String())) > 0 {
+							err := json.Unmarshal([]byte(vv.String()), x.Interface())
+							if err != nil {
+								session.Engine.logger.Error(err)
+								return err
+							}
+							fieldValue.Set(x.Elem())
 						}
-						fieldValue.Set(x.Elem())
 					} else if rawValueType.Kind() == reflect.Slice {
 						hasAssigned = true
 						x := reflect.New(fieldType)
-						err := json.Unmarshal(vv.Bytes(), x.Interface())
-						if err != nil {
-							session.Engine.logger.Error(err)
-							return err
+						if len(vv.Bytes()) > 0 {
+							err := json.Unmarshal(vv.Bytes(), x.Interface())
+							if err != nil {
+								session.Engine.logger.Error(err)
+								return err
+							}
+							fieldValue.Set(x.Elem())
 						}
-						fieldValue.Set(x.Elem())
 					}
 				} else if session.Statement.UseCascade {
 					table := session.Engine.autoMapType(*fieldValue)
@@ -834,20 +842,24 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					}
 				case core.Complex64Type:
 					var x complex64
-					err := json.Unmarshal([]byte(vv.String()), &x)
-					if err != nil {
-						session.Engine.logger.Error(err)
-					} else {
-						fieldValue.Set(reflect.ValueOf(&x))
+					if len([]byte(vv.String())) > 0 {
+						err := json.Unmarshal([]byte(vv.String()), &x)
+						if err != nil {
+							session.Engine.logger.Error(err)
+						} else {
+							fieldValue.Set(reflect.ValueOf(&x))
+						}
 					}
 					hasAssigned = true
 				case core.Complex128Type:
 					var x complex128
-					err := json.Unmarshal([]byte(vv.String()), &x)
-					if err != nil {
-						session.Engine.logger.Error(err)
-					} else {
-						fieldValue.Set(reflect.ValueOf(&x))
+					if len([]byte(vv.String())) > 0 {
+						err := json.Unmarshal([]byte(vv.String()), &x)
+						if err != nil {
+							session.Engine.logger.Error(err)
+						} else {
+							fieldValue.Set(reflect.ValueOf(&x))
+						}
 					}
 					hasAssigned = true
 				} // switch fieldType
