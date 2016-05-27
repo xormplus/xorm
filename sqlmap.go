@@ -13,6 +13,11 @@ import (
 type SqlMap struct {
 	SqlMapRootDir string
 	Sql           map[string]string
+	Extension     string
+}
+
+type SqlMapOptions struct {
+	Extension string
 }
 
 type Result struct {
@@ -24,7 +29,18 @@ type Sql struct {
 	Id    string `xml:"id,attr"`
 }
 
-func (engine *Engine) InitSqlMap() error {
+func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
+	var opt SqlMapOptions
+	if len(options) > 0 {
+		opt = options[0]
+	}
+
+	if len(opt.Extension) == 0 {
+		opt.Extension = ".xml"
+	}
+
+	engine.SqlMap.Extension = opt.Extension
+
 	var err error
 	if engine.SqlMap.SqlMapRootDir == "" {
 		cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
@@ -46,6 +62,63 @@ func (engine *Engine) InitSqlMap() error {
 	return nil
 }
 
+func (engine *Engine) LoadSqlMap(filepath string) error {
+	if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+		err := engine.loadSqlMap(filepath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (engine *Engine) ReloadSqlMap(filepath string) error {
+	if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+		err := engine.reloadSqlMap(filepath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (engine *Engine) loadSqlMap(filepath string) error {
+	info, err := os.Lstat(filepath)
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+
+	err = engine.SqlMap.paresSql(filepath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (engine *Engine) reloadSqlMap(filepath string) error {
+	info, err := os.Lstat(filepath)
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+	err = engine.SqlMap.paresSql(filepath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (sqlMap *SqlMap) walkFunc(path string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
@@ -55,7 +128,7 @@ func (sqlMap *SqlMap) walkFunc(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	if strings.HasSuffix(path, ".xml") {
+	if strings.HasSuffix(path, sqlMap.Extension) {
 		err = sqlMap.paresSql(path)
 		if err != nil {
 			return err
@@ -84,4 +157,28 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 	}
 
 	return nil
+}
+
+func (engine *Engine) AddSql(key string, sql string) {
+	engine.SqlMap.addSql(key, sql)
+}
+
+func (sqlMap *SqlMap) addSql(key string, sql string) {
+	sqlMap.Sql[key] = sql
+}
+
+func (engine *Engine) UpdateSql(key string, sql string) {
+	engine.SqlMap.updateSql(key, sql)
+}
+
+func (sqlMap *SqlMap) updateSql(key string, sql string) {
+	sqlMap.Sql[key] = sql
+}
+
+func (engine *Engine) RemoveSql(key string) {
+	engine.SqlMap.removeSql(key)
+}
+
+func (sqlMap *SqlMap) removeSql(key string) {
+	delete(sqlMap.Sql, key)
 }

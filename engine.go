@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/xormplus/core"
 )
 
@@ -34,6 +35,7 @@ type Engine struct {
 	Tables        map[reflect.Type]*core.Table
 	SqlMap        SqlMap
 	SqlTemplate   SqlTemplate
+	watcher       *fsnotify.Watcher
 	mutex         *sync.RWMutex
 	Cacher        core.Cacher
 
