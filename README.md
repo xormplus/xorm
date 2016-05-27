@@ -99,7 +99,7 @@ if err != nil {
 	t.Fatal(err)
 }
 
-err = engine.StartMonitorFs() //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
+err = engine.StartFSWatcher() //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
 if err != nil {
 	t.Fatal(err)
 }
