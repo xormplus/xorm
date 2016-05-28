@@ -16,7 +16,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 
 * 同时支持原始SQL语句和ORM操作的混合执行
 
-* 支持类ibatis方式配置SQL语句（支持xml配置文件和pogon2模板2种方式）
+* 支持类ibatis方式配置SQL语句（支持xml配置文件和pongo2模板2种方式）
 
 * 支持动态SQL功能
 
@@ -148,12 +148,12 @@ results1 := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().Result
 sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 
 //执行的 sql：select * from user where id=7
-//如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pogon2
+//如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
 paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
 results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Result
 
 //执行的 sql：select * from user where name='xormplus'
-//如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pogon2
+//如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
 paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
 results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_2).Query().Result
 ```
@@ -174,7 +174,7 @@ results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_2).Query().Result
 </sqlMap>
 ```
 
-* 第4种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pogon2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
+* 第4种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pongo2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
 
 ```java
 select * from user
