@@ -256,6 +256,45 @@ id := db.SqlMapClient(key, &paramMap).Query().Result[0]["id"] //返回查询结�
 id := db.SqlTemplateClient(key, paramMap).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
+* 事务处理，当使用事务处理时，需要创建Session对象。在进行事物处理时，可以混用ORM方法和RAW方法，如下代码所示：
+
+```go
+session := engine.NewSession()
+defer session.Close()
+// add Begin() before any action
+err := session.Begin()
+user1 := Userinfo{Username: "xiaoxiao", Departname: "dev", Alias: "lunny", Created: time.Now()}
+_, err = session.Insert(&user1)
+if err != nil {
+    session.Rollback()
+    return
+}
+user2 := Userinfo{Username: "yyy"}
+_, err = session.Where("id = ?", 2).Update(&user2)
+if err != nil {
+    session.Rollback()
+    return
+}
+
+_, err = session.Exec("delete from userinfo where username = ?", user2.Username)
+if err != nil {
+    session.Rollback()
+    return
+}
+
+_, err = session.SqlMapClient("delete.userinfo", user2.Username).Execute()
+if err != nil {
+    session.Rollback()
+    return
+}
+
+// add Commit() after all actions
+err = session.Commit()
+if err != nil {
+    return
+}
+```
+
 * SqlMap及SqlTemplate相关功能API
 
 ```go
@@ -294,7 +333,8 @@ engine.AddSqlTemplate(key, sql) //新增一条SqlTemplate模板
 engine.UpdateSqlTemplate(key, sql) //更新一条SqlTemplate模板
 engine.RemoveSqlTemplate(key) //删除一条SqlTemplate模板
 ```
-* 插入一条或者多条记录
+
+* ORM方式插入一条或者多条记录
 
 ```Go
 affected, err := engine.Insert(&user)
@@ -309,7 +349,7 @@ affected, err := engine.Insert(&user1, &users)
 // INSERT INTO struct2 () values (),(),()
 ```
 
-* 查询单条记录
+* ORM方式查询单条记录
 
 ```Go
 has, err := engine.Get(&user)
@@ -318,7 +358,7 @@ has, err := engine.Where("name = ?", name).Desc("id").Get(&user)
 // SELECT * FROM user WHERE name = ? ORDER BY id DESC LIMIT 1
 ```
 
-* 查询多条记录，当然可以使用Join和extends来组合使用
+* ORM方式查询多条记录，当然可以使用Join和extends来组合使用
 
 ```Go
 var users []User
@@ -361,7 +401,7 @@ for rows.Next() {
 }
 ```
 
-* 更新数据，除非使用Cols,AllCols函数指明，默认只更新非空和非0的字段
+* ORM方式更新数据，除非使用Cols,AllCols函数指明，默认只更新非空和非0的字段
 
 ```Go
 affected, err := engine.Id(1).Update(&user)
@@ -386,14 +426,14 @@ affected, err := engine.Id(1).AllCols().Update(&user)
 // UPDATE user SET name=?,age=?,salt=?,passwd=?,updated=? Where id = ?
 ```
 
-* 删除记录，需要注意，删除必须至少有一个条件，否则会报错。要清空数据库可以用EmptyTable
+* ORM方式删除记录，需要注意，删除必须至少有一个条件，否则会报错。要清空数据库可以用EmptyTable
 
 ```Go
 affected, err := engine.Where(...).Delete(&user)
 // DELETE FROM user Where ...
 ```
 
-* 获取记录条数
+* ORM方式获取记录条数
 
 ```Go
 counts, err := engine.Count(&user)
