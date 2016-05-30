@@ -440,6 +440,26 @@ counts, err := engine.Count(&user)
 // SELECT count(*) AS total FROM user
 ```
 
+* <b>Dump数据库结构和数据</b>
+DumpAll方法接收一个io.Writer接口来保存Dump出的数据库结构和数据的SQL语句，这个方法导出的SQL语句并不能通用。只针对当前engine所对应的数据库支持的SQL。
+
+```Go
+//如果需要在程序中Dump数据库的结构和数据可以使用下面2个方法
+engine.DumpAll(w io.Writer)
+
+engine.DumpAllFile(fpath string)
+```
+
+* <b>Import 执行数据库SQL脚本</b>
+同样，这里需要对应的数据库的SQL语法支持。
+
+```Go
+//如果你需要将保存在文件或者其它存储设施中的SQL脚本执行，那么可以使用下面2个方法
+engine.Import(r io.Reader)
+
+engine.ImportFile(fpath string)
+```
+
 ## 部分测试用例
 
 
