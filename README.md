@@ -326,12 +326,20 @@ engine.AddSql(key, sql) //新增一条SqlMap配置
 engine.UpdateSql(key, sql) //更新一条SqlMap配置
 engine.RemoveSql(key) //删除一条SqlMap配置
 
+engine.BatchAddSql(map[key]sql) //批量新增SqlMap配置
+engine.BatchUpdateSql(map[key]sql) //批量更新SqlMap配置
+engine.BatchRemoveSql([]key) //批量删除SqlMap配置
+
 engine.LoadSqlTemplate(filepath) //加载指定文件的SqlTemplate模板
 engine.ReloadSqlTemplate(filepath) //重新加载指定文件的SqlTemplate模板
 
 engine.AddSqlTemplate(key, sql) //新增一条SqlTemplate模板
 engine.UpdateSqlTemplate(key, sql) //更新一条SqlTemplate模板
 engine.RemoveSqlTemplate(key) //删除一条SqlTemplate模板
+
+engine.BatchAddSqlTemplate(map[key]sql) //批量新增SqlTemplate配置
+engine.BatchUpdateSqlTemplate(map[key]sql) //批量更新SqlTemplate配置
+engine.batchUpdateSqlTemplate([]key) //批量删除SqlTemplate配置
 ```
 
 * ORM方式插入一条或者多条记录
