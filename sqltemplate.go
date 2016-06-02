@@ -21,6 +21,7 @@ type SqlTemplateOptions struct {
 
 func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	var opt SqlTemplateOptions
+	engine.SqlTemplate.Template = make(map[string]*pongo2.Template)
 	if len(options) > 0 {
 		opt = options[0]
 	}
@@ -41,7 +42,6 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 		}
 	}
 
-	engine.SqlTemplate.Template = make(map[string]*pongo2.Template)
 	err = filepath.Walk(engine.SqlTemplate.SqlTemplateRootDir, engine.SqlTemplate.walkFunc)
 	if err != nil {
 		return err
@@ -178,4 +178,54 @@ func (engine *Engine) RemoveSqlTemplate(key string) {
 
 func (sqlTemplate *SqlTemplate) removeSqlTemplate(key string) {
 	delete(sqlTemplate.Template, key)
+}
+
+func (engine *Engine) BatchAddSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
+	return engine.SqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
+
+}
+
+func (sqlTemplate *SqlTemplate) batchAddSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
+
+	for k, v := range sqlTemplateStrMap {
+		template, err := pongo2.FromString(v)
+		if err != nil {
+			return err
+		}
+
+		sqlTemplate.Template[k] = template
+	}
+
+	return nil
+
+}
+
+func (engine *Engine) BatchUpdateSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
+	return engine.SqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
+
+}
+
+func (sqlTemplate *SqlTemplate) batchUpdateSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
+
+	for k, v := range sqlTemplateStrMap {
+		template, err := pongo2.FromString(v)
+		if err != nil {
+			return err
+		}
+
+		sqlTemplate.Template[k] = template
+	}
+
+	return nil
+
+}
+
+func (engine *Engine) BatchRemoveSqlTemplate(key []string) {
+	engine.SqlTemplate.batchRemoveSqlTemplate(key)
+}
+
+func (sqlTemplate *SqlTemplate) batchRemoveSqlTemplate(key []string) {
+	for _, v := range key {
+		delete(sqlTemplate.Template, v)
+	}
 }

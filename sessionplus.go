@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	//	"unsafe"
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
@@ -57,7 +58,7 @@ func (resultBean ResultBean) Xml() (bool, string, error) {
 	if !has {
 		return has, "", nil
 	}
-	var anydata = []byte(result)
+	var anydata = []byte(result) //str2byte(result)
 	var i interface{}
 	err = json.Unmarshal(anydata, &i)
 	if err != nil {
@@ -70,6 +71,12 @@ func (resultBean ResultBean) Xml() (bool, string, error) {
 
 	return resultBean.Has, string(resultByte), err
 }
+
+//func str2byte(s string) []byte {
+//    x := (*[2]uintptr)unsafe.Pointer(&s)
+//    h := [3]uintptr{x[0],x[1],x[1]}
+//    return *(*[]byte)(unsafe.Pointer(&h))
+//}
 
 func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool, string, error) {
 	if resultBean.Error != nil {

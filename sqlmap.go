@@ -31,6 +31,7 @@ type Sql struct {
 
 func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 	var opt SqlMapOptions
+	engine.SqlMap.Sql = make(map[string]string)
 	if len(options) > 0 {
 		opt = options[0]
 	}
@@ -53,7 +54,6 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 		}
 	}
 
-	engine.SqlMap.Sql = make(map[string]string)
 	err = filepath.Walk(engine.SqlMap.SqlMapRootDir, engine.SqlMap.walkFunc)
 	if err != nil {
 		return err
@@ -181,4 +181,34 @@ func (engine *Engine) RemoveSql(key string) {
 
 func (sqlMap *SqlMap) removeSql(key string) {
 	delete(sqlMap.Sql, key)
+}
+
+func (engine *Engine) BatchAddSql(sqlStrMap map[string]string) {
+	engine.SqlMap.batchAddSql(sqlStrMap)
+}
+
+func (sqlMap *SqlMap) batchAddSql(sqlStrMap map[string]string) {
+	for k, v := range sqlStrMap {
+		sqlMap.Sql[k] = v
+	}
+}
+
+func (engine *Engine) BatchUpdateSql(sqlStrMap map[string]string) {
+	engine.SqlMap.batchUpdateSql(sqlStrMap)
+}
+
+func (sqlMap *SqlMap) batchUpdateSql(sqlStrMap map[string]string) {
+	for k, v := range sqlStrMap {
+		sqlMap.Sql[k] = v
+	}
+}
+
+func (engine *Engine) BatchRemoveSql(key []string) {
+	engine.SqlMap.batchRemoveSql(key)
+}
+
+func (sqlMap *SqlMap) batchRemoveSql(key []string) {
+	for _, v := range key {
+		delete(sqlMap.Sql, v)
+	}
 }
