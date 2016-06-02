@@ -21,7 +21,7 @@ type SqlTemplateOptions struct {
 
 func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	var opt SqlTemplateOptions
-	engine.SqlTemplate.Template = make(map[string]*pongo2.Template)
+	engine.SqlTemplate.Template = make(map[string]*pongo2.Template, 100)
 	if len(options) > 0 {
 		opt = options[0]
 	}

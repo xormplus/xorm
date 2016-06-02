@@ -31,7 +31,7 @@ type Sql struct {
 
 func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 	var opt SqlMapOptions
-	engine.SqlMap.Sql = make(map[string]string)
+	engine.SqlMap.Sql = make(map[string]string, 100)
 	if len(options) > 0 {
 		opt = options[0]
 	}
