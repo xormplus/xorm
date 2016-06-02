@@ -19,9 +19,15 @@ type SqlTemplateOptions struct {
 	Extension string
 }
 
+func (sqlTemplate *SqlTemplate) checkNilAndInit() {
+	if sqlTemplate.Template == nil {
+		sqlTemplate.Template = make(map[string]*pongo2.Template, 100)
+	}
+}
+
 func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	var opt SqlTemplateOptions
-	engine.SqlTemplate.Template = make(map[string]*pongo2.Template, 100)
+
 	if len(options) > 0 {
 		opt = options[0]
 	}
@@ -51,6 +57,9 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 }
 
 func (engine *Engine) LoadSqlTemplate(filepath string) error {
+	if len(engine.SqlTemplate.Extension) == 0 {
+		engine.SqlTemplate.Extension = ".stpl"
+	}
 	if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
 		err := engine.loadSqlTemplate(filepath)
 		if err != nil {
@@ -61,11 +70,46 @@ func (engine *Engine) LoadSqlTemplate(filepath string) error {
 	return nil
 }
 
+func (engine *Engine) BatchLoadSqlTemplate(filepathSlice []string) error {
+	if len(engine.SqlTemplate.Extension) == 0 {
+		engine.SqlTemplate.Extension = ".stpl"
+	}
+	for _, filepath := range filepathSlice {
+		if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+			err := engine.loadSqlTemplate(filepath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (engine *Engine) ReloadSqlTemplate(filepath string) error {
+	if len(engine.SqlTemplate.Extension) == 0 {
+		engine.SqlTemplate.Extension = ".stpl"
+	}
 	if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
 		err := engine.reloadSqlTemplate(filepath)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (engine *Engine) BatchReloadSqlTemplate(filepathSlice []string) error {
+	if len(engine.SqlTemplate.Extension) == 0 {
+		engine.SqlTemplate.Extension = ".stpl"
+	}
+	for _, filepath := range filepathSlice {
+		if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+			err := engine.loadSqlTemplate(filepath)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -132,6 +176,7 @@ func (sqlTemplate *SqlTemplate) paresSqlTemplate(filename string, filepath strin
 		return err
 	}
 
+	sqlTemplate.checkNilAndInit()
 	sqlTemplate.Template[filename] = template
 
 	return nil
@@ -148,7 +193,7 @@ func (sqlTemplate *SqlTemplate) addSqlTemplate(key string, sqlTemplateStr string
 	if err != nil {
 		return err
 	}
-
+	sqlTemplate.checkNilAndInit()
 	sqlTemplate.Template[key] = template
 
 	return nil
@@ -165,7 +210,7 @@ func (sqlTemplate *SqlTemplate) updateSqlTemplate(key string, sqlTemplateStr str
 	if err != nil {
 		return err
 	}
-
+	sqlTemplate.checkNilAndInit()
 	sqlTemplate.Template[key] = template
 
 	return nil
@@ -177,6 +222,7 @@ func (engine *Engine) RemoveSqlTemplate(key string) {
 }
 
 func (sqlTemplate *SqlTemplate) removeSqlTemplate(key string) {
+	sqlTemplate.checkNilAndInit()
 	delete(sqlTemplate.Template, key)
 }
 
@@ -186,7 +232,7 @@ func (engine *Engine) BatchAddSqlTemplate(key string, sqlTemplateStrMap map[stri
 }
 
 func (sqlTemplate *SqlTemplate) batchAddSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
-
+	sqlTemplate.checkNilAndInit()
 	for k, v := range sqlTemplateStrMap {
 		template, err := pongo2.FromString(v)
 		if err != nil {
@@ -206,7 +252,7 @@ func (engine *Engine) BatchUpdateSqlTemplate(key string, sqlTemplateStrMap map[s
 }
 
 func (sqlTemplate *SqlTemplate) batchUpdateSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
-
+	sqlTemplate.checkNilAndInit()
 	for k, v := range sqlTemplateStrMap {
 		template, err := pongo2.FromString(v)
 		if err != nil {
@@ -225,6 +271,7 @@ func (engine *Engine) BatchRemoveSqlTemplate(key []string) {
 }
 
 func (sqlTemplate *SqlTemplate) batchRemoveSqlTemplate(key []string) {
+	sqlTemplate.checkNilAndInit()
 	for _, v := range key {
 		delete(sqlTemplate.Template, v)
 	}
