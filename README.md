@@ -323,7 +323,7 @@ engine.StopFSWatcher()
 1、以下方法是在没有engine.InitSqlMap()和engine.InitSqlTemplate()初始化相关配置文件的情况下让您在代码中可以轻松的手动管理SqlMap配置及SqlTemplate模板。
 2、engine.InitSqlMap()和engine.InitSqlTemplate()初始化相关配置文件之后也可以使用以下方法灵活的对SqlMap配置及SqlTemplate模板进行管理
 3、方便支持您系统中其他初始化配置源，可不依赖于本库的初始化配置方式
-4、可在代码中依据业务场景，动态的添加、更新、删除qlMap配置及SqlTemplate模板
+4、可在代码中依据业务场景，动态的添加、更新、删除SqlMap配置及SqlTemplate模板
 5、手工管理的SqlMap配置及SqlTemplate模板，与xorm初始化方法一样会将相关配置缓存，但不会生成相关配置文件
 -----------------------------------------------------------------------------------*/
 engine.LoadSqlMap(filepath) //加载指定文件的SqlMap配置
