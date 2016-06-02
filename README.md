@@ -322,6 +322,9 @@ engine.StopFSWatcher()
 engine.LoadSqlMap(filepath) //加载指定文件的SqlMap配置
 engine.ReloadSqlMap(filepath) //重新加载指定文件的SqlMap配置
 
+engine.BatchLoadSqlMap([]filepath) //批量加载SqlMap配置
+engine.BatchReloadSqlMap([]filepath) //批量加载SqlMap配置
+
 engine.AddSql(key, sql) //新增一条SqlMap配置
 engine.UpdateSql(key, sql) //更新一条SqlMap配置
 engine.RemoveSql(key) //删除一条SqlMap配置
@@ -332,6 +335,9 @@ engine.BatchRemoveSql([]key) //批量删除SqlMap配置
 
 engine.LoadSqlTemplate(filepath) //加载指定文件的SqlTemplate模板
 engine.ReloadSqlTemplate(filepath) //重新加载指定文件的SqlTemplate模板
+
+engine.BatchLoadSqlTemplate([]filepath) //批量加载SqlTemplate模板
+engine.BatchReloadSqlTemplate([]filepath) //批量加载SqlTemplate模板
 
 engine.AddSqlTemplate(key, sql) //新增一条SqlTemplate模板
 engine.UpdateSqlTemplate(key, sql) //更新一条SqlTemplate模板
