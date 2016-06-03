@@ -1,0 +1,18 @@
+<sqlMap>
+	<sql id="selectAllArticle">
+		select id,title,createdatetime,content 
+		from article where id in (?1,?2)
+	</sql>
+	<sql id="selectStudentById1">
+		select * from article where id=?id and 1=1
+	</sql>
+	<sql id="sql_2_1">
+		select id,title,createdatetime,content from article where id = ?id
+	</sql>
+	<sql id="sql_i_1">
+		INSERT INTO config(key,value) VALUES (?, ?)
+	</sql>
+	<sql id="sql_i_2">
+		INSERT INTO config(key,value) VALUES (?key, ?value)
+	</sql>
+</sqlMap>

@@ -2,6 +2,7 @@ package xorm
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 	"time"
@@ -26,6 +27,17 @@ type Article struct {
 	Lastupdatetime time.Time `xorm:"not null default 'now()' DATETIME"`
 }
 
+type Category struct {
+	Id             int       `xorm:"not null pk autoincr unique INTEGER"`
+	Name           string    `xorm:"not null VARCHAR(200)"`
+	Counts         int       `xorm:"not null default 0 INTEGER"`
+	Orders         int       `xorm:"not null default 0 INTEGER"`
+	Createtime     time.Time `xorm:"not null default 'now()' created DATETIME"`
+	Pid            int       `xorm:"not null default 0 INTEGER"`
+	Lastupdatetime time.Time `xorm:"not null default 'now()' updated  DATETIME"`
+	Status         int       `xorm:"not null default 1 SMALLINT"`
+}
+
 type JSONTime time.Time
 
 func (t JSONTime) MarshalJSON() ([]byte, error) {
@@ -39,22 +51,29 @@ var db *xorm.Engine
 func Test_InitDB(t *testing.T) {
 	var err error
 	db, err = xorm.NewPostgreSQL("postgres://postgres:root@localhost:5432/mblog?sslmode=disable")
-	//	db.SqlMap.SqlMapRootDir="./sql/oracle"
-	//	db.SqlTemplate.SqlTemplateRootDir="./sql/oracle"
+
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = db.InitSqlMap()
+	err = db.SetSqlMapRootDir("./sql/oracle").InitSqlMap()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = db.InitSqlTemplate()
+
+	err = db.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = db.StartFSWatcher()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	db.ShowSQL(true)
+	log.Println(db)
+	//	db.NewSession().SqlMapClient().Execute()
 }
 
 func Test_Get_Struct(t *testing.T) {
@@ -106,9 +125,9 @@ func Test_GetFirst_XmlIndent(t *testing.T) {
 	t.Log("[Test_GetFirst_XmlIndent]->rows:\n" + rows)
 }
 
-func Test_Find(t *testing.T) {
+func Test_Search(t *testing.T) {
 	var article []Article
-	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Find(&article)
+	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Search(&article)
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}
@@ -130,7 +149,7 @@ func Test_Find(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log("[Test_Find]-> result.Json():\n", resultJson)
+	t.Log("[Test_Search]-> result.Json():\n", resultJson)
 }
 
 func Test_Query_Json(t *testing.T) {
@@ -287,7 +306,7 @@ func Test_SqlMapClient_QueryByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMap_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 1}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).Query().Json()
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).Query().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +315,7 @@ func Test_SqlTemplateClient_QueryByParamMap_Json(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMapWithDateFormat_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 1}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryWithDateFormat("01/02/2006").Json()
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).QueryWithDateFormat("01/02/2006").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +324,7 @@ func Test_SqlTemplateClient_QueryByParamMapWithDateFormat_Json(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMap_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).Query().Xml()
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).Query().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,7 +333,7 @@ func Test_SqlTemplateClient_QueryByParamMap_Xml(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMapWithDateFormat_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryWithDateFormat("01/02/2006").Xml()
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).QueryWithDateFormat("01/02/2006").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -323,7 +342,7 @@ func Test_SqlTemplateClient_QueryByParamMapWithDateFormat_Xml(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMap_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).Query().XmlIndent("", "  ", "article")
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).Query().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -332,39 +351,119 @@ func Test_SqlTemplateClient_QueryByParamMap_XmlIndent(t *testing.T) {
 
 func Test_SqlTemplateClient_QueryByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"id": 2, "userid": 3, "count": 2}
-	rows, err := db.SqlTemplateClient("select.example.stpl", paramMap).QueryWithDateFormat("01/02/2006").XmlIndent("", "  ", "article")
+	rows, err := db.SqlTemplateClient("select.example.stpl", &paramMap).QueryWithDateFormat("01/02/2006").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log("[Test_SqlTemplateClient_QueryByParamMapWithDateFormat_XmlIndent]->rows:\n" + rows)
 }
 
-func Test_Find_Structs_Json(t *testing.T) {
-	articles := make([]Article, 0)
-	json, err := db.Where("id=?", 6).Find(&articles).Json()
+func Test_Where_Search_Structs_Json(t *testing.T) {
+	var articles []Article
+	json, err := db.Where("id=?", 6).Search(&articles).Json()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("[Test_Find_Structs_Json]->rows:\n" + json)
+	t.Log("[Test_Where_Search_Structs_Json]->rows:\n" + json)
 }
 
-func Test_Find_Structs_Xml(t *testing.T) {
-	articles := make([]Article, 0)
-	xml, err := db.Where("id=?", 6).Find(&articles).Xml()
+func Test_Search_Structs_Xml(t *testing.T) {
+	var articles []Article
+	xml, err := db.Where("id=?", 6).Search(&articles).Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("[Test_Find_Structs_Xml]->rows:\n" + xml)
+	t.Log("[Test_Search_Structs_Xml]->rows:\n" + xml)
 }
 
-func Test_Find_Structs_XmlIndent(t *testing.T) {
-	articles := make([]Article, 0)
-	xml, err := db.Where("id=?", 6).Find(&articles).XmlIndent("", "  ", "Article")
+func Test_Search_Structs_XmlIndent(t *testing.T) {
+	var articles []Article
+	xml, err := db.Where("id=?", 6).Search(&articles).XmlIndent("", "  ", "Article")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	t.Log("[Test_Find_Structs_XmlIndent]->rows:\n" + xml)
+	t.Log("[Test_Search_Structs_XmlIndent]->rows:\n" + xml)
+}
+
+func Test_Search_Structs_Json(t *testing.T) {
+	var categories []Category
+	Json, err := db.Select("id").Search(&categories).Json()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Search_Structs_Json]->rows:\n", Json)
+}
+
+func Test_Sql_Find_Structs(t *testing.T) {
+
+	var categories2 []Category
+	err := db.Sql("select * from category where id =?", 16).Find(&categories2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Sql_Find_Structs]->rows:\n", categories2)
+}
+
+func Test_SqlMapClient_Find_Structs(t *testing.T) {
+
+	var categories2 []Category
+	db.AddSql("1", "select * from category where id =?")
+	err := db.SqlMapClient("1", 16).Find(&categories2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_SqlMapClient_Find_Structs]->rows:\n", categories2)
+}
+
+func Test_SqlTemplateClient_Find_Structs(t *testing.T) {
+
+	var categories2 []Category
+	db.AddSqlTemplate("1", "select * from category where id =?id")
+	err := db.SqlTemplateClient("1", &map[string]interface{}{"id": 25}).Find(&categories2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_SqlTemplateClient_Find_Structs]->rows:\n", categories2)
+}
+
+func Test_Sql_Search_Json(t *testing.T) {
+
+	var categories2 []Category
+	json, err := db.Sql("select * from category where id =?", 16).Search(&categories2).Json()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Sql_Search_Json]->rows:\n", json)
+}
+
+func Test_SqlMapClient_Search_Json(t *testing.T) {
+
+	var categories2 []Category
+	db.AddSql("1", "select * from category where id =?")
+	json, err := db.SqlMapClient("1", 16).Search(&categories2).Json()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_SqlMapClient_Search_Json]->rows:\n", json)
+}
+
+func Test_SqlTemplateClient_Search_Json(t *testing.T) {
+
+	var categories2 []Category
+	db.AddSqlTemplate("1", "select * from category where id =?id")
+	json, err := db.SqlTemplateClient("1", &map[string]interface{}{"id": 25}).Search(&categories2).Json()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_SqlTemplateClient_Search_Json]->rows:\n", json)
 }

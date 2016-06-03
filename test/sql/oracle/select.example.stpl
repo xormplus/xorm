@@ -1,5 +1,5 @@
 select id,userid,title,createdatetime,content 
-from article where  
+from Article where  
 {% if count>1%}
 id=?id
 {% else%}
