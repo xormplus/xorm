@@ -242,7 +242,7 @@ affected, err := engine.SqlMapClient(sql_i_2, &paramMap_i).Execute()
 //第4种方式
 sql_i_3 := "insert.example.stpl"
 paramMap_i_t := map[string]interface{}{"key": "config_3", "value": "3"}
-affected, err := engine.SqlTemplateClient(sql_i_3, paramMap_i_t).Execute()
+affected, err := engine.SqlTemplateClient(sql_i_3, &paramMap_i_t).Execute()
 ```
 
 * 支持链式读取数据操作查询返回json或xml字符串
@@ -274,7 +274,7 @@ results, err := engine.SqlMapClient(sql_id_3_2, &paramMap).Query().Xml() //返�
 //第4种方式
 sql_key_4_1 := "select.example.stpl"
 paramMap_4_1 := map[string]interface{}{"id": 6, "userid": 1}
-results := engine.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Json()
+results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Json()
 ```
 
 * 支持链式读取数据操作查询返回某条记录的某个字段的值
@@ -288,7 +288,7 @@ id := engine.SqlMapClient(key, 2).Query().Results[0]["id"] //返回查询结果�
 id := engine.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 
 //第3种方式
-id := engine.SqlTemplateClient(key, paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := engine.SqlTemplateClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
 * 事务处理，当使用事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法，如下代码所示：
