@@ -107,8 +107,8 @@ func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag s
 }
 
 type ResultMap struct {
-	Result []map[string]interface{}
-	Error  error
+	Results []map[string]interface{}
+	Error   error
 }
 
 func (resultMap ResultMap) Json() (string, error) {
@@ -116,14 +116,14 @@ func (resultMap ResultMap) Json() (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
-	return JSONString(resultMap.Result, true)
+	return JSONString(resultMap.Results, true)
 }
 
 func (resultMap ResultMap) Xml() (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
-	results, err := anyxml.Xml(resultMap.Result)
+	results, err := anyxml.Xml(resultMap.Results)
 	if err != nil {
 		return "", err
 	}
@@ -135,7 +135,7 @@ func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag str
 		return "", resultMap.Error
 	}
 
-	results, err := anyxml.XmlIndent(resultMap.Result, prefix, indent, recordTag)
+	results, err := anyxml.XmlIndent(resultMap.Results, prefix, indent, recordTag)
 	if err != nil {
 		return "", err
 	}
@@ -243,7 +243,7 @@ func (session *Session) Query() ResultMap {
 	} else {
 		result, err = session.queryAll(sql, params...)
 	}
-	r := ResultMap{Result: result, Error: err}
+	r := ResultMap{Results: result, Error: err}
 	return r
 }
 
@@ -264,7 +264,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	} else {
 		result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
 	}
-	r := ResultMap{Result: result, Error: err}
+	r := ResultMap{Results: result, Error: err}
 	return r
 }
 
