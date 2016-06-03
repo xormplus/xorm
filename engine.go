@@ -33,8 +33,8 @@ type Engine struct {
 	TableMapper   core.IMapper
 	TagIdentifier string
 	Tables        map[reflect.Type]*core.Table
-	SqlMap        SqlMap
-	SqlTemplate   SqlTemplate
+	sqlMap        SqlMap
+	sqlTemplate   SqlTemplate
 	watcher       *fsnotify.Watcher
 	mutex         *sync.RWMutex
 	Cacher        core.Cacher
@@ -339,6 +339,7 @@ func (engine *Engine) LogWarnf(format string, contents ...interface{}) {
 func (engine *Engine) Sql(querystring string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
+	session.IsSqlFuc = true
 	return session.Sql(querystring, args...)
 }
 
@@ -1547,7 +1548,7 @@ func (engine *Engine) Get(bean interface{}) (bool, error) {
 func (engine *Engine) Find(beans interface{}, condiBeans ...interface{}) error {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.find(beans, condiBeans...)
+	return session.Find(beans, condiBeans...)
 }
 
 // Iterate record by record handle records from table, bean's non-empty fields
