@@ -117,7 +117,7 @@ if err != nil {
     * 解析所有配置SqlMap的xml配置文件
     * 配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
     * 配置文件中sql配置会读入内存并缓存
-    * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求，故SqlMap的xml只提供这种极简配置方式
+    * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求等强大功能，故SqlMap的xml只提供这种极简配置方式，非ibatis的OGNL的表达式实现方式
 
 * <b>db.InitSqlTemplate()过程</b>
     * 如使用SetSqlTemplateRootDir()方法指定SqlTemplate模板配置文件总根目录，则InitSqlTemplate()方法按指定目录遍历SqlTemplateRootDir所配置的目录及其子目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
