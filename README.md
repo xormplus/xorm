@@ -187,7 +187,7 @@ paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
 err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
 
-* 第3种方式所使用的SqlMap配置文件内容如下
+* 第3种和第6种方式所使用的SqlMap配置文件内容如下
 
 ```xml
 <sqlMap>
@@ -209,7 +209,7 @@ err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 </sqlMap>
 ```
 
-* 第4种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pongo2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
+* 第4种和第7种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pongo2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
 
 ```java
 select * from user
