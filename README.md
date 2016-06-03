@@ -87,14 +87,19 @@ if err != nil {
 	t.Fatal(err)
 }
 
-engine.SqlMap.SqlMapRootDir="./sql/oracle" //SqlMap配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
-engine.SqlTemplate.SqlTemplateRootDir="./sql/oracle" //SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
+/*--------------------------------------------------------------------------------------------------
+1、使用SetSqlMapRootDir()方法设置SqlMap配置文件总根目录，返回Engine实例本身，如采用sql/xormcfg.ini配置文件中的配置，可直接使用InitSqlMap()初始化
+2、使用SetSqlTemplateRootDir()方法设置SqlTemplate模板配置文件总根目录，返回Engine实例本身，如采用sql/xormcfg.ini配置文件中的配置，可直接使用InitSqlTemplate()初始化
+3、SqlMap配置文件总根目录和SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
+--------------------------------------------------------------------------------------------------*/
 
-err = engine.InitSqlMap() //初始化SqlMap配置，可选功能，如应用中无需使用SqlMap，可无需初始化
+//初始化SqlMap配置，可选功能，如应用中无需使用SqlMap，可无需初始化
+err = db.SetSqlMapRootDir("./sql/oracle").InitSqlMap()
 if err != nil {
 	t.Fatal(err)
 }
-err = engine.InitSqlTemplate() //初始化动态SQL模板配置，可选功能，如应用中无需使用SqlTemplate，可无需初始化
+//初始化动态SQL模板配置，可选功能，如应用中无需使用SqlTemplate，可无需初始化
+err = db.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
 if err != nil {
 	t.Fatal(err)
 }
@@ -150,12 +155,33 @@ sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
 paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
-results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Result
+results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Result
 
 //执行的 sql：select * from user where name='xormplus'
 //如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
 paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_2).Query().Result
+results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Result
+
+//第5种方式，返回的结果类型为对应的[]interface{}
+var categories []Category
+err := db.Sql("select * from category where id =?", 16).Find(&categories)
+
+//第6种方式，返回的结果类型为对应的[]interface{}
+sql_id_6_1 := "sql_6_1"
+var categories []Category
+err := db.SqlMapClient(sql_id_6_1, 16).Find(&categories)
+
+sql_id_6_2 := "sql_6_2"
+var categories []Category
+paramMap_6_2 := map[string]interface{}{"id": 25}
+err := db.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
+
+//第7种方式，返回的结果类型为对应的[]interface{}
+//执行的 sql：select * from user where name='xormplus'
+sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
+var users []User
+paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
+err := db.SqlMapClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
 
 * 第3种方式所使用的SqlMap配置文件内容如下
@@ -170,6 +196,12 @@ results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_2).Query().Result
 	</sql>
     <sql id="sql_3_3">
 		select * from user where id=?id and name=?name
+	</sql>
+    <sql id="sql_id_6_1">
+		select * from category where id =?
+	</sql>
+    <sql id="sql_id_6_2">
+		select * from category where id =?id
 	</sql>
 </sqlMap>
 ```
@@ -214,9 +246,9 @@ affected, err := engine.SqlTemplateClient(sql_i_3, paramMap_i_t).Execute()
 
 ```go
 //第1种方式
-users := make([]User, 0)
-results,err := db.Where("id=?", 6).Find(&users).Xml() //返回查询结果的xml字符串
-results,err := db.Where("id=?", 6).Find(&users).Json() //返回查询结果的json字符串
+var users []User
+results,err := db.Where("id=?", 6).Search(&users).Xml() //返回查询结果的xml字符串
+results,err := db.Where("id=?", 6).Search(&users).Json() //返回查询结果的json字符串
 
 //第2种方式
 sql := "select * from user where id = ?"
@@ -298,10 +330,10 @@ if err != nil {
 * SqlMap及SqlTemplate相关功能API
 
 ```go
-//SqlMap配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
-engine.SqlMap.SqlMapRootDir="./sql/oracle"
-//SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
-engine.SqlTemplate.SqlTemplateRootDir="./sql/oracle"
+//设置SqlMap文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
+engine.SetSqlMapRootDir()
+//设置SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
+engine.SetSqlTemplateRootDir()
 
 err := engine.InitSqlMap()//初始化加载SqlMap配置文件，默认初始化后缀为".xml"
 err := engine.InitSqlTemplate()//初始化加载SqlTemplate配置文件，默认初始化后缀为".stpl"
