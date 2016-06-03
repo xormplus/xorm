@@ -181,7 +181,7 @@ err := db.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
 sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 var users []User
 paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-err := db.SqlMapClient(sql_key_7_1, &paramMap_7_1).Find(&users)
+err := db.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
 
 * 第3种方式所使用的SqlMap配置文件内容如下
