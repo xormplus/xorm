@@ -90,6 +90,7 @@ func Test_Get_Struct(t *testing.T) {
 }
 
 func Test_GetFirst_Json(t *testing.T) {
+
 	var article Article
 	has, rows, err := db.Id(2).GetFirst(&article).Json()
 	if err != nil {
@@ -127,7 +128,7 @@ func Test_GetFirst_XmlIndent(t *testing.T) {
 
 func Test_Search(t *testing.T) {
 	var article []Article
-	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 27).Search(&article)
+	result := db.Sql("select id,title,createdatetime,content from article where id = ?", 25).Search(&article)
 	if result.Error != nil {
 		t.Fatal(result.Error)
 	}
@@ -166,12 +167,13 @@ func Test_Query_Result(t *testing.T) {
 		t.Fatal(rows.Error)
 	}
 
-	t.Log("[Test_Query_Result]->rows[0][\"id\"]:\n", rows.Result[0]["id"])
-	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"id\"]):\n", reflect.TypeOf(rows.Result[0]["id"]))
-	t.Log("[Test_Query_Result]->rows[0][\"title\"]:\n", rows.Result[0]["title"])
-	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"title\"]):\n", reflect.TypeOf(rows.Result[0]["title"]))
-	t.Log("[Test_Query_Result]->rows[0][\"createdatetime\"]:\n", rows.Result[0]["createdatetime"])
-	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"createdatetime\"]):\n", reflect.TypeOf(rows.Result[0]["createdatetime"]))
+	t.Log("[Test_Query_Result]->rows[0][\"id\"]:\n", rows.Results[0]["id"])
+	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"id\"]):\n", reflect.TypeOf(rows.Results[0]["id"]))
+	t.Log("[Test_Query_Result]->rows[0][\"title\"]:\n", rows.Results[0]["title"])
+	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"title\"]):\n", reflect.TypeOf(rows.Results[0]["title"]))
+	t.Log("[Test_Query_Result]->rows[0][\"createdatetime\"]:\n", rows.Results[0]["createdatetime"])
+	t.Log("[Test_Query_Result]->reflect.TypeOf(rows.Result[0][\"createdatetime\"]):\n", reflect.TypeOf(rows.Results[0]["createdatetime"]))
+
 }
 
 func Test_Query_Xml(t *testing.T) {
