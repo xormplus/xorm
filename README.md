@@ -94,12 +94,12 @@ if err != nil {
 --------------------------------------------------------------------------------------------------*/
 
 //初始化SqlMap配置，可选功能，如应用中无需使用SqlMap，可无需初始化
-err = db.SetSqlMapRootDir("./sql/oracle").InitSqlMap()
+err = engine.SetSqlMapRootDir("./sql/oracle").InitSqlMap()
 if err != nil {
 	t.Fatal(err)
 }
 //初始化动态SQL模板配置，可选功能，如应用中无需使用SqlTemplate，可无需初始化
-err = db.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
+err = engine.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
 if err != nil {
 	t.Fatal(err)
 }
@@ -135,7 +135,7 @@ results, err := engine.Query(sql_1)
 
 //第2种方式，返回的结果类型为 []map[string]interface{}
 sql_2_1 := "select * from user"
-results := db.Sql(sql_2_1).Query().Results
+results := engine.Sql(sql_2_1).Query().Results
 
 sql_2_2 := "select * from user where id = ? and age = ?"
 results := engine.Sql(sql_2_2, 7, 17).Query().Results
@@ -143,10 +143,10 @@ results := engine.Sql(sql_2_2, 7, 17).Query().Results
 
 //第3种方式，执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 sql_id_3_1 := "sql_3_1" //配置文件中sql标签的id属性,SqlMap的key
-results := db.SqlMapClient(sql_3_1).Query().Results
+results := engine.SqlMapClient(sql_3_1).Query().Results
 
 sql_id_3_2 := "sql_3_2"
-results := db.SqlMapClient(sql_id_3_2, 7, 17).Query().Results
+results := engine.SqlMapClient(sql_id_3_2, 7, 17).Query().Results
 
 sql_id_3_3 := "sql_3_3"
 paramMap_3_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
@@ -158,33 +158,33 @@ sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
 paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
-results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Results
+results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Results
 
 //执行的 sql：select * from user where name='xormplus'
 //如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
 paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Results
+results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Results
 
 //第5种方式，返回的结果类型为对应的[]interface{}
 var categories []Category
-err := db.Sql("select * from category where id =?", 16).Find(&categories)
+err := engine.Sql("select * from category where id =?", 16).Find(&categories)
 
 //第6种方式，返回的结果类型为对应的[]interface{}
 sql_id_6_1 := "sql_6_1"
 var categories []Category
-err := db.SqlMapClient(sql_id_6_1, 16).Find(&categories)
+err := engine.SqlMapClient(sql_id_6_1, 16).Find(&categories)
 
 sql_id_6_2 := "sql_6_2"
 var categories []Category
 paramMap_6_2 := map[string]interface{}{"id": 25}
-err := db.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
+err := engine.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
 
 //第7种方式，返回的结果类型为对应的[]interface{}
 //执行的 sql：select * from user where name='xormplus'
 sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 var users []User
 paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-err := db.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
+err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
 
 * 第3种方式所使用的SqlMap配置文件内容如下
@@ -250,45 +250,45 @@ affected, err := engine.SqlTemplateClient(sql_i_3, paramMap_i_t).Execute()
 ```go
 //第1种方式
 var users []User
-results,err := db.Where("id=?", 6).Search(&users).Xml() //返回查询结果的xml字符串
-results,err := db.Where("id=?", 6).Search(&users).Json() //返回查询结果的json字符串
+results,err := engine.Where("id=?", 6).Search(&users).Xml() //返回查询结果的xml字符串
+results,err := engine.Where("id=?", 6).Search(&users).Json() //返回查询结果的json字符串
 
 //第2种方式
 sql := "select * from user where id = ?"
-results, err := db.Sql(sql, 2).Query().Json() //返回查询结果的json字符串
-results, err := db.Sql(sql, 2).QueryWithDateFormat("20060102").Json() //返回查询结果的json字符串，并支持格式化日期
-results, err := db.Sql(sql, 2).QueryWithDateFormat("20060102").Xml() //返回查询结果的xml字符串，并支持格式化日期
+results, err := engine.Sql(sql, 2).Query().Json() //返回查询结果的json字符串
+results, err := engine.Sql(sql, 2).QueryWithDateFormat("20060102").Json() //返回查询结果的json字符串，并支持格式化日期
+results, err := engine.Sql(sql, 2).QueryWithDateFormat("20060102").Xml() //返回查询结果的xml字符串，并支持格式化日期
 
 sql := "select * from user where id = ?id and userid=?userid"
 paramMap := map[string]interface{}{"id": 6, "userid": 1} //支持参数使用map存放
-results, err := db.Sql(sql, &paramMap).Query().XmlIndent("", "  ", "article") //返回查询结果格式化后的xml字符串
+results, err := engine.Sql(sql, &paramMap).Query().XmlIndent("", "  ", "article") //返回查询结果格式化后的xml字符串
 
 //第3种方式
 sql_id_3_1 := "sql_3_1" //配置文件中sql标签的id属性,SqlMap的key
-results, err := db.SqlMapClient(sql_id_3_1, 7, 17).Query().Json() //返回查询结果的json字符串
+results, err := engine.SqlMapClient(sql_id_3_1, 7, 17).Query().Json() //返回查询结果的json字符串
 
 sql_id_3_2 := "sql_3_2" //配置文件中sql标签的id属性,SqlMap的key
 paramMap := map[string]interface{}{"id": 6, "userid": 1} //支持参数使用map存放
-results, err := db.SqlMapClient(sql_id_3_2, &paramMap).Query().Xml() //返回查询结果的xml字符串
+results, err := engine.SqlMapClient(sql_id_3_2, &paramMap).Query().Xml() //返回查询结果的xml字符串
 
 //第4种方式
 sql_key_4_1 := "select.example.stpl"
 paramMap_4_1 := map[string]interface{}{"id": 6, "userid": 1}
-results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Json()
+results := engine.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Json()
 ```
 
 * 支持链式读取数据操作查询返回某条记录的某个字段的值
 
 ```go
 //第1种方式
-id := db.Sql(sql, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := engine.Sql(sql, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 
 //第2种方式
-id := db.SqlMapClient(key, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
-id := db.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := engine.SqlMapClient(key, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := engine.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 
 //第3种方式
-id := db.SqlTemplateClient(key, paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := engine.SqlTemplateClient(key, paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
 * 事务处理，当使用事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法，如下代码所示：
