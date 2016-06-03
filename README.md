@@ -116,12 +116,15 @@ if err != nil {
     * 如未指定db.SqlMap.SqlMapRootDir，err = db.InitSqlMap()则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）
     * 解析所有配置SqlMap的xml配置文件
     * 配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
+    * 配置文件中sql配置会读入内存并缓存
+    * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求，故SqlMap的xml只提供这种极简配置方式
 
 * <b>db.InitSqlTemplate()过程</b>
     * 如指定db.SqlTemplate.SqlTemplateRootDir，err = db.InitSqlTemplate()按指定目录遍历SqlTemplateRootDir所配置的目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
     * 如指未定db.SqlTemplate.SqlTemplateRootDir，err = db.InitSqlTemplate()则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlTemplateRootDir配置项，遍历SqlTemplateRootDir所配置的目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
     * 解析stpl模板文件
     * stpl模板文件名作为SqlTemplate存储的key（不包含目录路径），如有不同路径下出现同名文件，则后加载的覆盖之前加载的配置模板内容
+    * stpl模板内容会读入内存并缓存
 
 * 支持最原始的SQL语句查询
 
