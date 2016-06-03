@@ -1186,32 +1186,13 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 
 	if sliceValue.Kind() != reflect.Map {
 		var rawRows *core.Rows
-		//todo xiaolipeng
+
 		if session.IsSqlFuc {
 			sql := session.Statement.RawSQL
 			params := session.Statement.RawParams
 			i := len(params)
 			if i == 1 {
 				vv := reflect.ValueOf(params[0])
-				//				if vv.Kind() == reflect.Map {
-				//					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
-				//				} else if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
-				//					sqlStr = sql
-				//					args = params
-				//				} else {
-				//					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
-				//				}
-
-				//				if vv.Kind() == reflect.Map {
-				//					sqlStr, args, err = core.MapToSlice(sqlStr, params[0])
-				//					if err != nil {
-				//						session.Engine.logger.Info(err)
-				//					}
-				//				} else {
-				//					sqlStr = sql
-				//					args = params
-				//				}
-
 				if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
 					sqlStr = sql
 					args = params
