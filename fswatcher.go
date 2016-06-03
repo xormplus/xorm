@@ -15,18 +15,20 @@ func (engine *Engine) StartFSWatcher() error {
 	}
 
 	go func() {
+
 		for {
+
 			select {
 			case event := <-engine.watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					if strings.HasSuffix(event.Name, engine.SqlTemplate.Extension) {
+					if strings.HasSuffix(event.Name, engine.sqlTemplate.Extension) {
 						err = engine.reloadSqlTemplate(event.Name)
 						if err != nil {
 							engine.logger.Error(err)
 						}
 					}
 
-					if strings.HasSuffix(event.Name, engine.SqlMap.Extension) {
+					if strings.HasSuffix(event.Name, engine.sqlMap.Extension) {
 						err = engine.reloadSqlMap(event.Name)
 						if err != nil {
 							engine.logger.Error(err)
@@ -42,15 +44,15 @@ func (engine *Engine) StartFSWatcher() error {
 		}
 	}()
 
-	if engine.SqlMap.SqlMapRootDir != "" {
-		err = engine.watcher.Add(engine.SqlMap.SqlMapRootDir)
+	if engine.sqlMap.SqlMapRootDir != "" {
+		err = engine.watcher.Add(engine.sqlMap.SqlMapRootDir)
 		if err != nil {
 			return err
 		}
 	}
 
-	if engine.SqlTemplate.SqlTemplateRootDir != "" {
-		err = engine.watcher.Add(engine.SqlTemplate.SqlTemplateRootDir)
+	if engine.sqlTemplate.SqlTemplateRootDir != "" {
+		err = engine.watcher.Add(engine.sqlTemplate.SqlTemplateRootDir)
 		if err != nil {
 			return err
 		}
