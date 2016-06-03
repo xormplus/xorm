@@ -132,22 +132,22 @@ results, err := engine.Query(sql_1)
 
 //第2种方式，返回的结果类型为 []map[string]interface{}
 sql_2_1 := "select * from user"
-results := db.Sql(sql_2_1).Query().Result
+results := db.Sql(sql_2_1).Query().Results
 
 sql_2_2 := "select * from user where id = ? and age = ?"
-results := engine.Sql(sql_2_2, 7, 17).Query().Result
+results := engine.Sql(sql_2_2, 7, 17).Query().Results
 
 
 //第3种方式，执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 sql_id_3_1 := "sql_3_1" //配置文件中sql标签的id属性,SqlMap的key
-results := db.SqlMapClient(sql_3_1).Query().Result
+results := db.SqlMapClient(sql_3_1).Query().Results
 
 sql_id_3_2 := "sql_3_2"
-results := db.SqlMapClient(sql_id_3_2, 7, 17).Query().Result
+results := db.SqlMapClient(sql_id_3_2, 7, 17).Query().Results
 
 sql_id_3_3 := "sql_3_3"
 paramMap_3_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
-results1 := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().Result
+results1 := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().Results
 
 //第4种方式，执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
@@ -155,12 +155,12 @@ sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
 paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
-results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Result
+results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Results
 
 //执行的 sql：select * from user where name='xormplus'
 //如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
 paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Result
+results := db.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Results
 
 //第5种方式，返回的结果类型为对应的[]interface{}
 var categories []Category
