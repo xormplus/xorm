@@ -469,3 +469,13 @@ func Test_SqlTemplateClient_Search_Json(t *testing.T) {
 
 	t.Log("[Test_SqlTemplateClient_Search_Json]->rows:\n", json)
 }
+
+func Test_Query(t *testing.T) {
+
+	result, err := db.Query("select * from category where id =25")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("[Test_Query]->rows:\n", result)
+}
