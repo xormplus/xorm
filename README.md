@@ -278,14 +278,14 @@ results := db.SqlTemplateClient(sql_key_4_1, paramMap_4_1).Query().Json()
 
 ```go
 //第1种方式
-id := db.Sql(sql, 2).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
+id := db.Sql(sql, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 
 //第2种方式
-id := db.SqlMapClient(key, 2).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
-id := db.SqlMapClient(key, &paramMap).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
+id := db.SqlMapClient(key, 2).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
+id := db.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 
 //第3种方式
-id := db.SqlTemplateClient(key, paramMap).Query().Result[0]["id"] //返回查询结果的第一条数据的id列的值
+id := db.SqlTemplateClient(key, paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
 * 事务处理，当使用事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法，如下代码所示：
