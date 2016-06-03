@@ -28,6 +28,7 @@ type Session struct {
 	Statement              Statement
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
+	IsSqlFuc               bool
 	TransType              string
 	IsAutoClose            bool
 
@@ -67,6 +68,7 @@ func (session *Session) Init() {
 	session.IsAutoCommit = true
 	session.IsCommitedOrRollbacked = false
 	session.IsAutoClose = false
+	session.IsSqlFuc = false
 	session.AutoResetStatement = true
 	session.prepareStmt = false
 
@@ -885,7 +887,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			}
 		}
 
-		err = newSession.NoCache().find(beans)
+		err = newSession.NoCache().Find(beans)
 		if err != nil {
 			return err
 		}
@@ -1095,7 +1097,7 @@ func (session *Session) Count(bean interface{}) (int64, error) {
 // Find retrieve records from table, condiBeans's non-empty fields
 // are conditions. beans could be []Struct, []*Struct, map[int64]Struct
 // map[int64]*Struct
-func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
+func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -1184,8 +1186,46 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 
 	if sliceValue.Kind() != reflect.Map {
 		var rawRows *core.Rows
+		//todo xiaolipeng
+		if session.IsSqlFuc {
+			sql := session.Statement.RawSQL
+			params := session.Statement.RawParams
+			i := len(params)
+			if i == 1 {
+				vv := reflect.ValueOf(params[0])
+				//				if vv.Kind() == reflect.Map {
+				//					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+				//				} else if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+				//					sqlStr = sql
+				//					args = params
+				//				} else {
+				//					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+				//				}
+
+				//				if vv.Kind() == reflect.Map {
+				//					sqlStr, args, err = core.MapToSlice(sqlStr, params[0])
+				//					if err != nil {
+				//						session.Engine.logger.Info(err)
+				//					}
+				//				} else {
+				//					sqlStr = sql
+				//					args = params
+				//				}
+
+				if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+					sqlStr = sql
+					args = params
+				} else {
+					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+				}
+			} else {
+				sqlStr = sql
+				args = params
+			}
+		}
 
 		session.queryPreprocess(&sqlStr, args...)
+
 		if session.IsAutoCommit {
 			_, rawRows, err = session.innerQuery(sqlStr, args...)
 		} else {

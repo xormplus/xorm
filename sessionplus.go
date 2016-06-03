@@ -204,15 +204,15 @@ func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recor
 }
 
 func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
-	return session.Sql(session.Engine.SqlMap.Sql[sqlTagName], args...)
+	return session.Sql(session.Engine.sqlMap.Sql[sqlTagName], args...)
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
 	map1 := args[0].(map[string]interface{})
-	if session.Engine.SqlTemplate.Template[sqlTagName] == nil {
+	if session.Engine.sqlTemplate.Template[sqlTagName] == nil {
 		return session.Sql("", &map1)
 	}
-	sql, err := session.Engine.SqlTemplate.Template[sqlTagName].Execute(map1)
+	sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(map1)
 	if err != nil {
 		session.Engine.logger.Error(err)
 	}
@@ -220,8 +220,8 @@ func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}
 	return session.Sql(sql, &map1)
 }
 
-func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs {
-	err := session.find(rowsSlicePtr, condiBean...)
+func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs {
+	err := session.Find(rowsSlicePtr, condiBean...)
 	r := ResultStructs{Result: rowsSlicePtr, Error: err}
 	return r
 }
