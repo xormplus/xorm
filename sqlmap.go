@@ -46,21 +46,21 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 		opt.Extension = ".xml"
 	}
 
-	engine.SqlMap.Extension = opt.Extension
+	engine.sqlMap.Extension = opt.Extension
 
 	var err error
-	if engine.SqlMap.SqlMapRootDir == "" {
+	if engine.sqlMap.SqlMapRootDir == "" {
 		cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
 		if err != nil {
 			return err
 		}
-		engine.SqlMap.SqlMapRootDir, err = cfg.GetValue("", "SqlMapRootDir")
+		engine.sqlMap.SqlMapRootDir, err = cfg.GetValue("", "SqlMapRootDir")
 		if err != nil {
 			return err
 		}
 	}
 
-	err = filepath.Walk(engine.SqlMap.SqlMapRootDir, engine.SqlMap.walkFunc)
+	err = filepath.Walk(engine.sqlMap.SqlMapRootDir, engine.sqlMap.walkFunc)
 	if err != nil {
 		return err
 	}
@@ -69,10 +69,10 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 }
 
 func (engine *Engine) LoadSqlMap(filepath string) error {
-	if len(engine.SqlMap.Extension) == 0 {
-		engine.SqlMap.Extension = ".xml"
+	if len(engine.sqlMap.Extension) == 0 {
+		engine.sqlMap.Extension = ".xml"
 	}
-	if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+	if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
 		err := engine.loadSqlMap(filepath)
 		if err != nil {
 			return err
@@ -83,11 +83,11 @@ func (engine *Engine) LoadSqlMap(filepath string) error {
 }
 
 func (engine *Engine) BatchLoadSqlMap(filepathSlice []string) error {
-	if len(engine.SqlMap.Extension) == 0 {
-		engine.SqlMap.Extension = ".xml"
+	if len(engine.sqlMap.Extension) == 0 {
+		engine.sqlMap.Extension = ".xml"
 	}
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
 			err := engine.loadSqlMap(filepath)
 			if err != nil {
 				return err
@@ -99,10 +99,10 @@ func (engine *Engine) BatchLoadSqlMap(filepathSlice []string) error {
 }
 
 func (engine *Engine) ReloadSqlMap(filepath string) error {
-	if len(engine.SqlMap.Extension) == 0 {
-		engine.SqlMap.Extension = ".xml"
+	if len(engine.sqlMap.Extension) == 0 {
+		engine.sqlMap.Extension = ".xml"
 	}
-	if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+	if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
 		err := engine.reloadSqlMap(filepath)
 		if err != nil {
 			return err
@@ -113,11 +113,11 @@ func (engine *Engine) ReloadSqlMap(filepath string) error {
 }
 
 func (engine *Engine) BatchReloadSqlMap(filepathSlice []string) error {
-	if len(engine.SqlMap.Extension) == 0 {
-		engine.SqlMap.Extension = ".xml"
+	if len(engine.sqlMap.Extension) == 0 {
+		engine.sqlMap.Extension = ".xml"
 	}
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.SqlMap.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
 			err := engine.loadSqlMap(filepath)
 			if err != nil {
 				return err
@@ -139,7 +139,7 @@ func (engine *Engine) loadSqlMap(filepath string) error {
 		return nil
 	}
 
-	err = engine.SqlMap.paresSql(filepath)
+	err = engine.sqlMap.paresSql(filepath)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (engine *Engine) reloadSqlMap(filepath string) error {
 	if info.IsDir() {
 		return nil
 	}
-	err = engine.SqlMap.paresSql(filepath)
+	err = engine.sqlMap.paresSql(filepath)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 }
 
 func (engine *Engine) AddSql(key string, sql string) {
-	engine.SqlMap.addSql(key, sql)
+	engine.sqlMap.addSql(key, sql)
 }
 
 func (sqlMap *SqlMap) addSql(key string, sql string) {
@@ -217,7 +217,7 @@ func (sqlMap *SqlMap) addSql(key string, sql string) {
 }
 
 func (engine *Engine) UpdateSql(key string, sql string) {
-	engine.SqlMap.updateSql(key, sql)
+	engine.sqlMap.updateSql(key, sql)
 }
 
 func (sqlMap *SqlMap) updateSql(key string, sql string) {
@@ -226,7 +226,7 @@ func (sqlMap *SqlMap) updateSql(key string, sql string) {
 }
 
 func (engine *Engine) RemoveSql(key string) {
-	engine.SqlMap.removeSql(key)
+	engine.sqlMap.removeSql(key)
 }
 
 func (sqlMap *SqlMap) removeSql(key string) {
@@ -235,7 +235,7 @@ func (sqlMap *SqlMap) removeSql(key string) {
 }
 
 func (engine *Engine) BatchAddSql(sqlStrMap map[string]string) {
-	engine.SqlMap.batchAddSql(sqlStrMap)
+	engine.sqlMap.batchAddSql(sqlStrMap)
 }
 
 func (sqlMap *SqlMap) batchAddSql(sqlStrMap map[string]string) {
@@ -246,7 +246,7 @@ func (sqlMap *SqlMap) batchAddSql(sqlStrMap map[string]string) {
 }
 
 func (engine *Engine) BatchUpdateSql(sqlStrMap map[string]string) {
-	engine.SqlMap.batchUpdateSql(sqlStrMap)
+	engine.sqlMap.batchUpdateSql(sqlStrMap)
 }
 
 func (sqlMap *SqlMap) batchUpdateSql(sqlStrMap map[string]string) {
@@ -257,7 +257,7 @@ func (sqlMap *SqlMap) batchUpdateSql(sqlStrMap map[string]string) {
 }
 
 func (engine *Engine) BatchRemoveSql(key []string) {
-	engine.SqlMap.batchRemoveSql(key)
+	engine.sqlMap.batchRemoveSql(key)
 }
 
 func (sqlMap *SqlMap) batchRemoveSql(key []string) {

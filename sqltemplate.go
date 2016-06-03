@@ -37,18 +37,18 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	}
 
 	var err error
-	if engine.SqlTemplate.SqlTemplateRootDir == "" {
+	if engine.sqlTemplate.SqlTemplateRootDir == "" {
 		cfg, err := goconfig.LoadConfigFile("./sql/xormcfg.ini")
 		if err != nil {
 			return err
 		}
-		engine.SqlTemplate.SqlTemplateRootDir, err = cfg.GetValue("", "SqlTemplateRootDir")
+		engine.sqlTemplate.SqlTemplateRootDir, err = cfg.GetValue("", "SqlTemplateRootDir")
 		if err != nil {
 			return err
 		}
 	}
 
-	err = filepath.Walk(engine.SqlTemplate.SqlTemplateRootDir, engine.SqlTemplate.walkFunc)
+	err = filepath.Walk(engine.sqlTemplate.SqlTemplateRootDir, engine.sqlTemplate.walkFunc)
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,10 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 }
 
 func (engine *Engine) LoadSqlTemplate(filepath string) error {
-	if len(engine.SqlTemplate.Extension) == 0 {
-		engine.SqlTemplate.Extension = ".stpl"
+	if len(engine.sqlTemplate.Extension) == 0 {
+		engine.sqlTemplate.Extension = ".stpl"
 	}
-	if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+	if strings.HasSuffix(filepath, engine.sqlTemplate.Extension) {
 		err := engine.loadSqlTemplate(filepath)
 		if err != nil {
 			return err
@@ -71,11 +71,11 @@ func (engine *Engine) LoadSqlTemplate(filepath string) error {
 }
 
 func (engine *Engine) BatchLoadSqlTemplate(filepathSlice []string) error {
-	if len(engine.SqlTemplate.Extension) == 0 {
-		engine.SqlTemplate.Extension = ".stpl"
+	if len(engine.sqlTemplate.Extension) == 0 {
+		engine.sqlTemplate.Extension = ".stpl"
 	}
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlTemplate.Extension) {
 			err := engine.loadSqlTemplate(filepath)
 			if err != nil {
 				return err
@@ -87,10 +87,10 @@ func (engine *Engine) BatchLoadSqlTemplate(filepathSlice []string) error {
 }
 
 func (engine *Engine) ReloadSqlTemplate(filepath string) error {
-	if len(engine.SqlTemplate.Extension) == 0 {
-		engine.SqlTemplate.Extension = ".stpl"
+	if len(engine.sqlTemplate.Extension) == 0 {
+		engine.sqlTemplate.Extension = ".stpl"
 	}
-	if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+	if strings.HasSuffix(filepath, engine.sqlTemplate.Extension) {
 		err := engine.reloadSqlTemplate(filepath)
 		if err != nil {
 			return err
@@ -101,11 +101,11 @@ func (engine *Engine) ReloadSqlTemplate(filepath string) error {
 }
 
 func (engine *Engine) BatchReloadSqlTemplate(filepathSlice []string) error {
-	if len(engine.SqlTemplate.Extension) == 0 {
-		engine.SqlTemplate.Extension = ".stpl"
+	if len(engine.sqlTemplate.Extension) == 0 {
+		engine.sqlTemplate.Extension = ".stpl"
 	}
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.SqlTemplate.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlTemplate.Extension) {
 			err := engine.loadSqlTemplate(filepath)
 			if err != nil {
 				return err
@@ -126,7 +126,7 @@ func (engine *Engine) loadSqlTemplate(filepath string) error {
 		return nil
 	}
 
-	err = engine.SqlTemplate.paresSqlTemplate(info.Name(), filepath)
+	err = engine.sqlTemplate.paresSqlTemplate(info.Name(), filepath)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (engine *Engine) reloadSqlTemplate(filepath string) error {
 		return nil
 	}
 
-	err = engine.SqlTemplate.paresSqlTemplate(info.Name(), filepath)
+	err = engine.sqlTemplate.paresSqlTemplate(info.Name(), filepath)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,7 @@ func (sqlTemplate *SqlTemplate) paresSqlTemplate(filename string, filepath strin
 }
 
 func (engine *Engine) AddSqlTemplate(key string, sqlTemplateStr string) error {
-	return engine.SqlTemplate.addSqlTemplate(key, sqlTemplateStr)
+	return engine.sqlTemplate.addSqlTemplate(key, sqlTemplateStr)
 
 }
 
@@ -201,7 +201,7 @@ func (sqlTemplate *SqlTemplate) addSqlTemplate(key string, sqlTemplateStr string
 }
 
 func (engine *Engine) UpdateSqlTemplate(key string, sqlTemplateStr string) error {
-	return engine.SqlTemplate.updateSqlTemplate(key, sqlTemplateStr)
+	return engine.sqlTemplate.updateSqlTemplate(key, sqlTemplateStr)
 }
 
 func (sqlTemplate *SqlTemplate) updateSqlTemplate(key string, sqlTemplateStr string) error {
@@ -218,7 +218,7 @@ func (sqlTemplate *SqlTemplate) updateSqlTemplate(key string, sqlTemplateStr str
 }
 
 func (engine *Engine) RemoveSqlTemplate(key string) {
-	engine.SqlTemplate.removeSqlTemplate(key)
+	engine.sqlTemplate.removeSqlTemplate(key)
 }
 
 func (sqlTemplate *SqlTemplate) removeSqlTemplate(key string) {
@@ -227,7 +227,7 @@ func (sqlTemplate *SqlTemplate) removeSqlTemplate(key string) {
 }
 
 func (engine *Engine) BatchAddSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
-	return engine.SqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
+	return engine.sqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
 
 }
 
@@ -247,7 +247,7 @@ func (sqlTemplate *SqlTemplate) batchAddSqlTemplate(key string, sqlTemplateStrMa
 }
 
 func (engine *Engine) BatchUpdateSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
-	return engine.SqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
+	return engine.sqlTemplate.batchAddSqlTemplate(key, sqlTemplateStrMap)
 
 }
 
@@ -267,7 +267,7 @@ func (sqlTemplate *SqlTemplate) batchUpdateSqlTemplate(key string, sqlTemplateSt
 }
 
 func (engine *Engine) BatchRemoveSqlTemplate(key []string) {
-	engine.SqlTemplate.batchRemoveSqlTemplate(key)
+	engine.sqlTemplate.batchRemoveSqlTemplate(key)
 }
 
 func (sqlTemplate *SqlTemplate) batchRemoveSqlTemplate(key []string) {
