@@ -457,6 +457,7 @@ if err != nil {
     return
 }
 
+//Execuet返回值有3个，分别为slice,map,error类型
 results, _, err = session.Sqls(sqls, parmas...).Execute()
 if err != nil {
     session.Rollback()
@@ -480,6 +481,79 @@ err = session.Commit()
 if err != nil {
     return
 }
+
+//支持两种返回结果集
+//Slice形式类似如下
+/*
+[
+    [
+        {
+            "id": "6",
+            "name": "xorm"
+        },
+        {
+            "id": "7",
+            "name": "xormplus"
+        },
+        {
+            "id": "8",
+            "name": "ibatis"
+        }
+    ],
+    [
+        {
+            "LastInsertId": 0,
+            "RowsAffected": 0
+        }
+    ],
+    [
+        {
+            "LastInsertId": 0,
+            "RowsAffected": 0
+        }
+    ],
+    [
+        {
+            "LastInsertId": 13,
+            "RowsAffected": 1
+        }
+    ]
+]
+ */
+
+//Map形式类似如下
+/*
+{
+    "deleteUser": [
+        {
+            "LastInsertId": 0,
+            "RowsAffected": 0
+        }
+    ],
+    "insertUser": [
+        {
+            "LastInsertId": 11,
+            "RowsAffected": 1
+        }
+    ],
+    "updateUser": [
+        {
+            "LastInsertId": 0,
+            "RowsAffected": 0
+        }
+    ],
+    "userList": [
+        {
+            "id": "3",
+            "name": "xorm"
+        },
+        {
+            "id": "4",
+            "name": "xormplus"
+        },
+    ]
+}
+ */
 
 ```
 
