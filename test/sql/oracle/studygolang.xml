@@ -10,9 +10,39 @@
 		select id,title,createdatetime,content from Article where id = ?id
 	</sql>
 	<sql id="sql_i_1">
-		INSERT INTO user(key,value) VALUES (?, ?)
+		INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)
 	</sql>
 	<sql id="sql_i_2">
-		INSERT INTO user(key,value) VALUES (?key, ?value)
+		INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)
+	</sql>
+	<sql id="create_1">
+		<![CDATA[
+				DROP TABLE IF EXISTS "public"."categories11";
+		CREATE TABLE "public"."categories11" (
+		"id" int4 NOT NULL,
+		"name" varchar(200) COLLATE "default" NOT NULL,
+		"counts" int4 NOT NULL,
+		"orders" int4 NOT NULL,
+		"pid" int4 NOT NULL
+		)
+		WITH (OIDS=FALSE)
+
+		;
+
+		-- ----------------------------
+		-- Records of categories
+		-- ----------------------------
+		INSERT INTO "public"."categories11" VALUES ('16', 'aaa', '1', '1', '1');
+		INSERT INTO "public"."categories11" VALUES ('17', 'xxx', '1', '1', '1');
+
+		-- ----------------------------
+		-- Alter Sequences Owned By
+		-- ----------------------------
+
+		-- ----------------------------
+		-- Primary Key structure for table categories
+		-- ----------------------------
+		ALTER TABLE "public"."categories11" ADD PRIMARY KEY ("id");
+        ]]>
 	</sql>
 </sqlMap>
