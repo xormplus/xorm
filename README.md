@@ -3,7 +3,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 
 ## 说明
 
-* 本库是基于原版 <b>xorm</b>：[https://github.com/go-xorm/xorm](https://github.com/go-xorm/xorm) 的定制增强版本，由于本定制版有第三方库依赖（原版xorm无任何第三方库依赖），所以只好单独开了本Github库。
+* 本库是基于原版 <b>xorm</b>：[https://github.com/go-xorm/xorm](https://github.com/go-xorm/xorm) 的定制增强版本，由于本定制版有第三方库依赖（原版xorm无任何第三方库依赖），原版xorm要保持对第三方库零依赖特性，所以只好单独开了本Github库。
 * 本库的相关定制功能是为了解决更简单的进行复杂SQL调用和一些特殊业务需求场景而开发的。
 * 本定制版ORM相关核心功能和原版保持一致，会跟随原版xorm更新。
 * 定制功能采用针对原版弱侵入性代码实现。
