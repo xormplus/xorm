@@ -266,3 +266,83 @@ func (sqlMap *SqlMap) batchRemoveSql(key []string) {
 		delete(sqlMap.Sql, v)
 	}
 }
+
+func (engine *Engine) GetSql(key string) string {
+	return engine.sqlMap.getSql(key)
+}
+
+func (sqlMap *SqlMap) getSql(key string) string {
+	return sqlMap.Sql[key]
+}
+
+func (engine *Engine) GetSqlMap(keys ...interface{}) map[string]string {
+	return engine.sqlMap.getSqlMap(keys...)
+}
+
+func (sqlMap *SqlMap) getSqlMap(keys ...interface{}) map[string]string {
+	var resultSqlMap map[string]string
+	i := len(keys)
+	if i == 0 {
+		return sqlMap.Sql
+	}
+
+	if i == 1 {
+		switch keys[0].(type) {
+		case string:
+			resultSqlMap = make(map[string]string, 1)
+		case []string:
+			ks := keys[0].([]string)
+			n := len(ks)
+			resultSqlMap = make(map[string]string, n)
+		}
+	} else {
+		resultSqlMap = make(map[string]string, i)
+	}
+
+	for k, _ := range keys {
+		switch keys[k].(type) {
+		case string:
+			key := keys[k].(string)
+			resultSqlMap[key] = sqlMap.Sql[key]
+		case []string:
+			ks := keys[k].([]string)
+			for _, v := range ks {
+				resultSqlMap[v] = sqlMap.Sql[v]
+			}
+		}
+	}
+
+	return resultSqlMap
+}
+
+//	if i == 1 {
+//		switch keys[0].(type) {
+//		case string:
+//			key := keys[0].(string)
+//			resultSqlMap = make(map[string]string, 1)
+//			resultSqlMap[key] = sqlMap.Sql[key]
+//		case []string:
+//			ks := keys[0].([]string)
+//			l := len(ks)
+//			resultSqlMap = make(map[string]string, l)
+//			for _, v := range ks {
+//				resultSqlMap[v] = sqlMap.Sql[v]
+//			}
+//		}
+//	} else if i > 1 {
+//		resultSqlMap = make(map[string]string, i)
+//		for k, _ := range keys {
+//			switch keys[k].(type) {
+//			case string:
+//				key := keys[k].(string)
+//				resultSqlMap[key] = sqlMap.Sql[key]
+//			case []string:
+//				ks := keys[k].([]string)
+//				for _, v := range ks {
+//					resultSqlMap[v] = sqlMap.Sql[v]
+//				}
+
+//			}
+//		}
+
+//	}

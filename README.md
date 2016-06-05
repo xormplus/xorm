@@ -11,25 +11,16 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 ## 特性
 
 * 支持Struct和数据库表之间的灵活映射，并支持自动同步
-
 * 事务支持
-
 * 同时支持原始SQL语句和ORM操作的混合执行
-
 * 支持类ibatis方式配置SQL语句（支持xml配置文件和pongo2模板2种方式）
-
 * 支持动态SQL功能
-
+* 支持一次批量混合执行CRUD操作，并返回多个结果集
 * 使用连写来简化调用
-
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
-
 * 支持级联加载Struct
-
 * 支持缓存
-
 * 支持根据数据库自动生成xorm的结构体
-
 * 支持记录版本（即乐观锁）
 
 ## 驱动支持
@@ -37,21 +28,13 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 目前支持的Go数据库驱动和对应的数据库如下：
 
 * Mysql: [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
-
 * MyMysql: [github.com/ziutek/mymysql](https://github.com/ziutek/mymysql)
-
 * Postgres: [github.com/lib/pq](https://github.com/lib/pq)
-
 * Tidb: [github.com/pingcap/tidb](https://github.com/pingcap/tidb)
-
 * SQLite: [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
-
 * MsSql: [github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb)
-
 * MsSql: [github.com/lunny/godbc](https://github.com/lunny/godbc)
-
 * Oracle: [github.com/mattn/go-oci8](https://github.com/mattn/go-oci8) (试验性支持)
-
 * ql: [github.com/cznic/ql](https://github.com/cznic/ql) (试验性支持)
 
 ## 安装
@@ -104,7 +87,8 @@ if err != nil {
 	t.Fatal(err)
 }
 
-err = engine.StartFSWatcher() //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
+//开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
+err = engine.StartFSWatcher()
 if err != nil {
 	t.Fatal(err)
 }
@@ -129,47 +113,58 @@ if err != nil {
 * 支持最原始的SQL语句查询
 
 ```go
-//第1种方式，返回的结果类型为 []map[string][]byte
+/*-------------------------------------------------------------------------------------
+ * 第1种方式：返回的结果类型为 []map[string][]byte
+-------------------------------------------------------------------------------------*/
 sql_1 := "select * from user"
 results, err := engine.Query(sql_1)
 
-//第2种方式，返回的结果类型为 []map[string]interface{}
+/*-------------------------------------------------------------------------------------
+ * 第2种方式：返回的结果类型为 []map[string]interface{}
+-------------------------------------------------------------------------------------*/
 sql_2_1 := "select * from user"
-results := engine.Sql(sql_2_1).Query().Results
+results, err := engine.Sql(sql_2_1).Query().GetResults()
 
 sql_2_2 := "select * from user where id = ? and age = ?"
-results := engine.Sql(sql_2_2, 7, 17).Query().Results
+results, err := engine.Sql(sql_2_2, 7, 17).Query().GetResults()
 
-
-//第3种方式，执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+/*-------------------------------------------------------------------------------------
+  第3种方式：执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+-------------------------------------------------------------------------------------*/
 sql_id_3_1 := "sql_3_1" //配置文件中sql标签的id属性,SqlMap的key
-results := engine.SqlMapClient(sql_3_1).Query().Results
+results, err := engine.SqlMapClient(sql_3_1).Query().GetResults()
 
 sql_id_3_2 := "sql_3_2"
-results := engine.SqlMapClient(sql_id_3_2, 7, 17).Query().Results
+results, err := engine.SqlMapClient(sql_id_3_2, 7, 17).Query().GetResults()
 
 sql_id_3_3 := "sql_3_3"
 paramMap_3_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
-results1 := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().Results
+results1, err := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().GetResults()
 
-//第4种方式，执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+/*-------------------------------------------------------------------------------------
+ * 第4种方式：执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+-------------------------------------------------------------------------------------*/
 sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
 paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
-results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Results
+results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().GetResults()
 
 //执行的 sql：select * from user where name='xormplus'
 //如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
 paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().Results
+results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().GetResults()
 
-//第5种方式，返回的结果类型为对应的[]interface{}
+/*-------------------------------------------------------------------------------------
+ * 第5种方式：返回的结果类型为对应的[]interface{}
+-------------------------------------------------------------------------------------*/
 var categories []Category
 err := engine.Sql("select * from category where id =?", 16).Find(&categories)
 
-//第6种方式，返回的结果类型为对应的[]interface{}
+/*-------------------------------------------------------------------------------------
+ * 第6种方式：返回的结果类型为对应的[]interface{}
+-------------------------------------------------------------------------------------*/
 sql_id_6_1 := "sql_6_1"
 var categories []Category
 err := engine.SqlMapClient(sql_id_6_1, 16).Find(&categories)
@@ -179,13 +174,19 @@ var categories []Category
 paramMap_6_2 := map[string]interface{}{"id": 25}
 err := engine.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
 
-//第7种方式，返回的结果类型为对应的[]interface{}
+/*-------------------------------------------------------------------------------------
+ * 第7种方式：返回的结果类型为对应的[]interface{}
+-------------------------------------------------------------------------------------*/
 //执行的 sql：select * from user where name='xormplus'
 sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 var users []User
 paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
 err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
+
+* 注：
+	* 除以上7种方式外，本库还支持另外3种方式，由于这4种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
 * 第3种和第6种方式所使用的SqlMap配置文件内容如下
 
@@ -244,6 +245,10 @@ sql_i_3 := "insert.example.stpl"
 paramMap_i_t := map[string]interface{}{"key": "config_3", "value": "3"}
 affected, err := engine.SqlTemplateClient(sql_i_3, &paramMap_i_t).Execute()
 ```
+
+* 注：
+	* 除以上3种方式外，本库还支持另外3种方式，由于这4种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此4种方式将在此章节单独说明
 
 * 支持链式读取数据操作查询返回json或xml字符串
 
@@ -367,6 +372,7 @@ engine.ReloadSqlMap(filepath) //重新加载指定文件的SqlMap配置
 engine.BatchLoadSqlMap([]filepath) //批量加载SqlMap配置
 engine.BatchReloadSqlMap([]filepath) //批量加载SqlMap配置
 
+engine.GetSql(key, sql) //获取一条SqlMap配置
 engine.AddSql(key, sql) //新增一条SqlMap配置
 engine.UpdateSql(key, sql) //更新一条SqlMap配置
 engine.RemoveSql(key) //删除一条SqlMap配置
@@ -388,8 +394,39 @@ engine.RemoveSqlTemplate(key) //删除一条SqlTemplate模板
 engine.BatchAddSqlTemplate(map[key]sql) //批量新增SqlTemplate配置，sql为SqlTemplate模板内容字符串
 engine.BatchUpdateSqlTemplate(map[key]sql) //批量更新SqlTemplate配置，sql为SqlTemplate模板内容字符串
 engine.batchUpdateSqlTemplate([]key) //批量删除SqlTemplate配置
-```
 
+/*
+1、指定多个key，批量查询SqlMap配置,...key的数据类型为...interface{},返回类型为map[string]string
+2、支持如下多种调用方式
+	a)engine.GetSqlMap("Test_GetSqlMap_1"),返回key为Test_GetSqlMap_1的SqlMap配置
+    b)engine.GetSqlMap("Test_GetSqlMap_1", "Test_GetSqlMap_3"),返回key为Test_GetSqlMap_1,Test_GetSqlMap_3的SqlMap配置
+    c)engine.GetSqlMap("Test_GetSqlMap_1", "Test_GetSqlMap_3","Test_GetSqlMap_null"),返回key为Test_GetSqlMap_1,Test_GetSqlMap_3的SqlMap，Test_GetSqlMap_null配置，其中Test_GetSqlMap_null在内存中缓存的的key不存在，则在返回的map[string]string中，key Test_GetSqlMap_null配置返回的值为空字符串
+    d)engine.GetSqlMap([]string{"Test_GetSqlMap_1", "Test_GetSqlMap_3"})支持字符串数组形式参数
+    e)engine.GetSqlMap([]string{"Test_GetSqlMap_1", "Test_GetSqlMap_3"},"Test_GetSqlMap_2")支持字符串数组形式和字符串参数混用
+    f)engine.GetSqlMap([]string{"Test_GetSqlMap_1", "Test_GetSqlMap_3"},"Test_GetSqlMap_2"，3)支持字符串数组形式，字符串参数和其他类型参数混用，但查询时只会处理字符串类型参数和字符转数组类型参数（因为SqlMap的key是字符串类型），返回的map[string]string也无其他类型的key
+3、如不传任何参数，调用engine.GetSqlMap()，则返回整个内存中当前缓存的所有SqlMap配置
+*/
+engine.GetSqlMap(...key)
+
+/*
+1、指定多个key，批量查询SqlTemplate配置,...key的数据类型为...interface{},返回类型为map[string]*pongo2.Template
+2、支持如下多种调用方式
+	a)engine.GetSqlTemplates("Test_GetSqlTemplates_1"),返回key为Test_GetSqlTemplates_1的SSqlTemplate配置
+    b)engine.GetSqlTemplates("Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3"),返回key为Test_GetSqlTemplates_1,Test_GetSqlTemplates_3的SqlTemplate配置
+    c)engine.GetSqlTemplates("Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3","Test_GetSqlTemplates_null"),返回key为Test_GetSqlTemplates_1,Test_GetSqlTemplates_3的SqlMap，Test_GetSqlMap_null配置，其中Test_GetSqlTemplates_null在内存中缓存的的key不存在，则在返回的map[string]*pongo2.Template中，key Test_GetSqlTemplates_null配置返回的值为nil
+    d)engine.GetSqlTemplates([]string{"Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3"})支持字符串数组形式参数
+    e)engine.GetSqlTemplates([]string{"Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3"},"Test_GetSqlTemplates_2")支持字符串数组形式和字符串参数混用
+    f)engine.GetSqlTemplates([]string{"Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3"},"Test_GetSqlTemplates_2"，3)支持字符串数组形式，字符串参数和其他类型参数混用，但查询时只会处理字符串类型参数和字符转数组类型参数（因为SqlTemplate的key是字符串类型），返回的map[string]*pongo2.Template也无其他类型的key
+3、如不传任何参数，调用engine.GetSqlTemplates()，则返回整个内存中当前缓存的所有SqlTemplate配置
+4、engine.GetSqlTemplates()返回类型为map[string]*pongo2.Template，可以方便的实现链式调用pongo2的Execute()，ExecuteBytes()，ExecuteWriter()方法
+*/
+engine.GetSqlTemplates(...key)
+```
+<a name="ROP_ARM"/>
+# 一次批量混合执行CRUD操作，并返回批量结果集
+
+
+# ORM方式操作数据库
 * ORM方式插入一条或者多条记录
 
 ```Go

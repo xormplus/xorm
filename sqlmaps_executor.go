@@ -3,74 +3,70 @@ package xorm
 import (
 	"database/sql"
 	"strings"
-	"time"
 )
 
-type SqlsExecutor struct {
+type SqlMapsExecutor struct {
 	session *Session
-	sqls    interface{}
+	sqlkeys interface{}
 	parmas  interface{}
 	err     error
 }
 
-func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
-	if sqlsExecutor.err != nil {
-		return nil, nil, sqlsExecutor.err
+func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
+	if sqlMapsExecutor.err != nil {
+		return nil, nil, sqlMapsExecutor.err
 	}
+
 	var model_1_results ResultMap
 	var model_2_results sql.Result
 	var err error
 
 	sqlModel := 1
 
-	switch sqlsExecutor.sqls.(type) {
+	switch sqlMapsExecutor.sqlkeys.(type) {
 	case string:
-		sqlStr := strings.TrimSpace(sqlsExecutor.sqls.(string))
+		sqlkey := strings.TrimSpace(sqlMapsExecutor.sqlkeys.(string))
+		sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkey)
 		sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
-		if sqlsExecutor.parmas == nil {
+		if sqlMapsExecutor.parmas == nil {
 			switch sqlCmd {
 			case "select", "desc":
-				model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
-
+				model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey).Query()
 			case "insert", "delete", "update", "create":
-				model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+				model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey).Execute()
 				sqlModel = 2
 			}
 		} else {
-			switch sqlsExecutor.parmas.(type) {
+			switch sqlMapsExecutor.parmas.(type) {
 			case []map[string]interface{}:
-				parmaMap, ok := sqlsExecutor.parmas.([]map[string]interface{})
+				parmaMap, ok := sqlMapsExecutor.parmas.([]map[string]interface{})
 				if !ok {
 					return nil, nil, ErrParamsType
 				}
-				key := NewV4().String() + time.Now().String()
-				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap[0]).Query()
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap[0]).Query()
 
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.SqlMapClient(key, &parmaMap[0]).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap[0]).Execute()
 					sqlModel = 2
-
 				}
-				sqlsExecutor.session.Engine.RemoveSql(key)
+
 			case map[string]interface{}:
-				parmaMap, ok := sqlsExecutor.parmas.(map[string]interface{})
+				parmaMap, ok := sqlMapsExecutor.parmas.(map[string]interface{})
 				if !ok {
 					return nil, nil, ErrParamsType
 				}
-				key := NewV4().String() + time.Now().String()
-				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
+
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Query()
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap).Query()
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap).Execute()
 					sqlModel = 2
 				}
-				sqlsExecutor.session.Engine.RemoveSql(key)
+
 			default:
 				return nil, nil, ErrParamsType
 			}
@@ -107,23 +103,23 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			return resultSlice, nil, nil
 		}
 	case []string:
-		if sqlsExecutor.session.IsSqlFuc == true {
-			err := sqlsExecutor.session.Begin()
+		if sqlMapsExecutor.session.IsSqlFuc == true {
+			err := sqlMapsExecutor.session.Begin()
 			if err != nil {
 				return nil, nil, err
 			}
 		}
-		sqlsSlice := sqlsExecutor.sqls.([]string)
-		n := len(sqlsSlice)
+		sqlkeysSlice := sqlMapsExecutor.sqlkeys.([]string)
+		n := len(sqlkeysSlice)
 		resultSlice := make([][]map[string]interface{}, n)
 		parmaSlice := make([]map[string]interface{}, n)
-		switch sqlsExecutor.parmas.(type) {
+		switch sqlMapsExecutor.parmas.(type) {
 		case []map[string]interface{}:
-			parmaSlice = sqlsExecutor.parmas.([]map[string]interface{})
+			parmaSlice = sqlMapsExecutor.parmas.([]map[string]interface{})
 
 		default:
-			if sqlsExecutor.session.IsSqlFuc == true {
-				err := sqlsExecutor.session.Rollback()
+			if sqlMapsExecutor.session.IsSqlFuc == true {
+				err := sqlMapsExecutor.session.Rollback()
 				if err != nil {
 					return nil, nil, err
 				}
@@ -131,35 +127,32 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			return nil, nil, ErrParamsType
 		}
 
-		for i, _ := range sqlsSlice {
-			sqlStr := strings.TrimSpace(sqlsSlice[i])
+		for i, _ := range sqlkeysSlice {
+			sqlkey := strings.TrimSpace(sqlkeysSlice[i])
+			sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkey)
 			sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 			if parmaSlice[i] == nil {
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
-
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey).Query()
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey).Execute()
 					sqlModel = 2
 				}
 			} else {
-				key := NewV4().String() + time.Now().String()
-				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaSlice[i]).Query()
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaSlice[i]).Query()
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.SqlMapClient(key, &parmaSlice[i]).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaSlice[i]).Execute()
 					sqlModel = 2
 				}
-				sqlsExecutor.session.Engine.RemoveSql(key)
 			}
 
 			if sqlModel == 1 {
 				if model_1_results.Error != nil {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err := sqlsExecutor.session.Rollback()
+					if sqlMapsExecutor.session.IsSqlFuc == true {
+						err := sqlMapsExecutor.session.Rollback()
 						if err != nil {
 							return nil, nil, err
 						}
@@ -172,8 +165,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			} else {
 				if err != nil {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err := sqlsExecutor.session.Rollback()
+					if sqlMapsExecutor.session.IsSqlFuc == true {
+						err := sqlMapsExecutor.session.Rollback()
 						if err != nil {
 							return nil, nil, err
 						}
@@ -199,8 +192,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			}
 		}
 
-		if sqlsExecutor.session.IsSqlFuc == true {
-			err := sqlsExecutor.session.Commit()
+		if sqlMapsExecutor.session.IsSqlFuc == true {
+			err := sqlMapsExecutor.session.Commit()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -208,23 +201,23 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		return resultSlice, nil, nil
 
 	case map[string]string:
-		if sqlsExecutor.session.IsSqlFuc == true {
-			err := sqlsExecutor.session.Begin()
+		if sqlMapsExecutor.session.IsSqlFuc == true {
+			err := sqlMapsExecutor.session.Begin()
 			if err != nil {
 				return nil, nil, err
 			}
 		}
-		sqlsMap := sqlsExecutor.sqls.(map[string]string)
-		n := len(sqlsMap)
+		sqlkeysMap := sqlMapsExecutor.sqlkeys.(map[string]string)
+		n := len(sqlkeysMap)
 		resultsMap := make(map[string][]map[string]interface{}, n)
 		parmasMap := make(map[string]map[string]interface{}, n)
-		switch sqlsExecutor.parmas.(type) {
+		switch sqlMapsExecutor.parmas.(type) {
 		case map[string]map[string]interface{}:
-			parmasMap = sqlsExecutor.parmas.(map[string]map[string]interface{})
+			parmasMap = sqlMapsExecutor.parmas.(map[string]map[string]interface{})
 
 		default:
-			if sqlsExecutor.session.IsSqlFuc == true {
-				err := sqlsExecutor.session.Rollback()
+			if sqlMapsExecutor.session.IsSqlFuc == true {
+				err := sqlMapsExecutor.session.Rollback()
 				if err != nil {
 					return nil, nil, err
 				}
@@ -232,36 +225,34 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			return nil, nil, ErrParamsType
 		}
 
-		for k, _ := range sqlsMap {
-			sqlStr := strings.TrimSpace(sqlsMap[k])
+		for k, _ := range sqlkeysMap {
+			sqlkey := strings.TrimSpace(sqlkeysMap[k])
+			sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkey)
 			sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 			if parmasMap[k] == nil {
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey).Query()
 
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey).Execute()
 					sqlModel = 2
 				}
 			} else {
-				key := NewV4().String() + time.Now().String()
-				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				parmaMap := parmasMap[k]
 				switch sqlCmd {
 				case "select", "desc":
-					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Query()
+					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap).Query()
 				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Execute()
+					model_2_results, err = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap).Execute()
 					sqlModel = 2
 				}
-				sqlsExecutor.session.Engine.RemoveSql(key)
 			}
 
 			if sqlModel == 1 {
 				if model_1_results.Error != nil {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err := sqlsExecutor.session.Rollback()
+					if sqlMapsExecutor.session.IsSqlFuc == true {
+						err := sqlMapsExecutor.session.Rollback()
 						if err != nil {
 							return nil, nil, err
 						}
@@ -274,8 +265,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			} else {
 				if err != nil {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err := sqlsExecutor.session.Rollback()
+					if sqlMapsExecutor.session.IsSqlFuc == true {
+						err := sqlMapsExecutor.session.Rollback()
 						if err != nil {
 							return nil, nil, err
 						}
@@ -292,8 +283,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				resultMap[0]["LastInsertId"] = LastInsertId
 				RowsAffected, err := model_2_results.RowsAffected()
 				if err != nil {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err := sqlsExecutor.session.Rollback()
+					if sqlMapsExecutor.session.IsSqlFuc == true {
+						err := sqlMapsExecutor.session.Rollback()
 						if err != nil {
 							return nil, nil, err
 						}
@@ -306,8 +297,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			}
 		}
-		if sqlsExecutor.session.IsSqlFuc == true {
-			err := sqlsExecutor.session.Commit()
+		if sqlMapsExecutor.session.IsSqlFuc == true {
+			err := sqlMapsExecutor.session.Commit()
 			if err != nil {
 				return nil, nil, err
 			}

@@ -2,6 +2,7 @@ package xorm
 
 import (
 	"encoding/json"
+	"reflect"
 
 	"gopkg.in/flosch/pongo2.v3"
 )
@@ -87,4 +88,46 @@ func JSONString(v interface{}, IndentJSON bool) (string, error) {
 		return "", nil
 	}
 	return string(result), nil
+}
+
+func (engine *Engine) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
+	session := engine.NewSession()
+	session.IsSqlFuc = true
+	return session.Sqls(sqls, parmas...)
+}
+
+func (engine *Engine) SqlMapsClient(sqls interface{}, parmas ...interface{}) *SqlMapsExecutor {
+	session := engine.NewSession()
+	session.IsSqlFuc = true
+	return session.SqlMapsClient(sqls, parmas...)
+}
+
+func (engine *Engine) SqlTemplatesClient(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
+	session := engine.NewSession()
+	session.IsSqlFuc = true
+	return session.Sqls(sqls, parmas...)
+}
+
+func (engine *Engine) BatchSql(sqls interface{}) *Session {
+	session := engine.NewSession()
+	types := reflect.TypeOf(sqls)
+	if types.Kind() == reflect.Map {
+		engine.logger.Info("sqls is Map")
+		engine.logger.Info(types.Elem())
+		engine.logger.Info(types.Elem().Kind())
+	}
+
+	if types.Kind() == reflect.Slice {
+		engine.logger.Info("sqls is Slice")
+		engine.logger.Info(types.Elem())
+		engine.logger.Info(types.Elem().Kind())
+	}
+
+	switch sqls.(type) {
+	case []string:
+		engine.logger.Info("sqls is []string")
+	case map[string]string:
+		engine.logger.Info("sqls is map[string]string")
+	}
+	return session.BatchSql()
 }

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 	//	"unsafe"
+	"runtime"
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
@@ -35,6 +36,10 @@ func (resultBean ResultBean) Json() (bool, string, error) {
 	}
 	result, err := JSONString(resultBean.Result, true)
 	return resultBean.Has, result, err
+}
+
+func (resultBean ResultBean) GetResult() (bool, interface{}, error) {
+	return resultBean.Has, resultBean.Result, resultBean.Error
 }
 
 func (session *Session) GetFirst(bean interface{}) ResultBean {
@@ -109,6 +114,10 @@ func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag s
 type ResultMap struct {
 	Results []map[string]interface{}
 	Error   error
+}
+
+func (resultMap ResultMap) GetResults() ([]map[string]interface{}, error) {
+	return resultMap.Results, resultMap.Error
 }
 
 func (resultMap ResultMap) Json() (string, error) {
@@ -231,6 +240,7 @@ func (session *Session) Query() ResultMap {
 	sql := session.Statement.RawSQL
 	params := session.Statement.RawParams
 	i := len(params)
+
 	var result []map[string]interface{}
 	var err error
 	if i == 1 {
@@ -906,4 +916,96 @@ func (session *Session) queryPreprocessByMap(sqlStr *string, paramMap interface{
 
 	*sqlStr = query
 	session.Engine.logSQL(*sqlStr, paramMap)
+}
+
+func (session *Session) BatchSql() *Session {
+	return session
+}
+
+func (session *Session) BatchExecute() interface{} {
+
+	session.Engine.logger.Info(runtime.Caller(0))
+	session.Engine.logger.Info(runtime.Caller(1))
+	session.Engine.logger.Info(runtime.Caller(2))
+	return []string{"GetSqlMap", "sql_2_1", "sql1"}
+}
+
+func (session *Session) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
+
+	sqlsExecutor := new(SqlsExecutor)
+	switch sqls.(type) {
+	case string:
+		sqlsExecutor.sqls = sqls.(string)
+	case []string:
+		sqlsExecutor.sqls = sqls.([]string)
+	case map[string]string:
+		sqlsExecutor.sqls = sqls.(map[string]string)
+	}
+
+	if len(parmas) == 0 {
+		sqlsExecutor.parmas = nil
+	}
+
+	if len(parmas) > 1 {
+		sqlsExecutor.parmas = nil
+		sqlsExecutor.err = ErrParamsType
+	}
+
+	if len(parmas) == 1 {
+		switch parmas[0].(type) {
+		case map[string]interface{}:
+			sqlsExecutor.parmas = parmas[0].(map[string]interface{})
+
+		case []map[string]interface{}:
+			sqlsExecutor.parmas = parmas[0].([]map[string]interface{})
+
+		case map[string]map[string]interface{}:
+			sqlsExecutor.parmas = parmas[0].(map[string]map[string]interface{})
+
+		}
+	}
+
+	sqlsExecutor.session = session
+
+	return sqlsExecutor
+}
+
+func (session *Session) SqlMapsClient(sqlkeys interface{}, parmas ...interface{}) *SqlMapsExecutor {
+	sqlMapsExecutor := new(SqlMapsExecutor)
+
+	switch sqlkeys.(type) {
+	case string:
+		sqlMapsExecutor.sqlkeys = sqlkeys.(string)
+	case []string:
+		sqlMapsExecutor.sqlkeys = sqlkeys.([]string)
+	case map[string]string:
+		sqlMapsExecutor.sqlkeys = sqlkeys.(map[string]string)
+	}
+
+	if len(parmas) == 0 {
+		sqlMapsExecutor.parmas = nil
+	}
+
+	if len(parmas) > 1 {
+		sqlMapsExecutor.parmas = nil
+		sqlMapsExecutor.err = ErrParamsType
+	}
+
+	if len(parmas) == 1 {
+		switch parmas[0].(type) {
+		case map[string]interface{}:
+			sqlMapsExecutor.parmas = parmas[0].(map[string]interface{})
+
+		case []map[string]interface{}:
+			sqlMapsExecutor.parmas = parmas[0].([]map[string]interface{})
+
+		case map[string]map[string]interface{}:
+			sqlMapsExecutor.parmas = parmas[0].(map[string]map[string]interface{})
+
+		}
+	}
+
+	sqlMapsExecutor.session = session
+
+	return sqlMapsExecutor
 }

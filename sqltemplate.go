@@ -184,7 +184,6 @@ func (sqlTemplate *SqlTemplate) paresSqlTemplate(filename string, filepath strin
 
 func (engine *Engine) AddSqlTemplate(key string, sqlTemplateStr string) error {
 	return engine.sqlTemplate.addSqlTemplate(key, sqlTemplateStr)
-
 }
 
 func (sqlTemplate *SqlTemplate) addSqlTemplate(key string, sqlTemplateStr string) error {
@@ -193,6 +192,7 @@ func (sqlTemplate *SqlTemplate) addSqlTemplate(key string, sqlTemplateStr string
 	if err != nil {
 		return err
 	}
+
 	sqlTemplate.checkNilAndInit()
 	sqlTemplate.Template[key] = template
 
@@ -275,4 +275,53 @@ func (sqlTemplate *SqlTemplate) batchRemoveSqlTemplate(key []string) {
 	for _, v := range key {
 		delete(sqlTemplate.Template, v)
 	}
+}
+
+func (engine *Engine) GetSqlTemplate(key string) *pongo2.Template {
+	return engine.sqlTemplate.getSqlTemplate(key)
+}
+
+func (sqlTemplate *SqlTemplate) getSqlTemplate(key string) *pongo2.Template {
+	return sqlTemplate.Template[key]
+}
+
+func (engine *Engine) GetSqlTemplates(keys ...interface{}) map[string]*pongo2.Template {
+	return engine.sqlTemplate.getSqlTemplates(keys...)
+}
+
+func (sqlTemplate *SqlTemplate) getSqlTemplates(keys ...interface{}) map[string]*pongo2.Template {
+
+	var resultSqlTemplates map[string]*pongo2.Template
+	i := len(keys)
+	if i == 0 {
+		return sqlTemplate.Template
+	}
+
+	if i == 1 {
+		switch keys[0].(type) {
+		case string:
+			resultSqlTemplates = make(map[string]*pongo2.Template, 1)
+		case []string:
+			ks := keys[0].([]string)
+			n := len(ks)
+			resultSqlTemplates = make(map[string]*pongo2.Template, n)
+		}
+	} else {
+		resultSqlTemplates = make(map[string]*pongo2.Template, i)
+	}
+
+	for k, _ := range keys {
+		switch keys[k].(type) {
+		case string:
+			key := keys[k].(string)
+			resultSqlTemplates[key] = sqlTemplate.Template[key]
+		case []string:
+			ks := keys[k].([]string)
+			for _, v := range ks {
+				resultSqlTemplates[v] = sqlTemplate.Template[v]
+			}
+		}
+	}
+
+	return resultSqlTemplates
 }
