@@ -13,6 +13,11 @@ type SqlTemplatesExecutor struct {
 }
 
 func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
+	defer sqlTemplatesExecutor.session.resetStatement()
+	if sqlTemplatesExecutor.session.IsAutoClose {
+		defer sqlTemplatesExecutor.session.Close()
+	}
+
 	if sqlTemplatesExecutor.err != nil {
 		return nil, nil, sqlTemplatesExecutor.err
 	}
@@ -23,6 +28,13 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 	sqlModel := 1
 
+	if sqlTemplatesExecutor.session.IsSqlFuc == true {
+		err := sqlTemplatesExecutor.session.Begin()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	switch sqlTemplatesExecutor.sqlkeys.(type) {
 	case string:
 		sqlkey := strings.TrimSpace(sqlTemplatesExecutor.sqlkeys.(string))
@@ -30,9 +42,9 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(nil)
 			if err != nil {
 				if sqlTemplatesExecutor.session.IsSqlFuc == true {
-					err = sqlTemplatesExecutor.session.Rollback()
-					if err != nil {
-						return nil, nil, err
+					err1 := sqlTemplatesExecutor.session.Rollback()
+					if err1 != nil {
+						return nil, nil, err1
 					}
 				}
 				return nil, nil, err
@@ -44,9 +56,11 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			case "select", "desc":
 				model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey).Query()
 				sqlModel = 1
-			case "insert", "delete", "update", "create":
+			case "insert", "delete", "update", "create", "drop":
 				model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey).Execute()
 				sqlModel = 2
+			default:
+				sqlModel = 3
 			}
 		} else {
 			switch sqlTemplatesExecutor.parmas.(type) {
@@ -58,9 +72,9 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap[0])
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
 						}
 					}
 					return nil, nil, err
@@ -72,9 +86,11 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				case "select", "desc":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap[0]).Query()
 					sqlModel = 1
-				case "insert", "delete", "update", "create":
+				case "insert", "delete", "update", "create", "drop":
 					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap[0]).Execute()
 					sqlModel = 2
+				default:
+					sqlModel = 3
 				}
 
 			case map[string]interface{}:
@@ -85,9 +101,9 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap)
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
 						}
 					}
 					return nil, nil, err
@@ -98,9 +114,11 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				case "select", "desc":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap).Query()
 					sqlModel = 1
-				case "insert", "delete", "update", "create":
+				case "insert", "delete", "update", "create", "drop":
 					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap).Execute()
 					sqlModel = 2
+				default:
+					sqlModel = 3
 				}
 
 			default:
@@ -118,7 +136,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Results))
 			resultSlice[0] = model_1_results.Results
 			return resultSlice, nil, nil
-		} else {
+		} else if sqlModel == 2 {
 			if err != nil {
 				return nil, nil, err
 			}
@@ -137,235 +155,406 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			resultMap[0]["RowsAffected"] = RowsAffected
 			resultSlice[0] = resultMap
 			return resultSlice, nil, nil
+		} else {
+			resultSlice[0] = nil
 		}
 	case []string:
-		if sqlTemplatesExecutor.session.IsSqlFuc == true {
-			err := sqlTemplatesExecutor.session.Begin()
-			if err != nil {
-				return nil, nil, err
-			}
-		}
+
 		sqlkeysSlice := sqlTemplatesExecutor.sqlkeys.([]string)
 		n := len(sqlkeysSlice)
 		resultSlice := make([][]map[string]interface{}, n)
 		parmaSlice := make([]map[string]interface{}, n)
-		switch sqlTemplatesExecutor.parmas.(type) {
-		case []map[string]interface{}:
-			parmaSlice = sqlTemplatesExecutor.parmas.([]map[string]interface{})
 
-		default:
-			if sqlTemplatesExecutor.session.IsSqlFuc == true {
-				err = sqlTemplatesExecutor.session.Rollback()
+		if sqlTemplatesExecutor.parmas == nil {
+			for i, _ := range sqlkeysSlice {
+				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysSlice[i]).Execute(nil)
 				if err != nil {
+					if sqlTemplatesExecutor.session.IsSqlFuc == true {
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
+						}
+					}
 					return nil, nil, err
 				}
-			}
-			return nil, nil, ErrParamsType
-		}
+				sqlStr = strings.TrimSpace(sqlStr)
 
-		for i, _ := range sqlkeysSlice {
-			sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysSlice[i]).Execute(parmaSlice[i])
-			if err != nil {
-				if sqlTemplatesExecutor.session.IsSqlFuc == true {
-					err = sqlTemplatesExecutor.session.Rollback()
-					if err != nil {
-						return nil, nil, err
-					}
-				}
-				return nil, nil, err
-			}
-			sqlStr = strings.TrimSpace(sqlStr)
-
-			sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
-			if parmaSlice[i] == nil {
+				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
 				case "select", "desc":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Query()
 					sqlModel = 1
-				case "insert", "delete", "update", "create":
+				case "insert", "delete", "update", "create", "drop":
 					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Execute()
 					sqlModel = 2
+				default:
+					sqlModel = 3
 				}
-			} else {
-				switch sqlCmd {
-				case "select", "desc":
-					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i], &parmaSlice[i]).Query()
-					sqlModel = 1
-				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i], &parmaSlice[i]).Execute()
-					sqlModel = 2
+
+				if sqlModel == 1 {
+					if model_1_results.Error != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, model_1_results.Error
+					}
+
+					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
+					resultSlice[i] = model_1_results.Results
+
+				} else if sqlModel == 2 {
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+
+					resultMap := make([]map[string]interface{}, 1)
+					resultMap[0] = make(map[string]interface{})
+
+					//todo all database support LastInsertId
+					LastInsertId, _ := model_2_results.LastInsertId()
+
+					resultMap[0]["LastInsertId"] = LastInsertId
+					RowsAffected, err := model_2_results.RowsAffected()
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+					resultMap[0]["RowsAffected"] = RowsAffected
+					resultSlice[i] = make([]map[string]interface{}, 1)
+					resultSlice[i] = resultMap
+
+				} else {
+					resultSlice[i] = nil
 				}
+
 			}
 
-			if sqlModel == 1 {
-				if model_1_results.Error != nil {
-					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
-						}
+		} else {
+
+			switch sqlTemplatesExecutor.parmas.(type) {
+			case []map[string]interface{}:
+				parmaSlice = sqlTemplatesExecutor.parmas.([]map[string]interface{})
+
+			default:
+				if sqlTemplatesExecutor.session.IsSqlFuc == true {
+					err1 := sqlTemplatesExecutor.session.Rollback()
+					if err1 != nil {
+						return nil, nil, err1
 					}
-					return nil, nil, model_1_results.Error
 				}
+				return nil, nil, ErrParamsType
+			}
 
-				resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
-				resultSlice[i] = model_1_results.Results
-
-			} else {
+			for i, _ := range sqlkeysSlice {
+				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysSlice[i]).Execute(parmaSlice[i])
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
 						}
 					}
 					return nil, nil, err
 				}
+				sqlStr = strings.TrimSpace(sqlStr)
 
-				resultMap := make([]map[string]interface{}, 1)
-				resultMap[0] = make(map[string]interface{})
-
-				//todo all database support LastInsertId
-				LastInsertId, _ := model_2_results.LastInsertId()
-
-				resultMap[0]["LastInsertId"] = LastInsertId
-				RowsAffected, err := model_2_results.RowsAffected()
-				if err != nil {
-					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Commit()
-						if err != nil {
-							return nil, nil, err
-						}
+				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
+				if parmaSlice[i] == nil {
+					switch sqlCmd {
+					case "select", "desc":
+						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Query()
+						sqlModel = 1
+					case "insert", "delete", "update", "create", "drop":
+						model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Execute()
+						sqlModel = 2
+					default:
+						sqlModel = 3
 					}
-					return nil, nil, err
+				} else {
+					switch sqlCmd {
+					case "select", "desc":
+						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i], &parmaSlice[i]).Query()
+						sqlModel = 1
+					case "insert", "delete", "update", "create", "drop":
+						model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i], &parmaSlice[i]).Execute()
+						sqlModel = 2
+					default:
+						sqlModel = 3
+					}
 				}
-				resultMap[0]["RowsAffected"] = RowsAffected
-				resultSlice[i] = make([]map[string]interface{}, 1)
-				resultSlice[i] = resultMap
 
+				if sqlModel == 1 {
+					if model_1_results.Error != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, model_1_results.Error
+					}
+
+					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
+					resultSlice[i] = model_1_results.Results
+
+				} else if sqlModel == 2 {
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+
+					resultMap := make([]map[string]interface{}, 1)
+					resultMap[0] = make(map[string]interface{})
+
+					//todo all database support LastInsertId
+					LastInsertId, _ := model_2_results.LastInsertId()
+
+					resultMap[0]["LastInsertId"] = LastInsertId
+					RowsAffected, err := model_2_results.RowsAffected()
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+					resultMap[0]["RowsAffected"] = RowsAffected
+					resultSlice[i] = make([]map[string]interface{}, 1)
+					resultSlice[i] = resultMap
+
+				} else {
+					resultSlice[i] = nil
+				}
 			}
+
 		}
 
 		if sqlTemplatesExecutor.session.IsSqlFuc == true {
-			err = sqlTemplatesExecutor.session.Commit()
-			if err != nil {
-				return nil, nil, err
+			err1 := sqlTemplatesExecutor.session.Commit()
+			if err1 != nil {
+				return nil, nil, err1
 			}
 		}
 		return resultSlice, nil, nil
 
 	case map[string]string:
-		if sqlTemplatesExecutor.session.IsSqlFuc == true {
-			err = sqlTemplatesExecutor.session.Begin()
-			if err != nil {
-				return nil, nil, err
-			}
-		}
+
 		sqlkeysMap := sqlTemplatesExecutor.sqlkeys.(map[string]string)
 		n := len(sqlkeysMap)
 		resultsMap := make(map[string][]map[string]interface{}, n)
 		parmasMap := make(map[string]map[string]interface{}, n)
 
-		switch sqlTemplatesExecutor.parmas.(type) {
-		case map[string]map[string]interface{}:
-			parmasMap = sqlTemplatesExecutor.parmas.(map[string]map[string]interface{})
+		if sqlTemplatesExecutor.parmas == nil {
 
-		default:
-			if sqlTemplatesExecutor.session.IsSqlFuc == true {
-				err = sqlTemplatesExecutor.session.Rollback()
+			for k, _ := range sqlkeysMap {
+				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysMap[k]).Execute(nil)
 				if err != nil {
+					if sqlTemplatesExecutor.session.IsSqlFuc == true {
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
+						}
+					}
 					return nil, nil, err
 				}
-			}
-			return nil, nil, ErrParamsType
-		}
+				sqlStr = strings.TrimSpace(sqlStr)
 
-		for k, _ := range sqlkeysMap {
-			sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysMap[k]).Execute(parmasMap[k])
-			if err != nil {
-				if sqlTemplatesExecutor.session.IsSqlFuc == true {
-					err = sqlTemplatesExecutor.session.Rollback()
-					if err != nil {
-						return nil, nil, err
-					}
-				}
-				return nil, nil, err
-			}
-			sqlStr = strings.TrimSpace(sqlStr)
-			sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
-			if parmasMap[k] == nil {
+				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
 				case "select", "desc":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Query()
 					sqlModel = 1
-				case "insert", "delete", "update", "create":
+				case "insert", "delete", "update", "create", "drop":
 					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Execute()
 					sqlModel = 2
+				default:
+					sqlModel = 3
 				}
-			} else {
-				parmaMap := parmasMap[k]
-				switch sqlCmd {
-				case "select", "desc":
-					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k], &parmaMap).Query()
-					sqlModel = 1
-				case "insert", "delete", "update", "create":
-					model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k], &parmaMap).Execute()
-					sqlModel = 2
+
+				if sqlModel == 1 {
+					if model_1_results.Error != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, model_1_results.Error
+					}
+
+					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
+					resultsMap[k] = model_1_results.Results
+
+				} else if sqlModel == 2 {
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+
+					resultMap := make([]map[string]interface{}, 1)
+					resultMap[0] = make(map[string]interface{})
+
+					//todo all database support LastInsertId
+					LastInsertId, _ := model_2_results.LastInsertId()
+
+					resultMap[0]["LastInsertId"] = LastInsertId
+					RowsAffected, err := model_2_results.RowsAffected()
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+					resultMap[0]["RowsAffected"] = RowsAffected
+					resultsMap[k] = make([]map[string]interface{}, 1)
+					resultsMap[k] = resultMap
+
+				} else {
+					resultsMap[k] = nil
 				}
+
 			}
 
-			if sqlModel == 1 {
-				if model_1_results.Error != nil {
-					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
-						}
+		} else {
+
+			switch sqlTemplatesExecutor.parmas.(type) {
+			case map[string]map[string]interface{}:
+				parmasMap = sqlTemplatesExecutor.parmas.(map[string]map[string]interface{})
+
+			default:
+				if sqlTemplatesExecutor.session.IsSqlFuc == true {
+					err1 := sqlTemplatesExecutor.session.Rollback()
+					if err1 != nil {
+						return nil, nil, err1
 					}
-					return nil, nil, model_1_results.Error
 				}
+				return nil, nil, ErrParamsType
+			}
 
-				resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
-				resultsMap[k] = model_1_results.Results
-
-			} else {
+			for k, _ := range sqlkeysMap {
+				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkeysMap[k]).Execute(parmasMap[k])
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
+						err1 := sqlTemplatesExecutor.session.Rollback()
+						if err1 != nil {
+							return nil, nil, err1
 						}
 					}
 					return nil, nil, err
 				}
-
-				resultMap := make([]map[string]interface{}, 1)
-				resultMap[0] = make(map[string]interface{})
-
-				//todo all database support LastInsertId
-				LastInsertId, _ := model_2_results.LastInsertId()
-
-				resultMap[0]["LastInsertId"] = LastInsertId
-				RowsAffected, err := model_2_results.RowsAffected()
-				if err != nil {
-					if sqlTemplatesExecutor.session.IsSqlFuc == true {
-						err = sqlTemplatesExecutor.session.Rollback()
-						if err != nil {
-							return nil, nil, err
-						}
+				sqlStr = strings.TrimSpace(sqlStr)
+				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
+				if parmasMap[k] == nil {
+					switch sqlCmd {
+					case "select", "desc":
+						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Query()
+						sqlModel = 1
+					case "insert", "delete", "update", "create", "drop":
+						model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Execute()
+						sqlModel = 2
+					default:
+						sqlModel = 3
 					}
-					return nil, nil, err
+				} else {
+					parmaMap := parmasMap[k]
+					switch sqlCmd {
+					case "select", "desc":
+						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k], &parmaMap).Query()
+						sqlModel = 1
+					case "insert", "delete", "update", "create", "drop":
+						model_2_results, err = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k], &parmaMap).Execute()
+						sqlModel = 2
+					default:
+						sqlModel = 3
+					}
 				}
-				resultMap[0]["RowsAffected"] = RowsAffected
-				resultsMap[k] = make([]map[string]interface{}, 1)
-				resultsMap[k] = resultMap
 
+				if sqlModel == 1 {
+					if model_1_results.Error != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, model_1_results.Error
+					}
+
+					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
+					resultsMap[k] = model_1_results.Results
+
+				} else if sqlModel == 2 {
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+
+					resultMap := make([]map[string]interface{}, 1)
+					resultMap[0] = make(map[string]interface{})
+
+					//todo all database support LastInsertId
+					LastInsertId, _ := model_2_results.LastInsertId()
+
+					resultMap[0]["LastInsertId"] = LastInsertId
+					RowsAffected, err := model_2_results.RowsAffected()
+					if err != nil {
+						if sqlTemplatesExecutor.session.IsSqlFuc == true {
+							err1 := sqlTemplatesExecutor.session.Rollback()
+							if err1 != nil {
+								return nil, nil, err1
+							}
+						}
+						return nil, nil, err
+					}
+					resultMap[0]["RowsAffected"] = RowsAffected
+					resultsMap[k] = make([]map[string]interface{}, 1)
+					resultsMap[k] = resultMap
+
+				} else {
+					resultsMap[k] = nil
+				}
 			}
+
 		}
+
 		if sqlTemplatesExecutor.session.IsSqlFuc == true {
-			err = sqlTemplatesExecutor.session.Commit()
-			if err != nil {
-				return nil, nil, err
+			err1 := sqlTemplatesExecutor.session.Commit()
+			if err1 != nil {
+				return nil, nil, err1
 			}
 		}
 		return nil, resultsMap, nil
