@@ -197,7 +197,7 @@ err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 ```
 
 * 注：
-	* 除以上7种方式外，本库还支持另外3种方式，由于这4种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 除以上7种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
 * 第3种和第6种方式所使用的SqlMap配置文件内容如下
@@ -259,7 +259,7 @@ affected, err := engine.SqlTemplateClient(sql_i_3, &paramMap_i_t).Execute()
 ```
 
 * 注：
-	* 除以上3种方式外，本库还支持另外3种方式，由于这4种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 除以上4种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此4种方式将在此章节单独说明
 
 * 支持链式读取数据操作查询返回json或xml字符串
@@ -458,11 +458,18 @@ if err != nil {
 }
 
 results, _, err = session.Sqls(sqls, parmas...).Execute()
+if err != nil {
+    session.Rollback()
+    return
+}
 
 _, results, err = session.SqlMapsClient(sqlkeys, parmas...).Execute()
+if err != nil {
+    session.Rollback()
+    return
+}
 
 results, _, err = session.SqlTemplatesClient(sqlkeys, parmas...).Execute()
-
 if err != nil {
     session.Rollback()
     return
@@ -521,8 +528,8 @@ if err != nil {
 
 * Execute()方法说明：
 	* 一共3个返回值，([][]map[string]interface{}, map[string][]map[string]interface{}, error)
-	* 当以上3个方法的sqls或sqlkeys参数为string或[]string时，返回结果集为第一个返回值，第二返回值为nil
-	* 当以上3个方法的sqls或sqlkeys参数为map[string]string时，返回结果集为第二个返回值，第一个返回值为nil
+	* 当以上3个方法的sqls或sqlkeys参数为string或[]string时为有序执行Sql执行单元，故返回结果集为第一个返回值，Slice存储，第二返回值为nil
+	* 当以上3个方法的sqls或sqlkeys参数为map[string]string时为无序执行Sql执行单元，返回结果集为第二个返回值，map存储，第一个返回值为nil
 	* 当以上3个方法执行中出现错误，则第三个返回值有值，前2个返回值均为nil
 
 <a name="SQL"></a>
