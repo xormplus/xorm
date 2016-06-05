@@ -42,7 +42,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 		if sqlsExecutor.parmas == nil {
 			switch sqlCmd {
-			case "select", "desc":
+			case "select":
 				model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
 				sqlModel = 1
 			case "insert", "delete", "update", "create", "drop":
@@ -67,7 +67,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				key := NewV4().String() + time.Now().String()
 				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap[0]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -92,7 +92,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				key := NewV4().String() + time.Now().String()
 				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -169,7 +169,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlStr := strings.TrimSpace(sqlsSlice[i])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -251,7 +251,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmaSlice[i] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -264,7 +264,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					key := NewV4().String() + time.Now().String()
 					sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaSlice[i]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -349,7 +349,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlStr := strings.TrimSpace(sqlsMap[k])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					sqlModel = 1
 					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
 
@@ -432,7 +432,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmasMap[k] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						sqlModel = 1
 						model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
 
@@ -448,7 +448,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 					parmaMap := parmasMap[k]
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						sqlModel = 1
 						model_1_results = sqlsExecutor.session.SqlMapClient(key, &parmaMap).Query()
 

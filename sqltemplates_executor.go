@@ -53,7 +53,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 			sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 			switch sqlCmd {
-			case "select", "desc":
+			case "select":
 				model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey).Query()
 				sqlModel = 1
 			case "insert", "delete", "update", "create", "drop":
@@ -83,7 +83,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap[0]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -111,7 +111,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				sqlStr = strings.TrimSpace(sqlStr)
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkey, &parmaMap).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -181,7 +181,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -275,7 +275,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmaSlice[i] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -286,7 +286,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 					}
 				} else {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysSlice[i], &parmaSlice[i]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -382,7 +382,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -475,7 +475,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmasMap[k] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -487,7 +487,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				} else {
 					parmaMap := parmasMap[k]
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlTemplatesExecutor.session.SqlTemplateClient(sqlkeysMap[k], &parmaMap).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":

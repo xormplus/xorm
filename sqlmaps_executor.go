@@ -44,7 +44,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 		if sqlMapsExecutor.parmas == nil {
 			switch sqlCmd {
-			case "select", "desc":
+			case "select":
 				model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey).Query()
 				sqlModel = 1
 			case "insert", "delete", "update", "create", "drop":
@@ -67,7 +67,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					return nil, nil, ErrParamsType
 				}
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap[0]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -90,7 +90,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				}
 
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -169,7 +169,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysSlice[i]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -253,7 +253,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				if parmaSlice[i] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysSlice[i]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -264,7 +264,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					}
 				} else {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysSlice[i], &parmaSlice[i]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -350,7 +350,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
 				switch sqlCmd {
-				case "select", "desc":
+				case "select":
 					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysMap[k]).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
@@ -433,7 +433,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmasMap[k] == nil {
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysMap[k]).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
@@ -445,7 +445,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				} else {
 					parmaMap := parmasMap[k]
 					switch sqlCmd {
-					case "select", "desc":
+					case "select":
 						model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkeysMap[k], &parmaMap).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
