@@ -613,7 +613,7 @@ if err != nil {
 	* 当sqls为[]string或map[string]string时候，则Sql执行单元为相关元素的字符串内容
 	* 当sqlkeys为[]string或map[string]string时候，则Sql执行单元为以相关元素为key所对应的SqlMap配置项或SqlTemplate模板
 	* Sql执行单元的具体内容，必须以"select", "insert", "delete", "update", "create", "drop"为起始内容,但后续内容不会继续做检查，请合理定义Sql执行单元内容。当执行单元内容不是以上起始内容，则对应索引或key返回的结果集为nil，请注意对返回结果集的nil判断
-	* Sql执行单元并非单条Sql语句，当执行insert，delete，update，create，drop操作时候，可以为多条Sql语句，这里需要对应的数据库的SQL语法支持。如在一个执行单元批量执行多条Sql，返回结果集作为一组所有执行单元的大结果集中的一个元素，这个结果集的数据类型为map[string]interface{}，只有2个键值对，一个键值对的key为LastInsertId，一个键值对的key为RowsAffected，请控制好执行粒度。另外不是所有数据库都支持返回LastInsertId，目前还在设计通用API能支持此功能。
+	* Sql执行单元并非单条Sql语句，当执行insert，delete，update，create，drop操作时候，可以为多条Sql语句，这里需要对应的数据库的SQL语法支持。如在一个执行单元批量执行多条Sql，返回结果集作为一组所有执行单元的大结果集中的一个元素，这个结果集的数据类型为map[string]interface{}，只有2个键值对，一个键值对的key为LastInsertId，一个键值对的key为RowsAffected，请控制好执行粒度。另外，目前不是所有数据库都支持返回LastInsertId，目前还在设计更通用的API来实现所有数据库都能支持此功能。
 	* 当执行select操作时候，执行单元的Sql语句必须为一条，返回结果集作为一组所有执行单元的大结果集中的一个元素
 	* insert，delete，update，create，drop操作不能和select操作混合定义在同一个执行单元中
 	* 最后，Sql执行单元基于以上约定，请合理组织
