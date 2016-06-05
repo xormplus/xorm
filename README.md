@@ -291,7 +291,7 @@ results, err := engine.SqlMapClient(sql_id_3_2, &paramMap).Query().Xml() //返�
 //第4种方式
 sql_key_4_1 := "select.example.stpl"
 paramMap_4_1 := map[string]interface{}{"id": 6, "userid": 1}
-results := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Json()
+results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().Json()
 ```
 
 * 支持链式读取数据操作查询返回某条记录的某个字段的值
