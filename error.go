@@ -10,6 +10,7 @@ import (
 
 var (
 	ErrParamsType      error = errors.New("Params type error")
+	ErrParamsFormat    error = errors.New("Params format error")
 	ErrTableNotFound   error = errors.New("Not found table")
 	ErrUnSupportedType error = errors.New("Unsupported type error")
 	ErrNotExist        error = errors.New("Not exist error")
