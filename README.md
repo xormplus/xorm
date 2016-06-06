@@ -125,6 +125,10 @@ results, err := engine.Query(sql_1)
 -------------------------------------------------------------------------------------*/
 sql_2_1 := "select * from user"
 results, err := engine.Sql(sql_2_1).Query().List()
+//当然也支持这种方法，将数据库中的时间字段格式化，时间字段对应的golang数据类型为time.Time
+//当然你也可以在数据库中先使用函数将时间类型的字段格式化成字符串，这里只是提供另外一种方式
+//该方式会将所有时间类型的字段都格式化，所以请依据需求按需使用
+results, err := engine.Sql(sql_2_1).QueryWithDateFormat("20060102").List()
 
 sql_2_2 := "select * from user where id = ? and age = ?"
 results, err := engine.Sql(sql_2_2, 7, 17).Query().List()
