@@ -200,6 +200,52 @@ err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 	* 除以上7种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
+* 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法种的参数，结构体对象名字不需要与数据库表中的对象映射，但字段名需要和数据库中的字段名字做映射。这种方法需要自己定义结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，请依据实际需要选用。
+
+	举例：多表联合查询例子如下
+
+```go
+//执行的SQL如下，查询的是article表与category表，查询的表字段是这两个表的部分字段
+sql := `SELECT
+	article.id,
+	article.title,
+	article.isdraft,
+	article.lastupdatetime,
+	category.name as categoryname
+FROM
+	article,
+	category
+WHERE
+	article.categorysubid = category. ID
+AND category. ID = 4`
+
+//我们可以定义一个结构体,注意字段名和上面执行的SQL语句字段名映射
+//当然你还可以给这个结构体加更多其他字段，但是如果执行上面的SQL语句时只会被赋值对应数据类型的零值
+type CategoryInfo struct {
+	Id             int       `xorm:"not null pk autoincr unique INTEGER"`
+	Title          string    `xorm:"not null VARCHAR(255)"`
+	Categoryname   string    `xorm:"not null VARCHAR(200)"`
+	Isdraft        int       `xorm:"SMALLINT"`
+	Lastupdatetime time.Time `xorm:"not null default 'now()' DATETIME"`
+}
+
+var categoryinfo []CategoryInfo
+
+//执行sql，返回值为error对象，同时查询的结果集会被赋值给[]CategoryInfo
+err = db.Sql(sql).Find(&categoryinfo)
+if err != nil {
+	t.Fatal(err)
+}
+t.Log(categoryinfo)
+t.Log(categoryinfo[0].Categoryname)
+t.Log(categoryinfo[0].Id)
+t.Log(categoryinfo[0].Title)
+t.Log(categoryinfo[0].Isdraft)
+t.Log(categoryinfo[0].Lastupdatetime)
+
+```
+
+
 * 第3种和第6种方式所使用的SqlMap配置文件内容如下
 
 ```xml
@@ -618,7 +664,25 @@ if err != nil {
 	* insert，delete，update，create，drop操作不能和select操作混合定义在同一个执行单元中
 	* 最后，Sql执行单元基于以上约定，请合理组织
 
+<a name="ORM"></a>
 # ORM方式操作数据库
+
+* 定义一个和表同步的结构体，并且自动同步结构体到数据库
+
+```Go
+type User struct {
+    Id int64
+    Name string
+    Salt string
+    Age int
+    Passwd string `xorm:"varchar(200)"`
+    Created time.Time `xorm:"created"`
+    Updated time.Time `xorm:"updated"`
+}
+
+err := engine.Sync2(new(User))
+```
+
 * ORM方式插入一条或者多条记录
 
 ```Go
