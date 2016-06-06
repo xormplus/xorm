@@ -200,7 +200,7 @@ err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 	* 除以上7种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
-* 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法种的参数，结构体对象名字不需要与数据库表中的对象映射，但字段名需要和数据库中的字段名字做映射。这种方法需要自己定义结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，请依据实际需要选用。
+* 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法种的参数，即结构体的名字不需要与数据库表的名字映射，但字段名需要和数据库中的字段名字做映射。使用Find()方法需要自己定义查询返回结果集的结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，两种方式请依据实际需要选用。
 
 	举例：多表联合查询例子如下
 
