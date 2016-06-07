@@ -415,7 +415,7 @@ option := xorm.SqlMapOptions{Extension: ".xx"}
 err := engine.InitSqlMap(option) //按指定SqlMap配置文件后缀为".xx"初始化
 
 //指定SqlTemplate配置文件后缀为".yy"，初始化容量200，如不指定，默认后缀为".stpl"，初始化容量100
-option := xorm.SqlTemplateOptions{Extension: ".yy", Capacity: 100}
+option := xorm.SqlTemplateOptions{Extension: ".yy", Capacity: 200}
 err = engine.InitSqlTemplate(option) //按指定SqlTemplate配置文件后缀为".yy"初始化
 
 //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
