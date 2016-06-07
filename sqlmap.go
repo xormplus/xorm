@@ -14,9 +14,11 @@ type SqlMap struct {
 	SqlMapRootDir string
 	Sql           map[string]string
 	Extension     string
+	Capacity      uint
 }
 
 type SqlMapOptions struct {
+	Capacity  uint
 	Extension string
 }
 
@@ -31,7 +33,12 @@ type Sql struct {
 
 func (sqlMap *SqlMap) checkNilAndInit() {
 	if sqlMap.Sql == nil {
-		sqlMap.Sql = make(map[string]string, 100)
+		if sqlMap.Capacity == 0 {
+			sqlMap.Sql = make(map[string]string, 100)
+		} else {
+			sqlMap.Sql = make(map[string]string, sqlMap.Capacity)
+		}
+
 	}
 }
 
@@ -47,6 +54,7 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 	}
 
 	engine.sqlMap.Extension = opt.Extension
+	engine.sqlMap.Capacity = opt.Capacity
 
 	var err error
 	if engine.sqlMap.SqlMapRootDir == "" {

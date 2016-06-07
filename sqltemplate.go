@@ -13,15 +13,21 @@ type SqlTemplate struct {
 	SqlTemplateRootDir string
 	Template           map[string]*pongo2.Template
 	Extension          string
+	Capacity           uint
 }
 
 type SqlTemplateOptions struct {
+	Capacity  uint
 	Extension string
 }
 
 func (sqlTemplate *SqlTemplate) checkNilAndInit() {
 	if sqlTemplate.Template == nil {
-		sqlTemplate.Template = make(map[string]*pongo2.Template, 100)
+		if sqlTemplate.Capacity == 0 {
+			sqlTemplate.Template = make(map[string]*pongo2.Template, 100)
+		} else {
+			sqlTemplate.Template = make(map[string]*pongo2.Template, sqlTemplate.Capacity)
+		}
 	}
 }
 
@@ -35,6 +41,8 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	if len(opt.Extension) == 0 {
 		opt.Extension = ".stpl"
 	}
+	engine.sqlTemplate.Extension = opt.Extension
+	engine.sqlTemplate.Capacity = opt.Capacity
 
 	var err error
 	if engine.sqlTemplate.SqlTemplateRootDir == "" {
