@@ -405,15 +405,18 @@ engine.SetSqlMapRootDir()
 //设置SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
 engine.SetSqlTemplateRootDir()
 
-err := engine.InitSqlMap()//初始化加载SqlMap配置文件，默认初始化后缀为".xml"
-err := engine.InitSqlTemplate()//初始化加载SqlTemplate配置文件，默认初始化后缀为".stpl"
+err := engine.InitSqlMap()//初始化加载SqlMap配置文件，默认初始化后缀为".xml"，初始化容量100
+err := engine.InitSqlTemplate()//初始化加载SqlTemplate配置文件，默认初始化后缀为".stpl"，初始化容量100
 
 //SqlMap配置文件和SqlTemplate配置文件后缀不要相同
-option := xorm.SqlMapOptions{Extension: ".xx"} //指定SqlMap配置文件后缀为".xx"，但配置内容必须为样例的xml格式
+//指定SqlMap配置文件后缀为".xx"，但配置内容必须为样例的xml格式，如不指定，默认后缀为".xml"
+//同时还可以指定初始化容量，如不指定，默认初始化容量100
+option := xorm.SqlMapOptions{Extension: ".xx"}
 err := engine.InitSqlMap(option) //按指定SqlMap配置文件后缀为".xx"初始化
 
-option := xorm.SqlTemplateOptions{Extension: ".yy"} //指定SqlTemplate配置文件后缀为".yy"
-err = engine.InitSqlTemplate(option) //按指定SqlMap配置文件后缀为".xx"初始化
+//指定SqlTemplate配置文件后缀为".yy"，初始化容量200，如不指定，默认后缀为".stpl"，初始化容量100
+option := xorm.SqlTemplateOptions{Extension: ".yy", Capacity: 100}
+err = engine.InitSqlTemplate(option) //按指定SqlTemplate配置文件后缀为".yy"初始化
 
 //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
 //该监控模式下，如删除配置文件，内存中不会删除相关配置
