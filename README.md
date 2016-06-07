@@ -204,7 +204,7 @@ err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
 	* 除以上7种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
-* 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法种的参数，即结构体的名字不需要与数据库表的名字映射，但字段名需要和数据库中的字段名字做映射。使用Find()方法需要自己定义查询返回结果集的结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，两种方式请依据实际需要选用。
+* 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法中的参数，即结构体的名字不需要与数据库表的名字映射（因为前面的Sql()方法已经确定了SQL语句），但字段名需要和数据库中的字段名字做映射。使用Find()方法需要自己定义查询返回结果集的结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，两种方式请依据实际需要选用。
 
 	举例：多表联合查询例子如下
 
@@ -223,14 +223,14 @@ WHERE
 	article.categorysubid = category. ID
 AND category. ID = 4`
 
-//我们可以定义一个结构体,注意字段名和上面执行的SQL语句字段名映射
-//当然你还可以给这个结构体加更多其他字段，但是如果执行上面的SQL语句时只会被赋值对应数据类型的零值
+//我们可以定义一个结构体,注意：结构体中的字段名和上面执行的SQL语句字段名映射，字段数据类型正确
+//当然你还可以给这个结构体加更多其他字段，但是如果执行上面的SQL语句时，这些其他字段只会被赋值对应数据类型的零值
 type CategoryInfo struct {
-	Id             int       `xorm:"not null pk autoincr unique INTEGER"`
-	Title          string    `xorm:"not null VARCHAR(255)"`
-	Categoryname   string    `xorm:"not null VARCHAR(200)"`
-	Isdraft        int       `xorm:"SMALLINT"`
-	Lastupdatetime time.Time `xorm:"not null default 'now()' DATETIME"`
+	Id             int     
+	Title          string    
+	Categoryname   string    
+	Isdraft        int       
+	Lastupdatetime time.Time 
 }
 
 var categoryinfo []CategoryInfo
