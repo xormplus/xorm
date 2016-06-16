@@ -1,6 +1,7 @@
 package xorm
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,11 +15,21 @@ type SqlTemplate struct {
 	Template           map[string]*pongo2.Template
 	Extension          string
 	Capacity           uint
+	Cipher             Cipher
 }
 
 type SqlTemplateOptions struct {
 	Capacity  uint
 	Extension string
+	Cipher    Cipher
+}
+
+func (engine *Engine) SetSqlTemplateCipher(cipher Cipher) {
+	engine.sqlTemplate.Cipher = cipher
+}
+
+func (engine *Engine) ClearSqlTemplateCipher() {
+	engine.sqlTemplate.Cipher = nil
 }
 
 func (sqlTemplate *SqlTemplate) checkNilAndInit() {
@@ -43,6 +54,8 @@ func (engine *Engine) InitSqlTemplate(options ...SqlTemplateOptions) error {
 	}
 	engine.sqlTemplate.Extension = opt.Extension
 	engine.sqlTemplate.Capacity = opt.Capacity
+
+	engine.sqlTemplate.Cipher = opt.Cipher
 
 	var err error
 	if engine.sqlTemplate.SqlTemplateRootDir == "" {
@@ -179,9 +192,29 @@ func (sqlTemplate *SqlTemplate) walkFunc(path string, info os.FileInfo, err erro
 }
 
 func (sqlTemplate *SqlTemplate) paresSqlTemplate(filename string, filepath string) error {
-	template, err := pongo2.FromFile(filepath)
-	if err != nil {
-		return err
+	var template *pongo2.Template
+	var err error
+	var content []byte
+
+	if sqlTemplate.Cipher == nil {
+		template, err = pongo2.FromFile(filepath)
+		if err != nil {
+			return err
+		}
+	} else {
+		content, err = ioutil.ReadFile(filepath)
+
+		if err != nil {
+			return err
+		}
+		content, err = sqlTemplate.Cipher.Decrypt(content)
+		if err != nil {
+			return err
+		}
+		template, err = pongo2.FromString(string(content))
+		if err != nil {
+			return err
+		}
 	}
 
 	sqlTemplate.checkNilAndInit()

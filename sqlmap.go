@@ -1,8 +1,10 @@
 package xorm
 
 import (
+	//	"encoding/base64"
 	"encoding/xml"
 	"io/ioutil"
+	//	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,11 +17,13 @@ type SqlMap struct {
 	Sql           map[string]string
 	Extension     string
 	Capacity      uint
+	Cipher        Cipher
 }
 
 type SqlMapOptions struct {
 	Capacity  uint
 	Extension string
+	Cipher    Cipher
 }
 
 type Result struct {
@@ -29,6 +33,14 @@ type Result struct {
 type Sql struct {
 	Value string `xml:",chardata"`
 	Id    string `xml:"id,attr"`
+}
+
+func (engine *Engine) SetSqlMapCipher(cipher Cipher) {
+	engine.sqlMap.Cipher = cipher
+}
+
+func (engine *Engine) ClearSqlMapCipher() {
+	engine.sqlMap.Cipher = nil
 }
 
 func (sqlMap *SqlMap) checkNilAndInit() {
@@ -55,6 +67,8 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 
 	engine.sqlMap.Extension = opt.Extension
 	engine.sqlMap.Capacity = opt.Capacity
+
+	engine.sqlMap.Cipher = opt.Cipher
 
 	var err error
 	if engine.sqlMap.SqlMapRootDir == "" {
@@ -199,9 +213,16 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 	if err != nil {
 		return err
 	}
+	enc := sqlMap.Cipher
+	if enc != nil {
+		content, err = enc.Decrypt(content)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	sqlMap.checkNilAndInit()
-
 	var result Result
 	err = xml.Unmarshal(content, &result)
 	if err != nil {
@@ -213,6 +234,7 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 	}
 
 	return nil
+
 }
 
 func (engine *Engine) AddSql(key string, sql string) {
