@@ -13,13 +13,14 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 支持Struct和数据库表之间的灵活映射，并支持自动同步
 * 事务支持
 * 同时支持原始SQL语句和ORM操作的混合执行
-* 支持类ibatis方式配置SQL语句（支持xml配置文件和pongo2模板2种方式）
-* 支持动态SQL功能
-* 支持一次批量混合执行多个CRUD操作，并返回多个结果集
 * 使用连写来简化调用
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
 * 支持级联加载Struct
+* 支持类ibatis方式配置SQL语句（支持xml配置文件和pongo2模板2种方式）
+* 支持动态SQL功能
+* 支持一次批量混合执行多个CRUD操作，并返回多个结果集
 * 支持数据库查询结果直接返回Json字符串和xml字符串
+* 支持SqlMap配置文件和SqlTemplate模板密文存储和解析
 * 支持缓存
 * 支持根据数据库自动生成xorm的结构体
 * 支持记录版本（即乐观锁）
@@ -132,6 +133,10 @@ results, err := engine.Sql(sql_2_1).QueryWithDateFormat("20060102").List()
 
 sql_2_2 := "select * from user where id = ? and age = ?"
 results, err := engine.Sql(sql_2_2, 7, 17).Query().List()
+
+sql_2_3 := "select * from user where id = ?id and age = ?age"
+paramMap_2_3 := map[string]interface{}{"id": 7, "age": 17}
+results, err := engine.Sql(sql_2_2, &paramMap_2_3).Query().List()
 
 //此Query()方法返回对象还支持ListPage()方法和Count()方法，这两个方法都是针对数据库查询出来后的结果集进行操作
 //此Query()方法返回对象还支持Xml()方法、XmlIndent()方法和Json()方法，相关内容请阅读之后的章节
@@ -397,7 +402,8 @@ if err != nil {
 }
 ```
 
-* SqlMap及SqlTemplate相关功能API
+# SqlMap及SqlTemplate
+* <b>SqlMap及SqlTemplate相关功能API</b>
 
 ```go
 //设置SqlMap文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
@@ -487,9 +493,149 @@ engine.GetSqlMap(...key)
 */
 engine.GetSqlTemplates(...key)
 ```
+
+* <b>SqlMap配置文件及SqlTemplate模板加密存储及解析</b>
+	* 出于系统信息安全的原因，一些大公司有自己的信息安全规范。其中就有类似这样的配置文件不允许明文存储的需求，本xorm定制版本也内置了一些API对SqlMap配置文件及SqlTemplate模板密文存储解析的需求进行支持。
+	* 本库内置提供了AES，DES，3DES，RSA四种加密算法支持SqlMap配置文件及SqlTemplate模板加解密存储解析功能。其中，AES，DES，3DES和标准实现略有不同，如不提供key，本库会提供了一个内置key，当然您也可以设置自己的key。RSA支持公钥加密私钥解密和私钥加密公钥解密两种模式。
+	* 本库还提供一个批量配置文件加密工具，采用sciter的Golang绑定库实现。工具传送门：[xorm tools](https://github.com/xormplus/tools)。
+	* 除以上4种内置加解密算法外，本库也支持自定义加解密算法功能，您也可以使用自己实现的加密解密算法，只需要实现Cipher接口即可。
+	* 内存中缓存的是经指定解密算法解密之后的配置文件内容或模板内容。
+	* SqlMap配置文件及SqlTemplate模板加密存储及解析具体示例如下：
+
+```go
+//如需使用自定义的加密解密算法，只需实现Cipher接口即可
+type Cipher interface {
+	Encrypt(strMsg string) ([]byte, error)
+	Decrypt(src []byte) (decrypted []byte, err error)
+}
+
+//SqlMapOptions中的Cipher实现了加密和解密方法
+type SqlMapOptions struct {
+	Capacity  uint
+	Extension string
+	Cipher    Cipher
+}
+
+//SqlTemplateOptions中的Cipher实现了加密和解密方法
+type SqlTemplateOptions struct {
+	Capacity  uint
+	Extension string
+	Cipher    Cipher
+}
+
+
+//如现在我们已经使用3DES加密了SqlMap配置文件和SqlTemplate模板，则xorm初始化方式如下
+var err error
+engine, err = xorm.NewPostgreSQL("postgres://postgres:root@localhost:5432/mblog?sslmode=disable")
+
+if err != nil {
+	t.Fatal(err)
+}
+
+puk := "sdlfj2_++1111111111"
+enc := new(xorm.TripleDesEncrypt)
+enc.PubKey = puk
+//如自定义加解密算法，则此处传入的enc为自己实现的加解密算法，后续代码与本示例一致
+cipher := xorm.Cipher(enc)
+opt := xorm.SqlMapOptions{Cipher: cipher}
+err = engine.SetSqlMapRootDir("./sql/3des").InitSqlMap(opt)
+if err != nil {
+	t.Fatal(err)
+}
+//这里也可以new其他加密解密算法，SqlMap配置文件和SqlTemplate模板的加密结算算法可不相同
+err = engine.SetSqlTemplateRootDir("./sql/3des").InitSqlTemplate(xorm.SqlTemplateOptions{Cipher: cipher})
+if err != nil {
+	t.Fatal(err)
+}
+
+//内置4种加密算法如下
+type AesEncrypt struct {
+	PubKey string
+}
+
+type DesEncrypt struct {
+	PubKey string
+}
+
+type TripleDesEncrypt struct {
+	PubKey string
+}
+
+//RSA加密解密算法支持公钥加密私钥解密和私钥加密公钥解密两种模式，请合理设置DecryptMode
+type RsaEncrypt struct {
+	PubKey      string
+	PriKey      string
+	pubkey      *rsa.PublicKey
+	prikey      *rsa.PrivateKey
+	EncryptMode int
+	DecryptMode int
+}
+
+const (
+	RSA_PUBKEY_ENCRYPT_MODE = iota //RSA公钥加密
+	RSA_PUBKEY_DECRYPT_MODE        //RSA公钥解密
+	RSA_PRIKEY_ENCRYPT_MODE        //RSA私钥加密
+	RSA_PRIKEY_DECRYPT_MODE        //RSA私钥解密
+)
+
+//RSA使用示例
+pukeyStr := `-----BEGIN PUBLIC KEY-----
+	MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyqyVCWQBeIgY4FyLnrA1
+	viOq9m++OyUwXIvpEH7zN7MjeJp7nSK5PBkvv81zIbQrMQXQzTuE52QjYfMfHVoq
+	FyK+Qxw+B/1qY3TACj8b4TlDS0IrII9u1QBRhGHmtmqJ5c6As/rIqYLQCdbmycC0
+	3iKBM8990Pff8uq+jqzsoQCFDexZClprR6Vbz3S1ejoFLuDUAXUfNrsudQ/7it3s
+	Vn540kh4a9MKeSOg68TSmKKQe1huTF03uDAdPuDveFpVU/l7nETH8mFoW06QvvJR
+	6Dh6FC9LzJA6EOK4fNGeDzJg9e2jByng/ubJM6WeU29uri2zwnMGQ3qsCuGMXBS/
+	yQIDAQAB
+	-----END PUBLIC KEY-----`
+
+var err error
+engine, err = xorm.NewPostgreSQL("postgres://postgres:root@localhost:5432/mblog?sslmode=disable")
+
+if err != nil {
+	t.Fatal(err)
+}
+//公钥解密
+enc := new(xorm.RsaEncrypt)
+enc.PubKey = pukeyStr
+enc.DecryptMode = xorm.RSA_PUBKEY_DECRYPT_MODE
+cipher := xorm.Cipher(enc)
+opt := xorm.SqlMapOptions{Cipher: cipher}
+err = engine.SetSqlMapRootDir("./sql/rsa").InitSqlMap(opt)
+if err != nil {
+	t.Fatal(err)
+}
+
+err = engine.SetSqlTemplateRootDir("./sql/rsa").InitSqlTemplate(xorm.SqlTemplateOptions{Cipher: cipher})
+if err != nil {
+	t.Fatal(err)
+}
+
+/*----------------------------------------------------------------------------------------------------
+其他相关API
+1.ClearSqlMapCipher()可清除SqlMap中设置的Cipher，这样可以使用engine.LoadSqlMap(filepath)手工加载一些没有加密的配置文件
+2.如果您之后又想加载一些其他加密算法存储的配置文件，也可以先清除，再重新SetSqlMapCipher()之后加载
+3.当然，配置文件也可以不加密存储，遇到需要部分加密存储的配置文件可以手工调用SetSqlMapCipher()之后加载
+4.注意InitSqlMap()是对整个SqlMapRootDir做统一操作，如您有区别对待的配置文件，请自行设置隔离目录，使用ClearSqlMapCipher()或SetSqlMapCipher()后调用LoadSqlMap()方法进行指定处理。
+----------------------------------------------------------------------------------------------------*/
+engine.ClearSqlMapCipher()
+engine.SetSqlMapCipher(cipher)
+
+/*----------------------------------------------------------------------------------------------------
+1.ClearSqlTemplateCipher()可清除SqlTemplate中设置的Cipher，这样可以使用engine.LoadSqlTemplate(filepath)手工加载一些没有加密的模板文件
+2.如果您之后又想加载一些其他加密算法存储的模板文件，也可以先清除，再重新SetSqlTemplateCipher()之后加载
+3.当然，配置文件也可以不加密存储，遇到需要部分加密存储的配置文件可以手工调用SetSqlTemplateCipher()之后加载
+4.注意InitSqlMap()是对整个SqlTemplateRootDir做统一操作，如您有区别对待的配置文件，请自行设置隔离目录，使用ClearSqlTemplateCipher()或SetSqlTemplateCipher()后调用LoadSqlTemplate()方法进行指定处理。
+----------------------------------------------------------------------------------------------------*/
+engine.ClearSqlTemplateCipher()
+engine.SetSqlTemplateCipher(cipher)
+
+```
+
+
 <a name="ROP_ARM"/>
 # 批量SQL操作
-* 批量SQL操作API
+* <b>批量SQL操作API</b>
 
 ```Go
 //第一种方式，可以从Engine对象轻松进行使用，该方式自动管理事务，注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。
@@ -610,7 +756,7 @@ if err != nil {
 
 ```
 
-* Sqls(sqls, parmas...)方法说明：
+* <b>Sqls(sqls, parmas...)方法说明：</b>
   1. sqls参数
     * sqls参数数据类型为interface{}类型，但实际参数类型检查时，只支持string，[]string和map[string]string三中类型，使用其他类型均会返回参数类型错误。
     * 使用string类型则为执行单条Sql执行单元（传送门：[Sql执行单元定义](#SQL)），Execute()方法返回的结果集数据类型为[][]map[string]interface{}，只有1个元素。
@@ -623,7 +769,7 @@ if err != nil {
 	* 使用[]map[string]interface{}类型时候，sqls参数类型可以为string类型，此时只有第一个元素[0]map[string]interface{}会被提取，之后的元素将不起任何作用。同时，sqls参数类型也可以为[]string类型，这种参数组合是最常用的组合形式之一，sqls参数的索引和parmas参数的索引一一对应。当某个索引所对应的Sql执行单元是无参数的时候，请将此索引的值设为nil，即parmas[i] = nil
 	* 使用map[string]map[string]interface{}类型时，sqls参数类型必须为map[string]string类型，这种参数组合是最常用的组合形式之一，sqls参数的key和parmas参数的key一一对应。当某个key所对应的Sql执行单元是无参数的时候，请将此key的值设为nil，即parmas[key] = nil
 
-* SqlMapsClient(sqlkeys, parmas...)方法说明：
+* <b>SqlMapsClient(sqlkeys, parmas...)方法说明：</b>
   1. sqlkeys参数
     * sqlkeys参数数据类型为interface{}类型，但实际参数类型检查时，只支持string，[]string和map[string]string三中类型，使用其他类型均会返回参数类型错误。
     * 使用string类型则为执行单条Sql执行单元（Sql执行单元定义），即在xorm种缓存的SqlMap中的key所对应的配置项，Execute()方法返回的结果集数据类型为[][]map[string]interface{}，只有1个元素。
@@ -638,7 +784,7 @@ if err != nil {
 		* 第2种为[]string类型，这种参数组合是最常用的组合形式之一，sqlkeys参数的索引和parmas参数的索引一一对应。当某个索引所对应的Sql执行单元是无参数的时候，请将此索引的值设为nil，即parmas[i] = nil
 	* 使用map[string]map[string]interface{}类型时，sqlkeys参数类型必须为map[string]string类型，这种参数组合是最常用的组合形式之一，sqlkeys参数的key和parmas参数的key一一对应。当某个key所对应的Sql执行单元是无参数的时候，请将此key的值设为nil，即parmas[key] = nil
 
-* SqlTemplatesClient(sqlkeys, parmas...)方法说明：
+* <b>SqlTemplatesClient(sqlkeys, parmas...)方法说明：</b>
   1. sqlkeys参数
     * sqlkeys参数数据类型为interface{}类型，但实际参数类型检查时，只支持string，[]string和map[string]string三中类型，使用其他类型均会返回参数类型错误。
     * 使用string类型则为执行单条Sql执行单元（Sql执行单元定义），即在xorm缓存的SqlTemplate中的key所对应的模板，Execute()方法返回的结果集数据类型为[][]map[string]interface{}，只有1个元素。
@@ -653,14 +799,14 @@ if err != nil {
 		* 第2种为[]string类型，这种参数组合是最常用的组合形式之一，sqlkeys参数的索引和parmas参数的索引一一对应。当某个索引所对应的Sql执行单元是无参数的时候，请将此索引的值设为nil，即parmas[i] = nil
 	* 使用map[string]map[string]interface{}类型时，sqlkeys参数类型必须为map[string]string类型，这种参数组合是最常用的组合形式之一，sqlkeys参数的key和parmas参数的key一一对应。当某个key所对应的Sql执行单元是无参数的时候，请将此key的值设为nil，即parmas[key] = nil
 
-* Execute()方法说明：
+* <b>Execute()方法说明：</b>
 	* 一共3个返回值，([][]map[string]interface{}, map[string][]map[string]interface{}, error)
 	* 当以上3个方法的sqls或sqlkeys参数为string或[]string时为有序执行Sql执行单元，故返回结果集为第一个返回值，Slice存储，第二返回值为nil
 	* 当以上3个方法的sqls或sqlkeys参数为map[string]string时为无序执行Sql执行单元，返回结果集为第二个返回值，map存储，第一个返回值为nil
 	* 当以上3个方法执行中出现错误，则第三个返回值有值，前2个返回值均为nil
 
 <a name="SQL"></a>
-* Sql执行单元定义
+* <b>Sql执行单元定义</b>
 	* 当sqls为string时候，则Sql执行单元为该字符串的内容
 	* 当sqlkeys为string时，则Sql执行单元为所对应的SqlMap配置项或SqlTemplate模板
 	* 当sqls为[]string或map[string]string时候，则Sql执行单元为相关元素的字符串内容
