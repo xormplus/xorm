@@ -581,4 +581,10 @@ func Test_GetSqlTemplates(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("[Test_GetSqlTemplates]->Test_GetSqlTemplates_1->strSqlTemplate:\n", strSqlTemplate)
+
+	strSqlTemplate, err = db.GetSqlTemplates("Test_GetSqlTemplates_1", "Test_GetSqlTemplates_3", []string{"Test_GetSqlTemplates_2", "Test_GetSqlTemplates_4"}, 2)["Test_GetSqlTemplates_2"].Execute(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log("[Test_GetSqlTemplates]->Test_GetSqlTemplates_2->strSqlTemplate:\n", strSqlTemplate)
 }
