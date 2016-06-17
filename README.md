@@ -49,6 +49,11 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 
 	go get -u github.com/xormplus/xorm
 
+## 文档
+
+* 本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
+
+
 # 快速开始
 
 * 第一步创建引擎，driverName, dataSourceName和database/sql接口相同
@@ -967,9 +972,6 @@ engine.ImportFile(fpath string)
 
 <a href="https://github.com/xormplus/xorm/blob/master/test/xorm_test.go">测试用例</a>，<a href="https://github.com/xormplus/xorm/blob/master/test/测试结果.txt">测试结果</a>
 
-## 文档
-
-* 原版核心ORM功能请详见原版[《xorm操作指南》](http://xorm.io/docs)
 
 ## 讨论
 请加入QQ群：280360085 进行讨论。API设计相关建议可联系本人QQ：50892683
