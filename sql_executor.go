@@ -22,7 +22,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 	if sqlsExecutor.err != nil {
 		return nil, nil, sqlsExecutor.err
 	}
-	var model_1_results ResultMap
+	var model_1_results *ResultMap
 	var model_2_results sql.Result
 	var err error
 

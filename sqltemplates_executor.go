@@ -22,7 +22,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 		return nil, nil, sqlTemplatesExecutor.err
 	}
 
-	var model_1_results ResultMap
+	var model_1_results *ResultMap
 	var model_2_results sql.Result
 	var err error
 

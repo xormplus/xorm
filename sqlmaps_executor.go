@@ -22,7 +22,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		return nil, nil, sqlMapsExecutor.err
 	}
 
-	var model_1_results ResultMap
+	var model_1_results *ResultMap
 	var model_2_results sql.Result
 	var err error
 
@@ -156,7 +156,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 			resultSlice[0] = nil
 		}
 	case []string:
-
 		sqlkeysSlice := sqlMapsExecutor.sqlkeys.([]string)
 		n := len(sqlkeysSlice)
 		resultSlice := make([][]map[string]interface{}, n)

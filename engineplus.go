@@ -57,7 +57,7 @@ func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) 
 
 }
 
-func (engine *Engine) Search(beans interface{}, condiBeans ...interface{}) ResultStructs {
+func (engine *Engine) Search(beans interface{}, condiBeans ...interface{}) *ResultStructs {
 	session := engine.NewSession()
 	defer session.Close()
 	return session.Search(beans, condiBeans...)
@@ -65,7 +65,7 @@ func (engine *Engine) Search(beans interface{}, condiBeans ...interface{}) Resul
 
 // Get retrieve one record from table, bean's non-empty fields
 // are conditions
-func (engine *Engine) GetFirst(bean interface{}) ResultBean {
+func (engine *Engine) GetFirst(bean interface{}) *ResultBean {
 	session := engine.NewSession()
 	defer session.Close()
 	return session.GetFirst(bean)

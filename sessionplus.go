@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 
@@ -26,7 +27,7 @@ type ResultBean struct {
 	Error  error
 }
 
-func (resultBean ResultBean) Json() (bool, string, error) {
+func (resultBean *ResultBean) Json() (bool, string, error) {
 	if resultBean.Error != nil {
 		return resultBean.Has, "", resultBean.Error
 	}
@@ -37,17 +38,17 @@ func (resultBean ResultBean) Json() (bool, string, error) {
 	return resultBean.Has, result, err
 }
 
-func (resultBean ResultBean) GetResult() (bool, interface{}, error) {
+func (resultBean *ResultBean) GetResult() (bool, interface{}, error) {
 	return resultBean.Has, resultBean.Result, resultBean.Error
 }
 
-func (session *Session) GetFirst(bean interface{}) ResultBean {
+func (session *Session) GetFirst(bean interface{}) *ResultBean {
 	has, err := session.Get(bean)
-	r := ResultBean{Has: has, Result: bean, Error: err}
+	r := &ResultBean{Has: has, Result: bean, Error: err}
 	return r
 }
 
-func (resultBean ResultBean) Xml() (bool, string, error) {
+func (resultBean *ResultBean) Xml() (bool, string, error) {
 
 	if resultBean.Error != nil {
 		return false, "", resultBean.Error
@@ -76,7 +77,7 @@ func (resultBean ResultBean) Xml() (bool, string, error) {
 	return resultBean.Has, string(resultByte), err
 }
 
-func (resultBean ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool, string, error) {
+func (resultBean *ResultBean) XmlIndent(prefix string, indent string, recordTag string) (bool, string, error) {
 	if resultBean.Error != nil {
 		return false, "", resultBean.Error
 	}
@@ -109,11 +110,11 @@ type ResultMap struct {
 	Error   error
 }
 
-func (resultMap ResultMap) List() ([]map[string]interface{}, error) {
+func (resultMap *ResultMap) List() ([]map[string]interface{}, error) {
 	return resultMap.Results, resultMap.Error
 }
 
-func (resultMap ResultMap) Count() (int, error) {
+func (resultMap *ResultMap) Count() (int, error) {
 	if resultMap.Error != nil {
 		return 0, resultMap.Error
 	}
@@ -123,7 +124,7 @@ func (resultMap ResultMap) Count() (int, error) {
 	return len(resultMap.Results), nil
 }
 
-func (resultMap ResultMap) ListPage(firstResult int, maxResults int) ([]map[string]interface{}, error) {
+func (resultMap *ResultMap) ListPage(firstResult int, maxResults int) ([]map[string]interface{}, error) {
 	if resultMap.Error != nil {
 		return nil, resultMap.Error
 	}
@@ -145,7 +146,7 @@ func (resultMap ResultMap) ListPage(firstResult int, maxResults int) ([]map[stri
 	return resultMap.Results[(firstResult - 1):maxResults], resultMap.Error
 }
 
-func (resultMap ResultMap) Json() (string, error) {
+func (resultMap *ResultMap) Json() (string, error) {
 
 	if resultMap.Error != nil {
 		return "", resultMap.Error
@@ -153,7 +154,7 @@ func (resultMap ResultMap) Json() (string, error) {
 	return JSONString(resultMap.Results, true)
 }
 
-func (resultMap ResultMap) Xml() (string, error) {
+func (resultMap *ResultMap) Xml() (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
@@ -164,7 +165,7 @@ func (resultMap ResultMap) Xml() (string, error) {
 	return string(results), nil
 }
 
-func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
+func (resultMap *ResultMap) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
@@ -176,12 +177,153 @@ func (resultMap ResultMap) XmlIndent(prefix string, indent string, recordTag str
 	return string(results), nil
 }
 
+func (resultMap *ResultMap) SaveAsCSV(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	csv, err := dataset.CSV()
+	if err != nil {
+		return err
+	}
+
+	return csv.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsTSV(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	tsv, err := dataset.TSV()
+	if err != nil {
+		return err
+	}
+
+	return tsv.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsHTML(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	html := dataset.HTML()
+
+	return html.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsXML(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	xml, err := dataset.XML()
+	if err != nil {
+		return err
+	}
+
+	return xml.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsXMLWithTagNamePrefixIndent(tagName string, prifix string, indent string, filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	xml, err := dataset.XMLWithTagNamePrefixIndent(tagName, prifix, indent)
+	if err != nil {
+		return err
+	}
+
+	return xml.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsYAML(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	yaml, err := dataset.YAML()
+	if err != nil {
+		return err
+	}
+
+	return yaml.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsJSON(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	json, err := dataset.JSON()
+	if err != nil {
+		return err
+	}
+
+	return json.WriteFile(filename, perm)
+
+}
+
+func (resultMap *ResultMap) SaveAsXLSX(filename string, headers []string, perm os.FileMode) error {
+	if resultMap.Error != nil {
+		return resultMap.Error
+	}
+
+	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	if err != nil {
+		return err
+	}
+	xlsx, err := dataset.XLSX()
+	if err != nil {
+		return err
+	}
+
+	return xlsx.WriteFile(filename, perm)
+
+}
+
 type ResultStructs struct {
 	Result interface{}
 	Error  error
 }
 
-func (resultStructs ResultStructs) Json() (string, error) {
+func (resultStructs *ResultStructs) Json() (string, error) {
 
 	if resultStructs.Error != nil {
 		return "", resultStructs.Error
@@ -189,7 +331,7 @@ func (resultStructs ResultStructs) Json() (string, error) {
 	return JSONString(resultStructs.Result, true)
 }
 
-func (resultStructs ResultStructs) Xml() (string, error) {
+func (resultStructs *ResultStructs) Xml() (string, error) {
 	if resultStructs.Error != nil {
 		return "", resultStructs.Error
 	}
@@ -213,7 +355,7 @@ func (resultStructs ResultStructs) Xml() (string, error) {
 	return string(resultByte), nil
 }
 
-func (resultStructs ResultStructs) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
+func (resultStructs *ResultStructs) XmlIndent(prefix string, indent string, recordTag string) (string, error) {
 	if resultStructs.Error != nil {
 		return "", resultStructs.Error
 	}
@@ -254,14 +396,14 @@ func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}
 	return session.Sql(sql, &map1)
 }
 
-func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{}) ResultStructs {
+func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{}) *ResultStructs {
 	err := session.Find(rowsSlicePtr, condiBean...)
-	r := ResultStructs{Result: rowsSlicePtr, Error: err}
+	r := &ResultStructs{Result: rowsSlicePtr, Error: err}
 	return r
 }
 
 // Exec a raw sql and return records as ResultMap
-func (session *Session) Query() ResultMap {
+func (session *Session) Query() *ResultMap {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -282,12 +424,12 @@ func (session *Session) Query() ResultMap {
 	} else {
 		result, err = session.queryAll(sql, params...)
 	}
-	r := ResultMap{Results: result, Error: err}
+	r := &ResultMap{Results: result, Error: err}
 	return r
 }
 
 // Exec a raw sql and return records as ResultMap
-func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
+func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -307,7 +449,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) ResultMap {
 	} else {
 		result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
 	}
-	r := ResultMap{Results: result, Error: err}
+	r := &ResultMap{Results: result, Error: err}
 	return r
 }
 

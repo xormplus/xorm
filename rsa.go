@@ -21,10 +21,10 @@ const (
 )
 
 type RsaEncrypt struct {
-	PubKey      string          //isFileInit＝=true:公钥文件路径， isFileInit＝=false:公钥字符串
-	PriKey      string          //isFileInit＝=true:私钥文件路径， isFileInit＝=false:私钥字符串
-	pubkey      *rsa.PublicKey  //公钥
-	prikey      *rsa.PrivateKey //私钥
+	PubKey      string
+	PriKey      string
+	pubkey      *rsa.PublicKey
+	prikey      *rsa.PrivateKey
 	EncryptMode int
 	DecryptMode int
 }
