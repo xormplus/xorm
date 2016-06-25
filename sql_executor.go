@@ -54,16 +54,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		} else {
 			switch sqlsExecutor.parmas.(type) {
 			case []map[string]interface{}:
-				parmaMap, ok := sqlsExecutor.parmas.([]map[string]interface{})
-				if !ok {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err1 := sqlsExecutor.session.Rollback()
-						if err1 != nil {
-							return nil, nil, err1
-						}
-					}
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlsExecutor.parmas.([]map[string]interface{})
+
 				key := NewV4().String() + time.Now().String()
 				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
@@ -79,16 +71,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				}
 				sqlsExecutor.session.Engine.RemoveSql(key)
 			case map[string]interface{}:
-				parmaMap, ok := sqlsExecutor.parmas.(map[string]interface{})
-				if !ok {
-					if sqlsExecutor.session.IsSqlFuc == true {
-						err1 := sqlsExecutor.session.Rollback()
-						if err1 != nil {
-							return nil, nil, err1
-						}
-					}
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlsExecutor.parmas.(map[string]interface{})
+
 				key := NewV4().String() + time.Now().String()
 				sqlsExecutor.session.Engine.AddSql(key, sqlStr)
 				switch sqlCmd {
@@ -190,7 +174,6 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -287,7 +270,6 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -348,6 +330,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			for k, _ := range sqlsMap {
 				sqlStr := strings.TrimSpace(sqlsMap[k])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
+
 				switch sqlCmd {
 				case "select":
 					sqlModel = 1
@@ -372,7 +355,6 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -395,6 +377,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					resultMap[0]["LastInsertId"] = LastInsertId
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
+
 						if sqlsExecutor.session.IsSqlFuc == true {
 							err1 := sqlsExecutor.session.Rollback()
 							if err1 != nil {
@@ -473,7 +456,6 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {

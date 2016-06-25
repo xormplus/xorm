@@ -65,10 +65,8 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 		} else {
 			switch sqlTemplatesExecutor.parmas.(type) {
 			case []map[string]interface{}:
-				parmaMap, ok := sqlTemplatesExecutor.parmas.([]map[string]interface{})
-				if !ok {
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlTemplatesExecutor.parmas.([]map[string]interface{})
+
 				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap[0])
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
@@ -94,10 +92,8 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				}
 
 			case map[string]interface{}:
-				parmaMap, ok := sqlTemplatesExecutor.parmas.(map[string]interface{})
-				if !ok {
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlTemplatesExecutor.parmas.(map[string]interface{})
+
 				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap)
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
@@ -133,7 +129,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				return nil, nil, model_1_results.Error
 			}
 
-			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Results))
 			resultSlice[0] = model_1_results.Results
 			return resultSlice, nil, nil
 		} else if sqlModel == 2 {
@@ -202,7 +197,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -308,7 +302,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -403,7 +396,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -509,7 +501,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {

@@ -56,16 +56,8 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		} else {
 			switch sqlMapsExecutor.parmas.(type) {
 			case []map[string]interface{}:
-				parmaMap, ok := sqlMapsExecutor.parmas.([]map[string]interface{})
-				if !ok {
-					if sqlMapsExecutor.session.IsSqlFuc == true {
-						err1 := sqlMapsExecutor.session.Rollback()
-						if err1 != nil {
-							return nil, nil, err1
-						}
-					}
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlMapsExecutor.parmas.([]map[string]interface{})
+
 				switch sqlCmd {
 				case "select":
 					model_1_results = sqlMapsExecutor.session.SqlMapClient(sqlkey, &parmaMap[0]).Query()
@@ -78,16 +70,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				}
 
 			case map[string]interface{}:
-				parmaMap, ok := sqlMapsExecutor.parmas.(map[string]interface{})
-				if !ok {
-					if sqlMapsExecutor.session.IsSqlFuc == true {
-						err1 := sqlMapsExecutor.session.Rollback()
-						if err1 != nil {
-							return nil, nil, err1
-						}
-					}
-					return nil, nil, ErrParamsType
-				}
+				parmaMap, _ := sqlMapsExecutor.parmas.(map[string]interface{})
 
 				switch sqlCmd {
 				case "select":
@@ -124,7 +107,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				return nil, nil, model_1_results.Error
 			}
 
-			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Results))
 			resultSlice[0] = model_1_results.Results
 			return resultSlice, nil, nil
 		} else if sqlModel == 2 {
@@ -189,7 +171,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -285,7 +266,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultSlice[i] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -370,7 +350,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {
@@ -466,7 +445,6 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = make([]map[string]interface{}, len(model_1_results.Results))
 					resultsMap[k] = model_1_results.Results
 
 				} else if sqlModel == 2 {
