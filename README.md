@@ -50,9 +50,9 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 
 	go get -u github.com/xormplus/xorm
 
-## 文档
+# 文档
 
-* 本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
+## 本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
 
 
 # 快速开始
