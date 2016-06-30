@@ -385,7 +385,7 @@ func (engine *Engine) DBMetas() ([]*core.Table, error) {
 		for _, index := range indexes {
 			for _, name := range index.Cols {
 				if col := table.GetColumn(name); col != nil {
-					col.Indexes[index.Name] = true
+					col.Indexes[index.Name] = index.Type
 				} else {
 					return nil, fmt.Errorf("Unknown col "+name+" in indexes %v of table", index, table.ColumnsSeq())
 				}
@@ -880,12 +880,12 @@ func (engine *Engine) TableInfo(bean interface{}) *core.Table {
 func addIndex(indexName string, table *core.Table, col *core.Column, indexType int) {
 	if index, ok := table.Indexes[indexName]; ok {
 		index.AddColumn(col.Name)
-		col.Indexes[index.Name] = true
+		col.Indexes[index.Name] = indexType
 	} else {
 		index := core.NewIndex(indexName, indexType)
 		index.AddColumn(col.Name)
 		table.AddIndex(index)
-		col.Indexes[index.Name] = true
+		col.Indexes[index.Name] = indexType
 	}
 }
 
@@ -933,16 +933,8 @@ func (engine *Engine) mapType(v reflect.Value) *core.Table {
 		fieldType := fieldValue.Type()
 
 		if ormTagStr != "" {
-			col = &core.Column{
-				FieldName:       t.Field(i).Name,
-				TableName:       table.Name,
-				Nullable:        true,
-				IsPrimaryKey:    false,
-				IsAutoIncrement: false,
-				MapType:         core.TWOSIDES,
-				Indexes:         make(map[string]bool),
-			}
-
+			col = &core.Column{FieldName: t.Field(i).Name, Nullable: true, IsPrimaryKey: false,
+				IsAutoIncrement: false, MapType: core.TWOSIDES, Indexes: make(map[string]int)}
 			tags := splitTag(ormTagStr)
 
 			if len(tags) > 0 {
@@ -964,22 +956,12 @@ func (engine *Engine) mapType(v reflect.Value) *core.Table {
 					case reflect.Struct:
 						parentTable := engine.mapType(fieldValue)
 						for _, col := range parentTable.Columns() {
-							/*if t.Field(i).Anonymous {
-								col.TableName = parentTable.Name
-							} else {
-								col.TableName = engine.TableMapper.Obj2Table(t.Field(i).Name)
-							}*/
-							if len(col.TableName) <= 0 {
-								if _, ok := fieldValue.Interface().(TableName); ok {
-									col.TableName = fieldValue.Interface().(TableName).TableName()
-								} else {
-									col.TableName = engine.TableMapper.Obj2Table(fieldType.Name())
-								}
-							}
 							col.FieldName = fmt.Sprintf("%v.%v", t.Field(i).Name, col.FieldName)
 							table.AddColumn(col)
+							for indexName, indexType := range col.Indexes {
+								addIndex(indexName, table, col, indexType)
+							}
 						}
-
 						continue
 					default:
 						//TODO: warning
@@ -1157,7 +1139,6 @@ func (engine *Engine) mapType(v reflect.Value) *core.Table {
 			col = core.NewColumn(engine.ColumnMapper.Obj2Table(t.Field(i).Name),
 				t.Field(i).Name, sqlType, sqlType.DefaultLength,
 				sqlType.DefaultLength2, true)
-			col.TableName = table.Name
 		}
 		if col.IsAutoIncrement {
 			col.Nullable = false
