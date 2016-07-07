@@ -928,8 +928,9 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 								return err
 							}
 							if has {
-								v := structInter.Elem().Interface()
-								fieldValue.Set(reflect.ValueOf(v))
+								//v := structInter.Elem().Interface()
+								//fieldValue.Set(reflect.ValueOf(v))
+								fieldValue.Set(structInter.Elem())
 							} else {
 								return errors.New("cascade obj is not exist!")
 							}

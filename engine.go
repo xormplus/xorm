@@ -1555,6 +1555,27 @@ func (engine *Engine) Count(bean interface{}) (int64, error) {
 	return session.Count(bean)
 }
 
+// Sum sum the records by some column. bean's non-empty fields are conditions.
+func (engine *Engine) Sum(bean interface{}, colName string) (float64, error) {
+	session := engine.NewSession()
+	defer session.Close()
+	return session.Sum(bean, colName)
+}
+
+// Sums sum the records by some columns. bean's non-empty fields are conditions.
+func (engine *Engine) Sums(bean interface{}, colNames ...string) ([]float64, error) {
+	session := engine.NewSession()
+	defer session.Close()
+	return session.Sums(bean, colNames...)
+}
+
+// SumsInt like Sums but return slice of int64 instead of float64.
+func (engine *Engine) SumsInt(bean interface{}, colNames ...string) ([]int64, error) {
+	session := engine.NewSession()
+	defer session.Close()
+	return session.SumsInt(bean, colNames...)
+}
+
 // Import SQL DDL file
 func (engine *Engine) ImportFile(ddlPath string) ([]sql.Result, error) {
 	file, err := os.Open(ddlPath)
