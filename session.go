@@ -446,7 +446,9 @@ func (session *Session) scanMapIntoStruct(obj interface{}, objMap map[string][]b
 	}
 
 	var col *core.Column
-	table := session.Engine.autoMapType(dataStruct)
+	session.Statement.setRefValue(dataStruct)
+	table := session.Statement.RefTable
+	tableName := session.Statement.tableName
 
 	for key, data := range objMap {
 		if col = table.GetColumn(key); col == nil {
@@ -470,7 +472,7 @@ func (session *Session) scanMapIntoStruct(obj interface{}, objMap map[string][]b
 			fieldValue = dataStruct.FieldByName(fieldName)
 		}
 		if !fieldValue.IsValid() || !fieldValue.CanSet() {
-			session.Engine.logger.Warnf("table %v's column %v is not valid or cannot set", table.Name, key)
+			session.Engine.logger.Warnf("table %v's column %v is not valid or cannot set", tableName, key)
 			continue
 		}
 
@@ -536,7 +538,7 @@ func (session *Session) Exec(sqlStr string, args ...interface{}) (sql.Result, er
 // CreateTable create a table according a bean
 func (session *Session) CreateTable(bean interface{}) error {
 	v := rValue(bean)
-	session.Statement.RefTable = session.Engine.mapType(v)
+	session.Statement.setRefValue(v)
 
 	defer session.resetStatement()
 	if session.IsAutoClose {
@@ -549,7 +551,7 @@ func (session *Session) CreateTable(bean interface{}) error {
 // CreateIndexes create indexes
 func (session *Session) CreateIndexes(bean interface{}) error {
 	v := rValue(bean)
-	session.Statement.RefTable = session.Engine.mapType(v)
+	session.Statement.setRefValue(v)
 
 	defer session.resetStatement()
 	if session.IsAutoClose {
@@ -569,7 +571,7 @@ func (session *Session) CreateIndexes(bean interface{}) error {
 // CreateUniques create uniques
 func (session *Session) CreateUniques(bean interface{}) error {
 	v := rValue(bean)
-	session.Statement.RefTable = session.Engine.mapType(v)
+	session.Statement.setRefValue(v)
 
 	defer session.resetStatement()
 	if session.IsAutoClose {
@@ -594,14 +596,15 @@ func (session *Session) createOneTable() error {
 
 // to be deleted
 func (session *Session) createAll() error {
-	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
 	}
 
 	for _, table := range session.Engine.Tables {
 		session.Statement.RefTable = table
+		session.Statement.tableName = table.Name
 		err := session.createOneTable()
+		session.resetStatement()
 		if err != nil {
 			return err
 		}
@@ -611,6 +614,9 @@ func (session *Session) createAll() error {
 
 // drop indexes
 func (session *Session) DropIndexes(bean interface{}) error {
+	v := rValue(bean)
+	session.Statement.setRefValue(v)
+
 	defer session.resetStatement()
 	if session.IsAutoClose {
 		defer session.Close()
@@ -777,9 +783,11 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 		return ErrCacheFailed
 	}
 
+	tableName := session.Statement.TableName()
+
 	table := session.Statement.RefTable
 	cacher := session.Engine.getCacher2(table)
-	ids, err := core.GetCacheSql(cacher, session.Statement.TableName(), newsql, args)
+	ids, err := core.GetCacheSql(cacher, tableName, newsql, args)
 	if err != nil {
 		rows, err := session.DB().Query(newsql, args...)
 		if err != nil {
@@ -819,8 +827,6 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			ids = append(ids, pk)
 		}
 
-		tableName := session.Statement.TableName()
-
 		session.Engine.logger.Debug("[cacheFind] cache sql:", ids, tableName, newsql, args)
 		err = core.PutCacheSql(cacher, ids, tableName, newsql, args)
 		if err != nil {
@@ -835,7 +841,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 	ididxes := make(map[string]int)
 	var ides []core.PK = make([]core.PK, 0)
 	var temps []interface{} = make([]interface{}, len(ids))
-	tableName := session.Statement.TableName()
+
 	for idx, id := range ids {
 		sid, err := id.ToString()
 		if err != nil {
@@ -1009,13 +1015,15 @@ func (session *Session) Get(bean interface{}) (bool, error) {
 		defer session.Close()
 	}
 
+	session.Statement.setRefValue(rValue(bean))
+	if len(session.Statement.TableName()) <= 0 {
+		return false, ErrTableNotFound
+	}
+
 	session.Statement.Limit(1)
+
 	var sqlStr string
 	var args []interface{}
-
-	if session.Statement.RefTable == nil {
-		session.Statement.RefTable = session.Engine.TableInfo(bean)
-	}
 
 	if session.Statement.RawSQL == "" {
 		sqlStr, args = session.Statement.genGetSql(bean)
@@ -1201,25 +1209,28 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 	}
 
 	sliceElementType := sliceValue.Type().Elem()
-	var table *core.Table
+
 	if session.Statement.RefTable == nil {
 		if sliceElementType.Kind() == reflect.Ptr {
 			if sliceElementType.Elem().Kind() == reflect.Struct {
 				pv := reflect.New(sliceElementType.Elem())
-				table = session.Engine.autoMapType(pv.Elem())
+				session.Statement.setRefValue(pv.Elem())
 			} else {
 				return errors.New("slice type")
 			}
 		} else if sliceElementType.Kind() == reflect.Struct {
 			pv := reflect.New(sliceElementType)
-			table = session.Engine.autoMapType(pv.Elem())
+			session.Statement.setRefValue(pv.Elem())
 		} else {
 			return errors.New("slice type")
 		}
-		session.Statement.RefTable = table
-	} else {
-		table = session.Statement.RefTable
 	}
+
+	if len(session.Statement.TableName()) <= 0 {
+		return ErrTableNotFound
+	}
+
+	var table = session.Statement.RefTable
 
 	var addedTableName = (len(session.Statement.JoinStr) > 0)
 	if !session.Statement.noAutoCondition && len(condiBean) > 0 {
@@ -1433,17 +1444,6 @@ func (session *Session) Ping() error {
 	return session.DB().Ping()
 }
 
-func (engine *Engine) tableName(beanOrTableName interface{}) (string, error) {
-	v := rValue(beanOrTableName)
-	if v.Type().Kind() == reflect.String {
-		return beanOrTableName.(string), nil
-	} else if v.Type().Kind() == reflect.Struct {
-		table := engine.autoMapType(v)
-		return table.Name, nil
-	}
-	return "", errors.New("bean should be a struct or struct's point")
-}
-
 // IsTableExist if a table is exist
 func (session *Session) IsTableExist(beanOrTableName interface{}) (bool, error) {
 	tableName, err := session.Engine.tableName(beanOrTableName)
@@ -1472,7 +1472,6 @@ func (session *Session) IsTableEmpty(bean interface{}) (bool, error) {
 	if t.Kind() == reflect.String {
 		return session.isTableEmpty(bean.(string))
 	} else if t.Kind() == reflect.Struct {
-		session.Engine.autoMapType(v)
 		rows, err := session.Count(bean)
 		return rows == 0, err
 	}
@@ -1635,8 +1634,9 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 		return errors.New("Expected a pointer to a struct")
 	}
 
-	table := session.Engine.autoMapType(dataStruct)
-	return session._row2Bean(rows, fields, fieldsCount, bean, &dataStruct, table)
+	session.Statement.setRefValue(dataStruct)
+
+	return session._row2Bean(rows, fields, fieldsCount, bean, &dataStruct, session.Statement.RefTable)
 }
 
 func (session *Session) _row2Bean(rows *core.Rows, fields []string, fieldsCount int, bean interface{}, dataStruct *reflect.Value, table *core.Table) error {
@@ -1909,6 +1909,7 @@ func (session *Session) _row2Bean(rows *core.Rows, fields []string, fieldsCount 
 				} else if session.Statement.UseCascade {
 					table := session.Engine.autoMapType(*fieldValue)
 					if table != nil {
+						hasAssigned = true
 						if len(table.PrimaryKeys) != 1 {
 							panic("unsupported non or composited primary key cascade")
 						}
@@ -2198,7 +2199,7 @@ func (session *Session) query2(sqlStr string, paramStr ...interface{}) (resultsS
 func (session *Session) Insert(beans ...interface{}) (int64, error) {
 	var affected int64
 	var err error
-	defer session.resetStatement()
+
 	if session.IsAutoClose {
 		defer session.Close()
 	}
@@ -2210,6 +2211,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 			if size > 0 {
 				if session.Engine.SupportInsertMany() {
 					cnt, err := session.innerInsertMulti(bean)
+					session.resetStatement()
 					if err != nil {
 						return affected, err
 					}
@@ -2217,6 +2219,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 				} else {
 					for i := 0; i < size; i++ {
 						cnt, err := session.innerInsert(sliceValue.Index(i).Interface())
+						session.resetStatement()
 						if err != nil {
 							return affected, err
 						}
@@ -2226,6 +2229,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 			}
 		} else {
 			cnt, err := session.innerInsert(bean)
+			session.resetStatement()
 			if err != nil {
 				return affected, err
 			}
@@ -2244,23 +2248,24 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 
 	bean := sliceValue.Index(0).Interface()
 	elementValue := rValue(bean)
-	//sliceElementType := elementValue.Type()
+	session.Statement.setRefValue(elementValue)
+	if len(session.Statement.TableName()) <= 0 {
+		return 0, ErrTableNotFound
+	}
 
-	table := session.Engine.autoMapType(elementValue)
-	session.Statement.RefTable = table
-
+	table := session.Statement.RefTable
 	size := sliceValue.Len()
 
-	colNames := make([]string, 0)
-	colMultiPlaces := make([]string, 0)
-	var args = make([]interface{}, 0)
-	cols := make([]*core.Column, 0)
+	var colNames []string
+	var colMultiPlaces []string
+	var args []interface{}
+	var cols []*core.Column
 
 	for i := 0; i < size; i++ {
 		v := sliceValue.Index(i)
 		vv := reflect.Indirect(v)
 		elemValue := v.Interface()
-		colPlaces := make([]string, 0)
+		var colPlaces []string
 
 		// handle BeforeInsertProcessor
 		// !nashtsai! does user expect it's same slice to passed closure when using Before()/After() when insert multi??
@@ -2307,6 +2312,13 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 					session.afterClosures = append(session.afterClosures, func(bean interface{}) {
 						col := table.GetColumn(colName)
 						setColumnTime(bean, col, t)
+					})
+				} else if col.IsVersion && session.Statement.checkVersion {
+					args = append(args, 1)
+					var colName = col.Name
+					session.afterClosures = append(session.afterClosures, func(bean interface{}) {
+						col := table.GetColumn(colName)
+						setColumnInt(bean, col, 1)
 					})
 				} else {
 					arg, err := session.value2Interface(col, fieldValue)
@@ -2355,6 +2367,13 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 					session.afterClosures = append(session.afterClosures, func(bean interface{}) {
 						col := table.GetColumn(colName)
 						setColumnTime(bean, col, t)
+					})
+				} else if col.IsVersion && session.Statement.checkVersion {
+					args = append(args, 1)
+					var colName = col.Name
+					session.afterClosures = append(session.afterClosures, func(bean interface{}) {
+						col := table.GetColumn(colName)
+						setColumnInt(bean, col, 1)
 					})
 				} else {
 					arg, err := session.value2Interface(col, fieldValue)
@@ -2416,24 +2435,29 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 			}
 		}
 	}
+
 	cleanupProcessorsClosures(&session.afterClosures)
 	return res.RowsAffected()
 }
 
 // InsertMulti insert multiple records
 func (session *Session) InsertMulti(rowsSlicePtr interface{}) (int64, error) {
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
-	if sliceValue.Kind() == reflect.Slice {
-		if sliceValue.Len() > 0 {
-			defer session.resetStatement()
-			if session.IsAutoClose {
-				defer session.Close()
-			}
-			return session.innerInsertMulti(rowsSlicePtr)
-		}
+	if sliceValue.Kind() != reflect.Slice {
+		return 0, ErrParamsType
+
+	}
+
+	if sliceValue.Len() <= 0 {
 		return 0, nil
 	}
-	return 0, ErrParamsType
+
+	return session.innerInsertMulti(rowsSlicePtr)
 }
 
 func (session *Session) str2Time(col *core.Column, data string) (outTime time.Time, outErr error) {
@@ -3084,8 +3108,12 @@ func (session *Session) value2Interface(col *core.Column, fieldValue reflect.Val
 }
 
 func (session *Session) innerInsert(bean interface{}) (int64, error) {
-	table := session.Engine.TableInfo(bean)
-	session.Statement.RefTable = table
+	session.Statement.setRefValue(rValue(bean))
+	if len(session.Statement.TableName()) <= 0 {
+		return 0, ErrTableNotFound
+	}
+
+	table := session.Statement.RefTable
 
 	// handle BeforeInsertProcessor
 	for _, closure := range session.beforeClosures {
@@ -3097,7 +3125,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		processor.BeforeInsert()
 	}
 	// --
-	colNames, args, err := genCols(table, session, bean, false, false)
+	colNames, args, err := genCols(session.Statement.RefTable, session, bean, false, false)
 	if err != nil {
 		return 0, err
 	}
@@ -3460,11 +3488,11 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		defer session.Close()
 	}
 
-	t := rType(bean)
+	v := rValue(bean)
+	t := v.Type()
 
 	var colNames []string
 	var args []interface{}
-	var table *core.Table
 
 	// handle before update processors
 	for _, closure := range session.beforeClosures {
@@ -3480,25 +3508,24 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	var isMap = t.Kind() == reflect.Map
 	var isStruct = t.Kind() == reflect.Struct
 	if isStruct {
-		table = session.Engine.TableInfo(bean)
-		session.Statement.RefTable = table
+		session.Statement.setRefValue(v)
+
+		if len(session.Statement.TableName()) <= 0 {
+			return 0, ErrTableNotFound
+		}
 
 		if session.Statement.ColumnStr == "" {
-			colNames, args = buildUpdates(session.Engine, table, bean, false, false,
+			colNames, args = buildUpdates(session.Engine, session.Statement.RefTable, bean, false, false,
 				false, false, session.Statement.allUseBool, session.Statement.useAllCols,
 				session.Statement.mustColumnMap, session.Statement.nullableMap,
 				session.Statement.columnMap, true, session.Statement.unscoped)
 		} else {
-			colNames, args, err = genCols(table, session, bean, true, true)
+			colNames, args, err = genCols(session.Statement.RefTable, session, bean, true, true)
 			if err != nil {
 				return 0, err
 			}
 		}
 	} else if isMap {
-		if session.Statement.RefTable == nil {
-			return 0, ErrTableNotFound
-		}
-		table = session.Statement.RefTable
 		colNames = make([]string, 0)
 		args = make([]interface{}, 0)
 		bValue := reflect.Indirect(reflect.ValueOf(bean))
@@ -3511,7 +3538,9 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		return 0, ErrParamsType
 	}
 
-	if session.Statement.UseAutoTime && table.Updated != "" {
+	table := session.Statement.RefTable
+
+	if session.Statement.UseAutoTime && table != nil && table.Updated != "" {
 		colNames = append(colNames, session.Engine.Quote(table.Updated)+" = ?")
 		col := table.UpdatedColumn()
 		val, t := session.Engine.NowTime2(col.SQLType.Name)
@@ -3574,7 +3603,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 	var inArgs []interface{}
 	doIncVer := false
 	var verValue *reflect.Value
-	if table.Version != "" && session.Statement.checkVersion {
+	if table != nil && table.Version != "" && session.Statement.checkVersion {
 		if condition != "" {
 			condition = fmt.Sprintf("WHERE (%v) %v %v = ?", condition, session.Engine.Dialect().AndStr(),
 				session.Engine.Quote(table.Version))
@@ -3643,9 +3672,11 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		}
 	}
 
-	if cacher := session.Engine.getCacher2(table); cacher != nil && session.Statement.UseCache {
-		cacher.ClearIds(session.Statement.TableName())
-		cacher.ClearBeans(session.Statement.TableName())
+	if table != nil {
+		if cacher := session.Engine.getCacher2(table); cacher != nil && session.Statement.UseCache {
+			cacher.ClearIds(session.Statement.TableName())
+			cacher.ClearBeans(session.Statement.TableName())
+		}
 	}
 
 	// handle after update processors
@@ -3712,18 +3743,16 @@ func (session *Session) cacheDelete(sqlStr string, args ...interface{}) error {
 				for _, col := range session.Statement.RefTable.PKColumns() {
 					if v, ok := data[col.Name]; !ok {
 						return errors.New("no id")
-					} else {
-						if col.SQLType.IsText() {
-							pk = append(pk, string(v))
-						} else if col.SQLType.IsNumeric() {
-							id, err = strconv.ParseInt(string(v), 10, 64)
-							if err != nil {
-								return err
-							}
-							pk = append(pk, id)
-						} else {
-							return errors.New("not supported primary key type")
+					} else if col.SQLType.IsText() {
+						pk = append(pk, string(v))
+					} else if col.SQLType.IsNumeric() {
+						id, err = strconv.ParseInt(string(v), 10, 64)
+						if err != nil {
+							return err
 						}
+						pk = append(pk, id)
+					} else {
+						return errors.New("not supported primary key type")
 					}
 				}
 				ids = append(ids, pk)
@@ -3754,6 +3783,9 @@ func (session *Session) Delete(bean interface{}) (int64, error) {
 		defer session.Close()
 	}
 
+	session.Statement.setRefValue(rValue(bean))
+	var table = session.Statement.RefTable
+
 	// handle before delete processors
 	for _, closure := range session.beforeClosures {
 		closure(bean)
@@ -3765,8 +3797,6 @@ func (session *Session) Delete(bean interface{}) (int64, error) {
 	}
 	// --
 
-	table := session.Engine.TableInfo(bean)
-	session.Statement.RefTable = table
 	var colNames []string
 	var args []interface{}
 
@@ -3947,19 +3977,6 @@ func (session *Session) LastSQL() (string, []interface{}) {
 }
 
 // tbName get some table's table name
-func (session *Session) tbName(table *core.Table) string {
-	var tbName = table.Name
-	if len(session.Statement.AltTableName) > 0 {
-		tbName = session.Statement.AltTableName
-	}
-
-	/*if len(session.Engine.dialect.URI().Schema) > 0 {
-		return session.Engine.dialect.URI().Schema + "." + tbName
-	}*/
-	return tbName
-}
-
-// tbName get some table's table name
 func (session *Session) tbNameNoSchema(table *core.Table) string {
 	if len(session.Statement.AltTableName) > 0 {
 		return session.Statement.AltTableName
@@ -4029,7 +4046,7 @@ func (s *Session) Sync2(beans ...interface{}) error {
 								engine.dialect.DBType() == core.POSTGRES {
 								engine.logger.Infof("Table %s column %s change type from %s to %s\n",
 									tbName, col.Name, curType, expectedType)
-								_, err = engine.Exec(engine.dialect.ModifyColumnSql(engine.tbName(table), col))
+								_, err = engine.Exec(engine.dialect.ModifyColumnSql(table.Name, col))
 							} else {
 								engine.logger.Warnf("Table %s column %s db type is %s, struct type is %s\n",
 									tbName, col.Name, curType, expectedType)
@@ -4039,7 +4056,7 @@ func (s *Session) Sync2(beans ...interface{}) error {
 								if oriCol.Length < col.Length {
 									engine.logger.Infof("Table %s column %s change type from varchar(%d) to varchar(%d)\n",
 										tbName, col.Name, oriCol.Length, col.Length)
-									_, err = engine.Exec(engine.dialect.ModifyColumnSql(engine.tbName(table), col))
+									_, err = engine.Exec(engine.dialect.ModifyColumnSql(table.Name, col))
 								}
 							}
 						} else {
@@ -4053,7 +4070,7 @@ func (s *Session) Sync2(beans ...interface{}) error {
 							if oriCol.Length < col.Length {
 								engine.logger.Infof("Table %s column %s change type from varchar(%d) to varchar(%d)\n",
 									tbName, col.Name, oriCol.Length, col.Length)
-								_, err = engine.Exec(engine.dialect.ModifyColumnSql(engine.tbName(table), col))
+								_, err = engine.Exec(engine.dialect.ModifyColumnSql(table.Name, col))
 							}
 						}
 					}

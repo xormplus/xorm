@@ -607,8 +607,9 @@ func (session *Session) row2BeanWithDateFormat(dateFormat string, rows *core.Row
 		return errors.New("Expected a pointer to a struct")
 	}
 
-	table := session.Engine.autoMapType(dataStruct)
-	return session._row2BeanWithDateFormat(dateFormat, rows, fields, fieldsCount, bean, &dataStruct, table)
+	session.Statement.setRefValue(dataStruct)
+
+	return session._row2BeanWithDateFormat(dateFormat, rows, fields, fieldsCount, bean, &dataStruct, session.Statement.RefTable)
 }
 
 func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Rows, fields []string, fieldsCount int, bean interface{}, dataStruct *reflect.Value, table *core.Table) error {
@@ -882,6 +883,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 				} else if session.Statement.UseCascade {
 					table := session.Engine.autoMapType(*fieldValue)
 					if table != nil {
+						hasAssigned = true
 						if len(table.PrimaryKeys) != 1 {
 							panic("unsupported non or composited primary key cascade")
 						}

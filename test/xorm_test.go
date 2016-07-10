@@ -62,7 +62,7 @@ func Test_InitDB(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = db.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
+	err = db.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".stpl"})
 	if err != nil {
 		t.Fatal(err)
 	}
