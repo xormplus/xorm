@@ -483,7 +483,7 @@ func Test_Query(t *testing.T) {
 
 func Test_Sql_Execute(t *testing.T) {
 
-	result, err := db.Sql("INSERT INTO categories VALUES (?, ?, ?, ?, ?)", 18, "xiaozhang", 1, 1, 1).Execute()
+	result, err := db.Sql("INSERT INTO categories VALUES (?, ?, ?, ?, ?)", 138, "xiaozhang", 1, 1, 1).Execute()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,7 +493,7 @@ func Test_Sql_Execute(t *testing.T) {
 
 func Test_SqlMapClient_Execute(t *testing.T) {
 	db.AddSql("Test_SqlMapClient_Execute", "INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)")
-	result, err := db.SqlMapClient("Test_SqlMapClient_Execute", &map[string]interface{}{"id": 19, "name": "xiaowang", "counts": 1, "orders": 1, "pid": 1}).Execute()
+	result, err := db.SqlMapClient("Test_SqlMapClient_Execute", &map[string]interface{}{"id": 139, "name": "xiaowang", "counts": 1, "orders": 1, "pid": 1}).Execute()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -503,7 +503,7 @@ func Test_SqlMapClient_Execute(t *testing.T) {
 
 func Test_SqlTemplateClientt_Execute(t *testing.T) {
 	db.AddSqlTemplate("Test_SqlTemplateClientt_Execute", "INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)")
-	result, err := db.SqlTemplateClient("Test_SqlTemplateClientt_Execute", &map[string]interface{}{"id": 20, "name": "laowang", "counts": 1, "orders": 1, "pid": 1}).Execute()
+	result, err := db.SqlTemplateClient("Test_SqlTemplateClientt_Execute", &map[string]interface{}{"id": 230, "name": "laowang", "counts": 1, "orders": 1, "pid": 1}).Execute()
 	if err != nil {
 		t.Fatal(err)
 	}
