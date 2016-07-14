@@ -44,6 +44,7 @@ type Engine struct {
 
 	logger     core.ILogger
 	TZLocation *time.Location
+	DatabaseTZ *time.Location // The timezone of the database
 
 	disableGlobalCache bool
 }
@@ -290,7 +291,6 @@ func (engine *Engine) logSQLExecutionTime(sqlStr string, args []interface{}, exe
 		return res, err
 	}
 	return executionBlock()
-
 }
 
 // Sql will be depracated, please use SQL instead

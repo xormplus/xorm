@@ -796,21 +796,27 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
-						if len(z) == 0 || t.Year() == 0 {
-							// !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
+						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
+							dbTZ := session.Engine.DatabaseTZ
+							if dbTZ == nil {
+								dbTZ = time.Local
+							}
 							session.Engine.logger.Debugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
-								t.Minute(), t.Second(), t.Nanosecond(), time.Local)
+								t.Minute(), t.Second(), t.Nanosecond(), dbTZ)
 						}
 						// !nashtsai! convert to engine location
+						var tz *time.Location
 						if col.TimeZone == nil {
 							t = t.In(session.Engine.TZLocation)
+							tz = session.Engine.TZLocation
 						} else {
 							t = t.In(col.TimeZone)
+							tz = col.TimeZone
 						}
 						// dateFormat to string
-						loc, _ := time.LoadLocation("Local") //重要：获取时区  rawValue.Interface().(time.Time).Format(dateFormat)
-						t, _ = time.ParseInLocation(dateFormat, t.Format(dateFormat), loc)
+						//loc, _ := time.LoadLocation("Local") //重要：获取时区  rawValue.Interface().(time.Time).Format(dateFormat)
+						t, _ = time.ParseInLocation(dateFormat, t.Format(dateFormat), tz)
 
 						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 					} else if rawValueType == core.IntType || rawValueType == core.Int64Type ||
