@@ -19,7 +19,7 @@ import (
 	"github.com/xormplus/core"
 )
 
-// Struct Session keep a pointer to sql.DB and provides all execution of all
+// Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
 	db                     *core.DB
