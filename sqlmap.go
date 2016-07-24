@@ -1,10 +1,9 @@
 package xorm
 
 import (
-	//	"encoding/base64"
 	"encoding/xml"
 	"io/ioutil"
-	//	"log"
+
 	"os"
 	"path/filepath"
 	"strings"
