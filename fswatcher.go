@@ -6,7 +6,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-//start filesytem watcher
+//start filesystem watcher
 func (engine *Engine) StartFSWatcher() error {
 	var err error
 	engine.watcher, err = fsnotify.NewWatcher()
@@ -61,7 +61,7 @@ func (engine *Engine) StartFSWatcher() error {
 	return nil
 }
 
-//stop filesytem watcher
+//stop filesystem watcher
 func (engine *Engine) StopFSWatcher() error {
 	return engine.watcher.Close()
 }
