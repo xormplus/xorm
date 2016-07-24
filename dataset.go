@@ -55,7 +55,6 @@ func NewDatasetWithData(headers []string, data interface{}) (*tablib.Dataset, er
 		} else {
 			return tablib.NewDatasetWithData(headers, nil), nil
 		}
-		return nil, ErrParamsType
 	default:
 		return nil, ErrParamsType
 	}

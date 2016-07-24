@@ -25,6 +25,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 	var model_1_results *ResultMap
 	var model_2_results sql.Result
 	var err error
+	var sqlStr string
 
 	sqlModel := 1
 
@@ -39,7 +40,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 	case string:
 		sqlkey := strings.TrimSpace(sqlTemplatesExecutor.sqlkeys.(string))
 		if sqlTemplatesExecutor.parmas == nil {
-			sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(nil)
+			sqlStr, err = sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(nil)
 			if err != nil {
 				if sqlTemplatesExecutor.session.IsSqlFuc == true {
 					err1 := sqlTemplatesExecutor.session.Rollback()
@@ -67,7 +68,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			case []map[string]interface{}:
 				parmaMap, _ := sqlTemplatesExecutor.parmas.([]map[string]interface{})
 
-				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap[0])
+				sqlStr, err = sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap[0])
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -94,7 +95,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			case map[string]interface{}:
 				parmaMap, _ := sqlTemplatesExecutor.parmas.(map[string]interface{})
 
-				sqlStr, err := sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap)
+				sqlStr, err = sqlTemplatesExecutor.session.Engine.GetSqlTemplate(sqlkey).Execute(parmaMap)
 				if err != nil {
 					if sqlTemplatesExecutor.session.IsSqlFuc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
