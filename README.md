@@ -25,6 +25,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 支持根据数据库自动生成xorm的结构体
 * 支持记录版本（即乐观锁）
 * 支持查询结果集导出csv、tsv、xml、json、xlsx、yaml、html功能
+* 支持SQL Builder [github.com/go-xorm/builder](https://github.com/go-xorm/builder)
 
 ## 驱动支持
 
@@ -38,7 +39,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * MsSql: [github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb)
 * MsSql: [github.com/lunny/godbc](https://github.com/lunny/godbc)
 * Oracle: [github.com/mattn/go-oci8](https://github.com/mattn/go-oci8) (试验性支持)
-* ql: [github.com/cznic/ql](https://github.com/cznic/ql) (试验性支持)
+
 
 ## 安装
 
