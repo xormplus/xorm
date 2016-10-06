@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// Version show the xorm's version
+	// Version show the xorm's version.
 	Version string = "0.6.0.0929"
 )
 

@@ -104,7 +104,7 @@ func (rows *Rows) Err() error {
 	return rows.lastError
 }
 
-// Scan row record to bean properties
+// Scan row record to bean properties.
 func (rows *Rows) Scan(bean interface{}) error {
 	if rows.lastError != nil {
 		return rows.lastError

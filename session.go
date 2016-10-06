@@ -56,7 +56,7 @@ type Session struct {
 	lastSQLArgs []interface{}
 }
 
-// Clone copy all the session's content and return a new session
+// Clone copy all the session's content and return a new session.
 func (session *Session) Clone() *Session {
 	var sess = *session
 	return &sess

@@ -24,7 +24,7 @@ import (
 )
 
 // Engine is the major struct of xorm, it means a database manager.
-// Commonly, an application only need one engine
+// Commonly, an application only need one engine.
 type Engine struct {
 	db      *core.DB
 	dialect core.Dialect
