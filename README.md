@@ -949,6 +949,13 @@ counts, err := engine.Count(&user)
 // SELECT count(*) AS total FROM user
 ```
 
+* 条件编辑器
+
+```Go
+err := engine.Where(builder.NotIn("a", 1, 2).And(builder.In("b", "c", "d", "e"))).Find(&users)
+// SELECT id, name ... FROM user WHERE a NOT IN (?, ?) AND b IN (?, ?, ?)
+```
+
 * <b>Dump数据库结构和数据</b>
 DumpAll方法接收一个io.Writer接口来保存Dump出的数据库结构和数据的SQL语句，这个方法导出的SQL语句并不能通用。只针对当前engine所对应的数据库支持的SQL。
 
