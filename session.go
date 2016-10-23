@@ -685,6 +685,7 @@ func (session *Session) canCache() bool {
 	if session.Statement.RefTable == nil ||
 		session.Statement.JoinStr != "" ||
 		session.Statement.RawSQL != "" ||
+		!session.Statement.UseCache ||
 		session.Tx != nil ||
 		len(session.Statement.selectStr) > 0 {
 		return false
@@ -763,7 +764,7 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 		}
 		cacheBean := cacher.GetBean(tableName, sid)
 		if cacheBean == nil {
-			newSession := session.Engine.NewSession()
+			/*newSession := session.Engine.NewSession()
 			defer newSession.Close()
 			cacheBean = reflect.New(structValue.Type()).Interface()
 			newSession.Id(id).NoCache()
@@ -774,6 +775,9 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 				newSession.NoCascade()
 			}
 			has, err = newSession.Get(cacheBean)
+			*/
+			cacheBean = bean
+			has, err = session.nocacheGet(cacheBean, sqlStr, args...)
 			if err != nil || !has {
 				return has, err
 			}
@@ -1030,6 +1034,30 @@ func (session *Session) doPrepare(sqlStr string) (stmt *core.Stmt, err error) {
 	return
 }
 
+func (session *Session) nocacheGet(bean interface{}, sqlStr string, args ...interface{}) (bool, error) {
+	var rawRows *core.Rows
+	var err error
+	session.queryPreprocess(&sqlStr, args...)
+	if session.IsAutoCommit {
+		_, rawRows, err = session.innerQuery(sqlStr, args...)
+	} else {
+		rawRows, err = session.Tx.Query(sqlStr, args...)
+	}
+	if err != nil {
+		return false, err
+	}
+
+	defer rawRows.Close()
+
+	if rawRows.Next() {
+		if fields, err := rawRows.Columns(); err == nil {
+			err = session.row2Bean(rawRows, fields, len(fields), bean)
+		}
+		return true, err
+	}
+	return false, nil
+}
+
 // Get retrieve one record from database, bean's non-empty fields
 // will be as conditions
 func (session *Session) Get(bean interface{}) (bool, error) {
@@ -1054,9 +1082,8 @@ func (session *Session) Get(bean interface{}) (bool, error) {
 		args = session.Statement.RawParams
 	}
 
-	if session.Statement.JoinStr == "" {
+	if session.canCache() {
 		if cacher := session.Engine.getCacher2(session.Statement.RefTable); cacher != nil &&
-			session.Statement.UseCache &&
 			!session.Statement.unscoped {
 			has, err := session.cacheGet(bean, sqlStr, args...)
 			if err != ErrCacheFailed {
@@ -1065,27 +1092,7 @@ func (session *Session) Get(bean interface{}) (bool, error) {
 		}
 	}
 
-	var rawRows *core.Rows
-	var err error
-	session.queryPreprocess(&sqlStr, args...)
-	if session.IsAutoCommit {
-		_, rawRows, err = session.innerQuery(sqlStr, args...)
-	} else {
-		rawRows, err = session.Tx.Query(sqlStr, args...)
-	}
-	if err != nil {
-		return false, err
-	}
-
-	defer rawRows.Close()
-
-	if rawRows.Next() {
-		if fields, err := rawRows.Columns(); err == nil {
-			err = session.row2Bean(rawRows, fields, len(fields), bean)
-		}
-		return true, err
-	}
-	return false, nil
+	return session.nocacheGet(bean, sqlStr, args...)
 }
 
 // Count counts the records. bean's non-empty fields
