@@ -1396,6 +1396,24 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 	}
 
 	if sliceValue.Kind() != reflect.Map {
+		if session.IsSqlFuc {
+			sql := session.Statement.RawSQL
+			params := session.Statement.RawParams
+			i := len(params)
+			if i == 1 {
+				vv := reflect.ValueOf(params[0])
+				if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+					sqlStr = sql
+					args = params
+				} else {
+					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+				}
+			} else {
+				sqlStr = sql
+				args = params
+			}
+		}
+
 		return session.noCacheFind(sliceValue, sqlStr, args...)
 	}
 
