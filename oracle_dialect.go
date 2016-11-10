@@ -525,8 +525,9 @@ func (db *oracle) SqlType(c *core.Column) string {
 		res = t
 	}
 
-	var hasLen1 bool = (c.Length > 0)
-	var hasLen2 bool = (c.Length2 > 0)
+	hasLen1 := (c.Length > 0)
+	hasLen2 := (c.Length2 > 0)
+
 	if hasLen2 {
 		res += "(" + strconv.Itoa(c.Length) + "," + strconv.Itoa(c.Length2) + ")"
 	} else if hasLen1 {
@@ -576,14 +577,14 @@ func (db *oracle) DropTableSql(tableName string) string {
 	return fmt.Sprintf("DROP TABLE `%s`", tableName)
 }
 
-func (b *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
+func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
 	var sql string
 	sql = "CREATE TABLE "
 	if tableName == "" {
 		tableName = table.Name
 	}
 
-	sql += b.Quote(tableName) + " ("
+	sql += db.Quote(tableName) + " ("
 
 	pkList := table.PrimaryKeys
 
@@ -592,7 +593,7 @@ func (b *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 		/*if col.IsPrimaryKey && len(pkList) == 1 {
 			sql += col.String(b.dialect)
 		} else {*/
-		sql += col.StringNoPk(b)
+		sql += col.StringNoPk(db)
 		//}
 		sql = strings.TrimSpace(sql)
 		sql += ", "
@@ -600,17 +601,17 @@ func (b *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 
 	if len(pkList) > 0 {
 		sql += "PRIMARY KEY ( "
-		sql += b.Quote(strings.Join(pkList, b.Quote(",")))
+		sql += db.Quote(strings.Join(pkList, db.Quote(",")))
 		sql += " ), "
 	}
 
 	sql = sql[:len(sql)-2] + ")"
-	if b.SupportEngine() && storeEngine != "" {
+	if db.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
 	}
-	if b.SupportCharset() {
+	if db.SupportCharset() {
 		if len(charset) == 0 {
-			charset = b.URI().Charset
+			charset = db.URI().Charset
 		}
 		if len(charset) > 0 {
 			sql += " DEFAULT CHARSET " + charset
