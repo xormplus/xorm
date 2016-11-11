@@ -1121,11 +1121,12 @@ func (session *Session) Count(bean interface{}) (int64, error) {
 	} else {
 		err = session.Tx.QueryRow(sqlStr, args...).Scan(&total)
 	}
-	if err != nil {
-		return 0, err
+
+	if err == sql.ErrNoRows || err == nil {
+		return total, nil
 	}
 
-	return total, nil
+	return 0, err
 }
 
 // Sum call sum some column. bean's non-empty fields are conditions.
@@ -1153,11 +1154,11 @@ func (session *Session) Sum(bean interface{}, columnName string) (float64, error
 	} else {
 		err = session.Tx.QueryRow(sqlStr, args...).Scan(&res)
 	}
-	if err != nil {
-		return 0, err
-	}
 
-	return res, nil
+	if err == sql.ErrNoRows || err == nil {
+		return res, nil
+	}
+	return 0, err
 }
 
 // Sums call sum some columns. bean's non-empty fields are conditions.
@@ -1185,11 +1186,11 @@ func (session *Session) Sums(bean interface{}, columnNames ...string) ([]float64
 	} else {
 		err = session.Tx.QueryRow(sqlStr, args...).ScanSlice(&res)
 	}
-	if err != nil {
-		return nil, err
-	}
 
-	return res, nil
+	if err == sql.ErrNoRows || err == nil {
+		return res, nil
+	}
+	return nil, err
 }
 
 // SumsInt sum specify columns and return as []int64 instead of []float64
@@ -1217,11 +1218,11 @@ func (session *Session) SumsInt(bean interface{}, columnNames ...string) ([]int6
 	} else {
 		err = session.Tx.QueryRow(sqlStr, args...).ScanSlice(&res)
 	}
-	if err != nil {
-		return nil, err
-	}
 
-	return res, nil
+	if err == sql.ErrNoRows || err == nil {
+		return res, nil
+	}
+	return nil, err
 }
 
 func (session *Session) noCacheFind(sliceValue reflect.Value, sqlStr string, args ...interface{}) error {
@@ -1519,10 +1520,13 @@ func (session *Session) isTableEmpty(tableName string) (bool, error) {
 	}
 
 	var total int64
-	sql := fmt.Sprintf("select count(*) from %s", session.Engine.Quote(tableName))
-	err := session.DB().QueryRow(sql).Scan(&total)
-	session.saveLastSQL(sql)
+	sqlStr := fmt.Sprintf("select count(*) from %s", session.Engine.Quote(tableName))
+	err := session.DB().QueryRow(sqlStr).Scan(&total)
+	session.saveLastSQL(sqlStr)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			err = nil
+		}
 		return true, err
 	}
 
