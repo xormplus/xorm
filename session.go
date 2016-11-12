@@ -23,10 +23,11 @@ import (
 // Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
-	db                     *core.DB
-	Engine                 *Engine
-	Tx                     *core.Tx
-	Statement              Statement
+	db        *core.DB
+	Engine    *Engine
+	Tx        *core.Tx
+	Statement Statement
+
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
 	IsSqlFuc               bool
@@ -2338,12 +2339,12 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 					continue
 				}
 				if session.Statement.ColumnStr != "" {
-					if _, ok := session.Statement.columnMap[strings.ToLower(col.Name)]; !ok {
+					if _, ok := getFlagForColumn(session.Statement.columnMap, col); !ok {
 						continue
 					}
 				}
 				if session.Statement.OmitStr != "" {
-					if _, ok := session.Statement.columnMap[strings.ToLower(col.Name)]; ok {
+					if _, ok := getFlagForColumn(session.Statement.columnMap, col); ok {
 						continue
 					}
 				}
@@ -2393,12 +2394,12 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 					continue
 				}
 				if session.Statement.ColumnStr != "" {
-					if _, ok := session.Statement.columnMap[strings.ToLower(col.Name)]; !ok {
+					if _, ok := getFlagForColumn(session.Statement.columnMap, col); !ok {
 						continue
 					}
 				}
 				if session.Statement.OmitStr != "" {
-					if _, ok := session.Statement.columnMap[strings.ToLower(col.Name)]; ok {
+					if _, ok := getFlagForColumn(session.Statement.columnMap, col); ok {
 						continue
 					}
 				}
