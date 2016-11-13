@@ -23,11 +23,11 @@ import (
 // Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
-	db        *core.DB
-	Engine    *Engine
-	Tx        *core.Tx
-	Statement Statement
-
+	db                     *core.DB
+	Engine                 *Engine
+	Tx                     *core.Tx
+	Statement              Statement
+	currentTransaction     *Transaction
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
 	IsSqlFuc               bool
