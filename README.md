@@ -16,7 +16,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 使用连写来简化调用
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
 * 支持级联加载Struct
-* 支持类ibatis方式配置SQL语句（支持xml配置文件和pongo2模板2种方式）
+* 支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件和pongo2模板3种方式）
 * 支持动态SQL功能
 * 支持一次批量混合执行多个CRUD操作，并返回多个结果集
 * 支持数据库查询结果直接返回Json字符串和xml字符串
@@ -105,12 +105,14 @@ if err != nil {
 ```
 
 * <b>db.InitSqlMap()过程</b>
-    * 如使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则InitSqlMap()方法按指定目录遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）
-    * 如未使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）
-    * 解析所有配置SqlMap的xml配置文件
-    * 配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
+    * 如使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则InitSqlMap()方法按指定目录遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）或json配置文件（配置文件样例 ）
+    * 如未使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）或json配置文件（配置文件样例 ）
+    * 解析所有配置SqlMap的xml配置文件或json配置文件
+    * xml配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
+    * json配置文件中key值作为SqlMap的key，如有重名key，则后加载的覆盖之前加载的配置sql条目
+    * json配置文件中key和xml配置文件中sql标签的id属性值有相互重名的，则后加载的覆盖之前加载的配置sql条目
     * 配置文件中sql配置会读入内存并缓存
-    * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求等强大功能，故SqlMap的xml只提供这种极简配置方式，非ibatis的OGNL的表达式实现方式
+    * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求等强大功能，故SqlMap的xml或json只提供这种极简配置方式，非ibatis的OGNL的表达式实现方式
 
 * <b>db.InitSqlTemplate()过程</b>
     * 如使用SetSqlTemplateRootDir()方法指定SqlTemplate模板配置文件总根目录，则InitSqlTemplate()方法按指定目录遍历SqlTemplateRootDir所配置的目录及其子目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
@@ -418,14 +420,16 @@ engine.SetSqlMapRootDir()
 //设置SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
 engine.SetSqlTemplateRootDir()
 
-err := engine.InitSqlMap()//初始化加载SqlMap配置文件，默认初始化后缀为".xml"，初始化容量100
+//初始化加载SqlMap配置文件，默认初始化xml格式内容后缀为".xml",json格式内容后缀为".json"，默认初始化容量100
+err := engine.InitSqlMap()
 err := engine.InitSqlTemplate()//初始化加载SqlTemplate配置文件，默认初始化后缀为".stpl"，初始化容量100
 
 //SqlMap配置文件和SqlTemplate配置文件后缀不要相同
-//指定SqlMap配置文件后缀为".xx"，但配置内容必须为样例的xml格式，如不指定，默认后缀为".xml"
+//指定SqlMap配置文件xml格式内容后缀为".xx"，但配置内容必须为样例的xml格式，如不指定，默认后缀为".xml"
+//指定SqlMap配置文件json格式内容后缀为".json"，但配置内容必须为样例的json格式，如不指定，默认后缀为".json"
 //同时还可以指定初始化容量，如不指定，默认初始化容量100
-option := xorm.SqlMapOptions{Extension: ".xx"}
-err := engine.InitSqlMap(option) //按指定SqlMap配置文件后缀为".xx"初始化
+opt := xorm.SqlMapOptions{Extension: map[string]string{"xml": ".xxx", "json": ".json"}}
+err := engine.InitSqlMap(opt) //按指定SqlMap配置文件xml格式内容后缀为".xxx"初始化,配置文件json格式内容后缀为".json"初始化
 
 //指定SqlTemplate配置文件后缀为".yy"，初始化容量200，如不指定，默认后缀为".stpl"，初始化容量100
 option := xorm.SqlTemplateOptions{Extension: ".yy", Capacity: 200}
