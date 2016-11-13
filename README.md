@@ -105,8 +105,8 @@ if err != nil {
 ```
 
 * <b>db.InitSqlMap()过程</b>
-    * 如使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则InitSqlMap()方法按指定目录遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）或json配置文件（配置文件样例 ）
-    * 如未使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例 </a>）或json配置文件（配置文件样例 ）
+    * 如使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则InitSqlMap()方法按指定目录遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例</a>）或json配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/test.json">配置文件样例</a>）
+    * 如未使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例</a>）或json配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/test.json">配置文件样例</a>）
     * 解析所有配置SqlMap的xml配置文件或json配置文件
     * xml配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
     * json配置文件中key值作为SqlMap的key，如有重名key，则后加载的覆盖之前加载的配置sql条目
