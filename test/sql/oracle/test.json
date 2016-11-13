@@ -1,0 +1,9 @@
+{
+  "json_selectAllArticle": "select id,title,createdatetime,content from Article where id in (?1,?2)",
+  "json_selectStudentById1": "select * from user where id=?id and 1=1",
+  "json_sql_2_1": "select id,title,createdatetime,content from Article where id = ?id",
+  "json_sql_i_1": "INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)",
+  "json_sql_i_2": "INSERT INTO categories VALUES (?id, ?name, ?counts, ?orders, ?pid)",
+  "json_category": "select * from category",
+  "json_category-16-17": "select * from category where id in (16,17) and name='dd'"
+}
