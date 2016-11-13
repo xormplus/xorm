@@ -28,7 +28,7 @@ func (engine *Engine) StartFSWatcher() error {
 						}
 					}
 
-					if strings.HasSuffix(event.Name, engine.sqlMap.Extension) {
+					if strings.HasSuffix(event.Name, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(event.Name, engine.sqlMap.Extension["json"]) {
 						err = engine.reloadSqlMap(event.Name)
 						if err != nil {
 							engine.logger.Error(err)

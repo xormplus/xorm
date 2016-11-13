@@ -1,6 +1,7 @@
 package xorm
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"io/ioutil"
 
@@ -14,14 +15,14 @@ import (
 type SqlMap struct {
 	SqlMapRootDir string
 	Sql           map[string]string
-	Extension     string
+	Extension     map[string]string
 	Capacity      uint
 	Cipher        Cipher
 }
 
 type SqlMapOptions struct {
 	Capacity  uint
-	Extension string
+	Extension map[string]string
 	Cipher    Cipher
 }
 
@@ -61,7 +62,14 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 	}
 
 	if len(opt.Extension) == 0 {
-		opt.Extension = ".xml"
+		opt.Extension = map[string]string{"xml": ".xml", "json": ".json"}
+	} else {
+		if opt.Extension["xml"] == "" || len(opt.Extension["xml"]) == 0 {
+			opt.Extension["xml"] = ".xml"
+		}
+		if opt.Extension["json"] == "" || len(opt.Extension["json"]) == 0 {
+			opt.Extension["json"] = ".json"
+		}
 	}
 
 	engine.sqlMap.Extension = opt.Extension
@@ -90,10 +98,19 @@ func (engine *Engine) InitSqlMap(options ...SqlMapOptions) error {
 }
 
 func (engine *Engine) LoadSqlMap(filepath string) error {
+
 	if len(engine.sqlMap.Extension) == 0 {
-		engine.sqlMap.Extension = ".xml"
+		engine.sqlMap.Extension = map[string]string{"xml": ".xml", "json": ".json"}
+	} else {
+		if engine.sqlMap.Extension["xml"] == "" || len(engine.sqlMap.Extension["xml"]) == 0 {
+			engine.sqlMap.Extension["xml"] = ".xml"
+		}
+		if engine.sqlMap.Extension["json"] == "" || len(engine.sqlMap.Extension["json"]) == 0 {
+			engine.sqlMap.Extension["json"] = ".json"
+		}
 	}
-	if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
+
+	if strings.HasSuffix(filepath, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(filepath, engine.sqlMap.Extension["json"]) {
 		err := engine.loadSqlMap(filepath)
 		if err != nil {
 			return err
@@ -105,10 +122,18 @@ func (engine *Engine) LoadSqlMap(filepath string) error {
 
 func (engine *Engine) BatchLoadSqlMap(filepathSlice []string) error {
 	if len(engine.sqlMap.Extension) == 0 {
-		engine.sqlMap.Extension = ".xml"
+		engine.sqlMap.Extension = map[string]string{"xml": ".xml", "json": ".json"}
+	} else {
+		if engine.sqlMap.Extension["xml"] == "" || len(engine.sqlMap.Extension["xml"]) == 0 {
+			engine.sqlMap.Extension["xml"] = ".xml"
+		}
+		if engine.sqlMap.Extension["json"] == "" || len(engine.sqlMap.Extension["json"]) == 0 {
+			engine.sqlMap.Extension["json"] = ".json"
+		}
 	}
+
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(filepath, engine.sqlMap.Extension["json"]) {
 			err := engine.loadSqlMap(filepath)
 			if err != nil {
 				return err
@@ -121,9 +146,17 @@ func (engine *Engine) BatchLoadSqlMap(filepathSlice []string) error {
 
 func (engine *Engine) ReloadSqlMap(filepath string) error {
 	if len(engine.sqlMap.Extension) == 0 {
-		engine.sqlMap.Extension = ".xml"
+		engine.sqlMap.Extension = map[string]string{"xml": ".xml", "json": ".json"}
+	} else {
+		if engine.sqlMap.Extension["xml"] == "" || len(engine.sqlMap.Extension["xml"]) == 0 {
+			engine.sqlMap.Extension["xml"] = ".xml"
+		}
+		if engine.sqlMap.Extension["json"] == "" || len(engine.sqlMap.Extension["json"]) == 0 {
+			engine.sqlMap.Extension["json"] = ".json"
+		}
 	}
-	if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
+
+	if strings.HasSuffix(filepath, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(filepath, engine.sqlMap.Extension["json"]) {
 		err := engine.reloadSqlMap(filepath)
 		if err != nil {
 			return err
@@ -135,10 +168,18 @@ func (engine *Engine) ReloadSqlMap(filepath string) error {
 
 func (engine *Engine) BatchReloadSqlMap(filepathSlice []string) error {
 	if len(engine.sqlMap.Extension) == 0 {
-		engine.sqlMap.Extension = ".xml"
+		engine.sqlMap.Extension = map[string]string{"xml": ".xml", "json": ".json"}
+	} else {
+		if engine.sqlMap.Extension["xml"] == "" || len(engine.sqlMap.Extension["xml"]) == 0 {
+			engine.sqlMap.Extension["xml"] = ".xml"
+		}
+		if engine.sqlMap.Extension["json"] == "" || len(engine.sqlMap.Extension["json"]) == 0 {
+			engine.sqlMap.Extension["json"] = ".json"
+		}
 	}
+
 	for _, filepath := range filepathSlice {
-		if strings.HasSuffix(filepath, engine.sqlMap.Extension) {
+		if strings.HasSuffix(filepath, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(filepath, engine.sqlMap.Extension["json"]) {
 			err := engine.loadSqlMap(filepath)
 			if err != nil {
 				return err
@@ -195,7 +236,7 @@ func (sqlMap *SqlMap) walkFunc(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	if strings.HasSuffix(path, sqlMap.Extension) {
+	if strings.HasSuffix(path, sqlMap.Extension["xml"]) || strings.HasSuffix(path, sqlMap.Extension["json"]) {
 		err = sqlMap.paresSql(path)
 		if err != nil {
 			return err
@@ -222,16 +263,33 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 	}
 
 	sqlMap.checkNilAndInit()
-	var result Result
-	err = xml.Unmarshal(content, &result)
-	if err != nil {
-		return err
+
+	if strings.HasSuffix(filepath, sqlMap.Extension["xml"]) {
+		var result Result
+		err = xml.Unmarshal(content, &result)
+		if err != nil {
+			return err
+		}
+
+		for _, sql := range result.Sql {
+			sqlMap.Sql[sql.Id] = sql.Value
+		}
+
+		return nil
 	}
 
-	for _, sql := range result.Sql {
-		sqlMap.Sql[sql.Id] = sql.Value
-	}
+	if strings.HasSuffix(filepath, sqlMap.Extension["json"]) {
+		var result map[string]string
+		err = json.Unmarshal(content, &result)
+		if err != nil {
+			return err
+		}
+		for k := range result {
+			sqlMap.Sql[k] = result[k]
+		}
 
+		return nil
+	}
 	return nil
 
 }
