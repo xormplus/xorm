@@ -1425,16 +1425,16 @@ func (engine *Engine) dropAll() error {
 	session := engine.NewSession()
 	defer session.Close()
 
-	tx, err := session.Begin()
+	err := session.begin()
 	if err != nil {
 		return err
 	}
 	err = session.dropAll()
 	if err != nil {
-		tx.Rollback()
+		session.rollback()
 		return err
 	}
-	return tx.Commit()
+	return session.commit()
 }
 
 // CreateTables create tabls according bean
@@ -1442,7 +1442,7 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 	session := engine.NewSession()
 	defer session.Close()
 
-	tx, err := session.Begin()
+	err := session.begin()
 	if err != nil {
 		return err
 	}
@@ -1450,11 +1450,11 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 	for _, bean := range beans {
 		err = session.CreateTable(bean)
 		if err != nil {
-			tx.Rollback()
+			session.rollback()
 			return err
 		}
 	}
-	return tx.Commit()
+	return session.commit()
 }
 
 // DropTables drop specify tables
@@ -1462,7 +1462,7 @@ func (engine *Engine) DropTables(beans ...interface{}) error {
 	session := engine.NewSession()
 	defer session.Close()
 
-	tx, err := session.Begin()
+	err := session.begin()
 	if err != nil {
 		return err
 	}
@@ -1470,11 +1470,11 @@ func (engine *Engine) DropTables(beans ...interface{}) error {
 	for _, bean := range beans {
 		err = session.DropTable(bean)
 		if err != nil {
-			tx.Rollback()
+			session.rollback()
 			return err
 		}
 	}
-	return tx.Commit()
+	return session.commit()
 }
 
 func (engine *Engine) createAll() error {
