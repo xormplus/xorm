@@ -539,7 +539,7 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 		if session.IsAutoCommit {
 			// FIXME: oci8 can not auto commit (github.com/mattn/go-oci8)
 			if session.Engine.dialect.DBType() == core.ORACLE {
-				session.Begin()
+				session.begin()
 				r, err := session.Tx.Exec(sqlStr, args...)
 				session.commit()
 				return r, err
