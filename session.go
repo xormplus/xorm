@@ -95,7 +95,7 @@ func (session *Session) Close() {
 		// When Close be called, if session is a transaction and do not call
 		// Commit or Rollback, then call Rollback.
 		if session.Tx != nil && !session.IsCommitedOrRollbacked {
-			session.Rollback()
+			session.rollback()
 		}
 		session.Tx = nil
 		session.stmtCache = nil
@@ -380,7 +380,7 @@ func (session *Session) Conds() builder.Cond {
 }
 
 // Begin a transaction
-func (session *Session) Begin() error {
+func (session *Session) begin() error {
 	if session.IsAutoCommit {
 		tx, err := session.DB().Begin()
 		if err != nil {
@@ -395,7 +395,7 @@ func (session *Session) Begin() error {
 }
 
 // Rollback When using transaction, you can rollback if any error
-func (session *Session) Rollback() error {
+func (session *Session) rollback() error {
 	if !session.IsAutoCommit && !session.IsCommitedOrRollbacked {
 		session.saveLastSQL(session.Engine.dialect.RollBackStr())
 		session.IsCommitedOrRollbacked = true
@@ -405,7 +405,7 @@ func (session *Session) Rollback() error {
 }
 
 // Commit When using transaction, Commit will commit all operations.
-func (session *Session) Commit() error {
+func (session *Session) commit() error {
 	if !session.IsAutoCommit && !session.IsCommitedOrRollbacked {
 		session.saveLastSQL("COMMIT")
 		session.IsCommitedOrRollbacked = true
@@ -541,7 +541,7 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 			if session.Engine.dialect.DBType() == core.ORACLE {
 				session.Begin()
 				r, err := session.Tx.Exec(sqlStr, args...)
-				session.Commit()
+				session.commit()
 				return r, err
 			}
 			return session.innerExec(sqlStr, args...)

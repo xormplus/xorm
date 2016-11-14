@@ -29,7 +29,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 	sqlModel := 1
 
 	if sqlsExecutor.session.IsSqlFuc == true {
-		err := sqlsExecutor.session.Begin()
+		err := sqlsExecutor.session.begin()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -88,7 +88,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlsExecutor.session.Engine.RemoveSql(key)
 			default:
 				if sqlsExecutor.session.IsSqlFuc == true {
-					err1 := sqlsExecutor.session.Rollback()
+					err1 := sqlsExecutor.session.rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -102,7 +102,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		if sqlModel == 1 {
 			if model_1_results.Error != nil {
 				if sqlsExecutor.session.IsSqlFuc == true {
-					err1 := sqlsExecutor.session.Rollback()
+					err1 := sqlsExecutor.session.rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -116,7 +116,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		} else if sqlModel == 2 {
 			if err != nil {
 				if sqlsExecutor.session.IsSqlFuc == true {
-					err1 := sqlsExecutor.session.Rollback()
+					err1 := sqlsExecutor.session.rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -166,7 +166,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -179,7 +179,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -197,7 +197,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -221,7 +221,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			default:
 				if sqlsExecutor.session.IsSqlFuc == true {
-					err1 := sqlsExecutor.session.Rollback()
+					err1 := sqlsExecutor.session.rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -262,7 +262,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -275,7 +275,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -293,7 +293,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -312,7 +312,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		}
 
 		if sqlsExecutor.session.IsSqlFuc == true {
-			err1 := sqlsExecutor.session.Commit()
+			err1 := sqlsExecutor.session.commit()
 			if err1 != nil {
 				return nil, nil, err1
 			}
@@ -347,7 +347,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -360,7 +360,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -379,7 +379,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					if err != nil {
 
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -402,7 +402,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			default:
 				if sqlsExecutor.session.IsSqlFuc == true {
-					err1 := sqlsExecutor.session.Rollback()
+					err1 := sqlsExecutor.session.rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -448,7 +448,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -461,7 +461,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -479,7 +479,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlsExecutor.session.IsSqlFuc == true {
-							err1 := sqlsExecutor.session.Rollback()
+							err1 := sqlsExecutor.session.rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -498,7 +498,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		}
 
 		if sqlsExecutor.session.IsSqlFuc == true {
-			err1 := sqlsExecutor.session.Commit()
+			err1 := sqlsExecutor.session.commit()
 			if err1 != nil {
 				return nil, nil, err1
 			}
