@@ -148,7 +148,13 @@ func (transaction *Transaction) Begin() error {
 			}
 		} else {
 			transaction.isNested = true
-			transaction.savePointID = "xorm" + NewV1().WithoutDashString()
+			dbtype := transaction.TxSession.Engine.Dialect().DBType()
+			if dbtype == core.MSSQL {
+				transaction.savePointID = "xorm" + NewShortUUID().String()
+			} else {
+				transaction.savePointID = "xorm" + NewV1().WithoutDashString()
+			}
+
 			if err := transaction.SavePoint(transaction.savePointID); err != nil {
 				return err
 			}
@@ -320,7 +326,7 @@ func (transaction *Transaction) SavePoint(savePointID string) error {
 	var lastSQL string
 	dbtype := transaction.TxSession.Engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
-		lastSQL = "save tran " + savePointID + ";"
+		lastSQL = "save tran " + savePointID
 	} else {
 		lastSQL = "SAVEPOINT " + savePointID + ";"
 	}
@@ -341,7 +347,7 @@ func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
 	var lastSQL string
 	dbtype := transaction.TxSession.Engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
-		lastSQL = "rollback tran " + savePointID + ";"
+		lastSQL = "rollback tran " + savePointID
 	} else {
 		lastSQL = "ROLLBACK TO SAVEPOINT " + transaction.savePointID + ";"
 	}
@@ -349,6 +355,31 @@ func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
 	transaction.TxSession.saveLastSQL(lastSQL)
 	if _, err := transaction.TxSession.Tx.Exec(lastSQL); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (transaction *Transaction) SetISOLATION() error {
+
+	var lastSQL string
+	dbtype := transaction.TxSession.Engine.Dialect().DBType()
+	if dbtype == core.MSSQL {
+		lastSQL = "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
+	} else {
+		lastSQL = "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
+	}
+
+	transaction.TxSession.saveLastSQL(lastSQL)
+
+	if transaction.TxSession.Tx == nil {
+		if _, err := transaction.TxSession.Exec(lastSQL); err != nil {
+			return err
+		}
+	} else {
+		if _, err := transaction.TxSession.Tx.Exec(lastSQL); err != nil {
+			return err
+		}
 	}
 
 	return nil
