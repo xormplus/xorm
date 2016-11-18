@@ -51,7 +51,7 @@ func (transaction *Transaction) Do(doFunc func(params ...interface{}), params ..
 	}
 }
 
-func (transaction *Transaction) WaitToDo(doFunc func(params ...interface{}), params ...interface{}) {
+func (transaction *Transaction) WaitForDo(doFunc func(params ...interface{}), params ...interface{}) {
 	if transaction.isNested {
 		var w sync.WaitGroup
 		w.Add(1)
