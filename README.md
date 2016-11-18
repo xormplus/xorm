@@ -379,28 +379,33 @@ session := engine.NewSession()
 defer session.Close()
 // add Begin() before any action
 tx, err := session.Begin()
+if err != nil {
+    return
+}
+
 user1 := Userinfo{Username: "xiaoxiao", Departname: "dev", Alias: "lunny", Created: time.Now()}
 _, err = tx.Session().Insert(&user1)
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
+
 user2 := Userinfo{Username: "yyy"}
 _, err = tx.Session().Where("id = ?", 2).Update(&user2)
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
 _, err = tx.Session().Exec("delete from userinfo where username = ?", user2.Username)
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
 _, err = tx.Session().SqlMapClient("delete.userinfo", user2.Username).Execute()
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
