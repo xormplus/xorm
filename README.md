@@ -11,7 +11,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 ## 特性
 
 * 支持Struct和数据库表之间的灵活映射，并支持自动同步
-* 事务支持
+* 事务支持，支持嵌套事务（支持类JAVA Spring的事务传播机制）
 * 同时支持原始SQL语句和ORM操作的混合执行
 * 使用连写来简化调用
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
@@ -378,38 +378,42 @@ id := engine.SqlTemplateClient(key, &paramMap).Query().Results[0]["id"] //返回
 session := engine.NewSession()
 defer session.Close()
 // add Begin() before any action
-err := session.Begin()
+tx, err := session.Begin()
 user1 := Userinfo{Username: "xiaoxiao", Departname: "dev", Alias: "lunny", Created: time.Now()}
-_, err = session.Insert(&user1)
+_, err = tx.Session().Insert(&user1)
 if err != nil {
     session.Rollback()
     return
 }
 user2 := Userinfo{Username: "yyy"}
-_, err = session.Where("id = ?", 2).Update(&user2)
+_, err = tx.Session().Where("id = ?", 2).Update(&user2)
 if err != nil {
     session.Rollback()
     return
 }
 
-_, err = session.Exec("delete from userinfo where username = ?", user2.Username)
+_, err = tx.Session().Exec("delete from userinfo where username = ?", user2.Username)
 if err != nil {
     session.Rollback()
     return
 }
 
-_, err = session.SqlMapClient("delete.userinfo", user2.Username).Execute()
+_, err = tx.Session().SqlMapClient("delete.userinfo", user2.Username).Execute()
 if err != nil {
     session.Rollback()
     return
 }
 
 // add Commit() after all actions
-err = session.Commit()
+err = tx.Commit()
 if err != nil {
+	...
     return
 }
 ```
+
+
+本定制版xorm还支持嵌套事务（类JAVA Spring的事务传播机制），这部分内容较多，详细了解请您移步本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
 
 # SqlMap及SqlTemplate
 * <b>SqlMap及SqlTemplate相关功能API</b>
