@@ -2,8 +2,6 @@ package xorm
 
 import (
 	"encoding/json"
-
-	"gopkg.in/flosch/pongo2.v3"
 )
 
 func (engine *Engine) SetSqlMapRootDir(sqlMapRootDir string) *Engine {
@@ -27,34 +25,7 @@ func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) 
 	session := engine.NewSession()
 	session.IsAutoClose = true
 	session.IsSqlFuc = true
-
-	if engine.sqlTemplate.Template[sqlTagName] == nil {
-		if len(args) == 0 {
-			return session.Sql("")
-		} else {
-			map1 := args[0].(*map[string]interface{})
-			return session.Sql("", map1)
-		}
-	}
-
-	if len(args) == 0 {
-		parmap := &pongo2.Context{"1": 1}
-		sql, err := engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
-		if err != nil {
-			engine.logger.Error(err)
-
-		}
-		return session.Sql(sql)
-	} else {
-		map1 := args[0].(*map[string]interface{})
-		sql, err := engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
-		if err != nil {
-			engine.logger.Error(err)
-
-		}
-		return session.Sql(sql, map1)
-	}
-
+	return session.SqlTemplateClient(sqlTagName, args...)
 }
 
 func (engine *Engine) Search(beans interface{}, condiBeans ...interface{}) *ResultStructs {

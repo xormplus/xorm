@@ -384,16 +384,33 @@ func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Se
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
-	map1 := args[0].(map[string]interface{})
 	if session.Engine.sqlTemplate.Template[sqlTagName] == nil {
-		return session.Sql("", &map1)
-	}
-	sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(map1)
-	if err != nil {
-		session.Engine.logger.Error(err)
+		if len(args) == 0 {
+			return session.Sql("")
+		} else {
+			map1 := args[0].(*map[string]interface{})
+			return session.Sql("", map1)
+		}
 	}
 
-	return session.Sql(sql, &map1)
+	if len(args) == 0 {
+		parmap := &pongo2.Context{"1": 1}
+		sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
+		if err != nil {
+			session.Engine.logger.Error(err)
+
+		}
+		return session.Sql(sql)
+	} else {
+		map1 := args[0].(*map[string]interface{})
+		sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
+		if err != nil {
+			session.Engine.logger.Error(err)
+
+		}
+		return session.Sql(sql, map1)
+	}
+
 }
 
 func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{}) *ResultStructs {
