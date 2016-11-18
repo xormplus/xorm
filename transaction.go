@@ -7,17 +7,17 @@ import (
 )
 
 const (
-	PROPAGATION_REQUIRED      = 0 //如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中。这是最常见的选择。
-	PROPAGATION_SUPPORTS      = 1 //支持当前事务，如果当前没有事务，就以非事务方式执行。
-	PROPAGATION_MANDATORY     = 2 //使用当前的事务，如果当前没有事务，就抛出异常。
-	PROPAGATION_REQUIRES_NEW  = 3 //新建事务，如果当前存在事务，把当前事务挂起。
-	PROPAGATION_NOT_SUPPORTED = 4 //以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
-	PROPAGATION_NEVER         = 5 //以非事务方式执行，如果当前存在事务，则抛出异常。
-	PROPAGATION_NESTED        = 6 //如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与 PROPAGATION_REQUIRED 类似的操作。它使用了一个单独的事务，这个事务拥有多个可以回滚的保存点。内部事务的回滚不会对外部事务造成影响。
+	PROPAGATION_REQUIRED      = 0 //Support a current transaction; create a new one if none exists.
+	PROPAGATION_SUPPORTS      = 1 //Support a current transaction; execute non-transactionally if none exists.
+	PROPAGATION_MANDATORY     = 2 //Support a current transaction; return an error if no current transaction exists.
+	PROPAGATION_REQUIRES_NEW  = 3 //Create a new transaction, suspending the current transaction if one exists.
+	PROPAGATION_NOT_SUPPORTED = 4 //Do not support a current transaction; rather always execute non-transactionally.
+	PROPAGATION_NEVER         = 5 //Do not support a current transaction; return an error if a current transaction exists.
+	PROPAGATION_NESTED        = 6 //Execute within a nested transaction if a current transaction exists, behave like PROPAGATION_REQUIRED else.
 )
 
 type Transaction struct {
-	TxSession             *Session
+	txSession             *Session
 	transactionDefinition int
 	isNested              bool
 	savePointID           string
@@ -28,7 +28,7 @@ func (transaction *Transaction) TransactionDefinition() int {
 }
 
 func (transaction *Transaction) IsExistingTransaction() bool {
-	if transaction.TxSession.Tx == nil {
+	if transaction.txSession.Tx == nil {
 		return false
 	} else {
 		return true
@@ -40,7 +40,7 @@ func (transaction *Transaction) GetSavePointID() string {
 }
 
 func (transaction *Transaction) Session() *Session {
-	return transaction.TxSession
+	return transaction.txSession
 }
 
 func (transaction *Transaction) Do(doFunc func(params ...interface{}), params ...interface{}) {
@@ -82,73 +82,74 @@ func (session *Session) Begin(transactionDefinition ...int) (*Transaction, error
 
 func (session *Session) transaction(transactionDefinition int) *Transaction {
 	if transactionDefinition > 6 || transactionDefinition < 0 {
-		return &Transaction{TxSession: session, transactionDefinition: PROPAGATION_REQUIRED}
+		return &Transaction{txSession: session, transactionDefinition: PROPAGATION_REQUIRED}
 	}
-	return &Transaction{TxSession: session, transactionDefinition: transactionDefinition}
+	return &Transaction{txSession: session, transactionDefinition: transactionDefinition}
 }
 
+// Begin a transaction
 func (transaction *Transaction) Begin() error {
 	switch transaction.transactionDefinition {
-	case PROPAGATION_REQUIRED: //如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中。这是最常见的选择。
+	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
-			if err := transaction.TxSession.begin(); err != nil {
+			if err := transaction.txSession.begin(); err != nil {
 				return err
 			}
 		} else {
-			if transaction.TxSession.currentTransaction != nil {
-				transaction.savePointID = transaction.TxSession.currentTransaction.savePointID
+			if transaction.txSession.currentTransaction != nil {
+				transaction.savePointID = transaction.txSession.currentTransaction.savePointID
 			}
 			transaction.isNested = true
 		}
-		transaction.TxSession.currentTransaction = transaction
+		transaction.txSession.currentTransaction = transaction
 		return nil
-	case PROPAGATION_SUPPORTS: //支持当前事务，如果当前没有事务，就以非事务方式执行。
+	case PROPAGATION_SUPPORTS:
 		if transaction.IsExistingTransaction() {
 			transaction.isNested = true
-			if transaction.TxSession.currentTransaction != nil {
-				transaction.savePointID = transaction.TxSession.currentTransaction.savePointID
+			if transaction.txSession.currentTransaction != nil {
+				transaction.savePointID = transaction.txSession.currentTransaction.savePointID
 			}
-			transaction.TxSession.currentTransaction = transaction
+			transaction.txSession.currentTransaction = transaction
 		}
 		return nil
-	case PROPAGATION_MANDATORY: //使用当前的事务，如果当前没有事务，就抛出异常。
+	case PROPAGATION_MANDATORY:
 		if !transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		} else {
-			if transaction.TxSession.currentTransaction != nil {
-				transaction.savePointID = transaction.TxSession.currentTransaction.savePointID
+			if transaction.txSession.currentTransaction != nil {
+				transaction.savePointID = transaction.txSession.currentTransaction.savePointID
 			}
 			transaction.isNested = true
-			transaction.TxSession.currentTransaction = transaction
+			transaction.txSession.currentTransaction = transaction
 		}
 		return nil
-	case PROPAGATION_REQUIRES_NEW: //新建事务，如果当前存在事务，把当前事务挂起。
-		transaction.TxSession = transaction.TxSession.Engine.NewSession()
-		if err := transaction.TxSession.begin(); err != nil {
+	case PROPAGATION_REQUIRES_NEW:
+		transaction.txSession = transaction.txSession.Engine.NewSession()
+		if err := transaction.txSession.begin(); err != nil {
 			return err
 		}
 		transaction.isNested = false
-		transaction.TxSession.currentTransaction = transaction
+		transaction.txSession.currentTransaction = transaction
 		return nil
-	case PROPAGATION_NOT_SUPPORTED: //以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
-		transaction.TxSession = transaction.TxSession.Engine.NewSession()
+	case PROPAGATION_NOT_SUPPORTED:
+		transaction.txSession = transaction.txSession.Engine.NewSession()
 		if transaction.IsExistingTransaction() {
 			transaction.isNested = true
 		}
 		return nil
-	case PROPAGATION_NEVER: //以非事务方式执行，如果当前存在事务，则抛出异常。
+	case PROPAGATION_NEVER:
 		if transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		}
 		return nil
-	case PROPAGATION_NESTED: //如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与 PROPAGATION_REQUIRED 类似的操作。
+	case PROPAGATION_NESTED:
 		if !transaction.IsExistingTransaction() {
-			if err := transaction.TxSession.begin(); err != nil {
+			if err := transaction.txSession.begin(); err != nil {
 				return err
 			}
 		} else {
 			transaction.isNested = true
-			dbtype := transaction.TxSession.Engine.Dialect().DBType()
+			dbtype := transaction.txSession.Engine.Dialect().DBType()
 			if dbtype == core.MSSQL {
 				transaction.savePointID = "xorm" + NewShortUUID().String()
 			} else {
@@ -158,9 +159,9 @@ func (transaction *Transaction) Begin() error {
 			if err := transaction.SavePoint(transaction.savePointID); err != nil {
 				return err
 			}
-			transaction.TxSession.IsAutoCommit = false
-			transaction.TxSession.IsCommitedOrRollbacked = false
-			transaction.TxSession.currentTransaction = transaction
+			transaction.txSession.IsAutoCommit = false
+			transaction.txSession.IsCommitedOrRollbacked = false
+			transaction.txSession.currentTransaction = transaction
 
 		}
 		return nil
@@ -170,67 +171,68 @@ func (transaction *Transaction) Begin() error {
 
 }
 
+// Commit When using transaction, Commit will commit all operations.
 func (transaction *Transaction) Commit() error {
 	switch transaction.transactionDefinition {
-	case PROPAGATION_REQUIRED: //如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中。这是最常见的选择。
+	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.TxSession.commit()
+			err := transaction.txSession.commit()
 			if err != nil {
 				return err
 			}
 		}
 		return nil
-	case PROPAGATION_SUPPORTS: //支持当前事务，如果当前没有事务，就以非事务方式执行。
+	case PROPAGATION_SUPPORTS:
 		if transaction.IsExistingTransaction() {
 			if !transaction.isNested {
-				err := transaction.TxSession.commit()
+				err := transaction.txSession.commit()
 				if err != nil {
 					return err
 				}
 			}
 		}
 		return nil
-	case PROPAGATION_MANDATORY: //使用当前的事务，如果当前没有事务，就抛出异常。
+	case PROPAGATION_MANDATORY:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.TxSession.commit()
+			err := transaction.txSession.commit()
 			if err != nil {
 				return err
 			}
 		}
 		return nil
-	case PROPAGATION_REQUIRES_NEW: //新建事务，如果当前存在事务，把当前事务挂起。
+	case PROPAGATION_REQUIRES_NEW:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.TxSession.commit()
+			err := transaction.txSession.commit()
 			if err != nil {
 				return err
 			}
 		}
 		return nil
-	case PROPAGATION_NOT_SUPPORTED: //以非事务方式执行操作，如果当前存在事务，就把当前事务挂起
+	case PROPAGATION_NOT_SUPPORTED:
 		if transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		}
 		return nil
-	case PROPAGATION_NEVER: //以非事务方式执行，如果当前存在事务，则抛出异常。
+	case PROPAGATION_NEVER:
 		if transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		}
 		return nil
-	case PROPAGATION_NESTED: //如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与 PROPAGATION_REQUIRED 类似的操作。
+	case PROPAGATION_NESTED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.TxSession.commit()
+			err := transaction.txSession.commit()
 			if err != nil {
 				return err
 			}
@@ -241,27 +243,28 @@ func (transaction *Transaction) Commit() error {
 	}
 }
 
+// Rollback When using transaction, you can rollback if any error
 func (transaction *Transaction) Rollback() error {
 	switch transaction.transactionDefinition {
-	case PROPAGATION_REQUIRED: //如果当前没有事务，就新建一个事务，如果已经存在一个事务中，加入到这个事务中。这是最常见的选择。
+	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
-		err := transaction.TxSession.rollback()
+		err := transaction.txSession.rollback()
 		if err != nil {
 			return err
 		}
 		return nil
-	case PROPAGATION_SUPPORTS: //支持当前事务，如果当前没有事务，就以非事务方式执行。
+	case PROPAGATION_SUPPORTS:
 		if transaction.IsExistingTransaction() {
-			err := transaction.TxSession.rollback()
+			err := transaction.txSession.rollback()
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 		return nil
-	case PROPAGATION_MANDATORY: //使用当前的事务，如果当前没有事务，就抛出异常。
+	case PROPAGATION_MANDATORY:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
@@ -271,33 +274,33 @@ func (transaction *Transaction) Rollback() error {
 			}
 			return nil
 		} else {
-			err := transaction.TxSession.rollback()
+			err := transaction.txSession.rollback()
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 
-	case PROPAGATION_REQUIRES_NEW: //新建事务，如果当前存在事务，把当前事务挂起。
+	case PROPAGATION_REQUIRES_NEW:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
-		err := transaction.TxSession.rollback()
+		err := transaction.txSession.rollback()
 		if err != nil {
 			return err
 		}
 		return nil
-	case PROPAGATION_NOT_SUPPORTED: //以非事务方式执行操作，如果当前存在事务，就把当前事务挂起
+	case PROPAGATION_NOT_SUPPORTED:
 		if transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		}
 		return nil
-	case PROPAGATION_NEVER: //以非事务方式执行，如果当前存在事务，则抛出异常。
+	case PROPAGATION_NEVER:
 		if transaction.IsExistingTransaction() {
 			return ErrNestedTransaction
 		}
 		return nil
-	case PROPAGATION_NESTED: //如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则执行与 PROPAGATION_REQUIRED 类似的操作。
+	case PROPAGATION_NESTED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
@@ -307,7 +310,7 @@ func (transaction *Transaction) Rollback() error {
 			}
 			return nil
 		} else {
-			err := transaction.TxSession.rollback()
+			err := transaction.txSession.rollback()
 			if err != nil {
 				return err
 			}
@@ -319,20 +322,20 @@ func (transaction *Transaction) Rollback() error {
 }
 
 func (transaction *Transaction) SavePoint(savePointID string) error {
-	if transaction.TxSession.Tx == nil {
+	if transaction.txSession.Tx == nil {
 		return ErrNotInTransaction
 	}
 
 	var lastSQL string
-	dbtype := transaction.TxSession.Engine.Dialect().DBType()
+	dbtype := transaction.txSession.Engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
 		lastSQL = "save tran " + savePointID
 	} else {
 		lastSQL = "SAVEPOINT " + savePointID + ";"
 	}
 
-	transaction.TxSession.saveLastSQL(lastSQL)
-	if _, err := transaction.TxSession.Tx.Exec(lastSQL); err != nil {
+	transaction.txSession.saveLastSQL(lastSQL)
+	if _, err := transaction.txSession.Tx.Exec(lastSQL); err != nil {
 		return err
 	}
 
@@ -340,46 +343,21 @@ func (transaction *Transaction) SavePoint(savePointID string) error {
 }
 
 func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
-	if transaction.TxSession.Tx == nil {
+	if transaction.txSession.Tx == nil {
 		return ErrNotInTransaction
 	}
 
 	var lastSQL string
-	dbtype := transaction.TxSession.Engine.Dialect().DBType()
+	dbtype := transaction.txSession.Engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
 		lastSQL = "rollback tran " + savePointID
 	} else {
 		lastSQL = "ROLLBACK TO SAVEPOINT " + transaction.savePointID + ";"
 	}
 
-	transaction.TxSession.saveLastSQL(lastSQL)
-	if _, err := transaction.TxSession.Tx.Exec(lastSQL); err != nil {
+	transaction.txSession.saveLastSQL(lastSQL)
+	if _, err := transaction.txSession.Tx.Exec(lastSQL); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (transaction *Transaction) SetISOLATION() error {
-
-	var lastSQL string
-	dbtype := transaction.TxSession.Engine.Dialect().DBType()
-	if dbtype == core.MSSQL {
-		lastSQL = "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
-	} else {
-		lastSQL = "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"
-	}
-
-	transaction.TxSession.saveLastSQL(lastSQL)
-
-	if transaction.TxSession.Tx == nil {
-		if _, err := transaction.TxSession.Exec(lastSQL); err != nil {
-			return err
-		}
-	} else {
-		if _, err := transaction.TxSession.Tx.Exec(lastSQL); err != nil {
-			return err
-		}
 	}
 
 	return nil
