@@ -178,7 +178,7 @@ sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
-paramMap_4_1 := map[string]interface{}{"count": 1, "id": 7, "name": ""}
+paramMap_4_1 := map[string]interface{}{"count": 2, "id": 7, "name": ""}
 results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().List()
 
 //执行的 sql：select * from user where name='xormplus'
