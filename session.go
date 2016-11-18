@@ -55,6 +55,8 @@ type Session struct {
 	//beforeSQLExec func(string, ...interface{})
 	lastSQL     string
 	lastSQLArgs []interface{}
+
+	rollbackSavePointID string
 }
 
 // Clone copy all the session's content and return a new session.
