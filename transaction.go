@@ -132,9 +132,9 @@ func (transaction *Transaction) Begin() error {
 		transaction.txSession.currentTransaction = transaction
 		return nil
 	case PROPAGATION_NOT_SUPPORTED:
-		transaction.txSession = transaction.txSession.Engine.NewSession()
 		if transaction.IsExistingTransaction() {
 			transaction.isNested = true
+			transaction.txSession = transaction.txSession.Engine.NewSession()
 		}
 		return nil
 	case PROPAGATION_NEVER:
