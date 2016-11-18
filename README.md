@@ -659,6 +659,7 @@ engine.SetSqlTemplateCipher(cipher)
 
 ```Go
 //第一种方式，可以从Engine对象轻松进行使用，该方式自动管理事务，注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。
+
 engine.Sqls(sqls, parmas...).Execute()
 engine.SqlMapsClient(sqlkeys, parmas...).Execute()
 engine.SqlTemplatesClient(sqlkeys, parmas...).Execute()
@@ -667,36 +668,36 @@ engine.SqlTemplatesClient(sqlkeys, parmas...).Execute()
 session := engine.NewSession()
 defer session.Close()
 // add Begin() before any action
-err := session.Begin()
+tx,err := session.Begin()
 
 
-_, err = session.Exec("delete from userinfo where username = ?", user2.Username)
+_, err = tx.Session().Exec("delete from userinfo where username = ?", user2.Username)
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
 //Execuet返回值有3个，分别为slice,map,error类型
-results, _, err = session.Sqls(sqls, parmas...).Execute()
+results, _, err = tx.Session().Sqls(sqls, parmas...).Execute()
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
-_, results, err = session.SqlMapsClient(sqlkeys, parmas...).Execute()
+_, results, err = tx.Session().SqlMapsClient(sqlkeys, parmas...).Execute()
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
-results, _, err = session.SqlTemplatesClient(sqlkeys, parmas...).Execute()
+results, _, err = tx.Session().SqlTemplatesClient(sqlkeys, parmas...).Execute()
 if err != nil {
-    session.Rollback()
+    tx.Rollback()
     return
 }
 
 // add Commit() after all actions
-err = session.Commit()
+err = tx.Commit()
 if err != nil {
     return
 }
@@ -772,7 +773,7 @@ if err != nil {
         },
     ]
 }
- */
+*/
 
 ```
 
