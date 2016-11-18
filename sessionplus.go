@@ -19,6 +19,7 @@ import (
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
+	"gopkg.in/flosch/pongo2.v3"
 )
 
 type ResultBean struct {
@@ -384,6 +385,7 @@ func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Se
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
+	session.IsSqlFuc = true
 	if session.Engine.sqlTemplate.Template[sqlTagName] == nil {
 		if len(args) == 0 {
 			return session.Sql("")

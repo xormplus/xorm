@@ -26,6 +26,7 @@ func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) 
 	session.IsAutoClose = true
 	session.IsSqlFuc = true
 	return session.SqlTemplateClient(sqlTagName, args...)
+
 }
 
 func (engine *Engine) Search(beans interface{}, condiBeans ...interface{}) *ResultStructs {

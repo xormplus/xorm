@@ -124,6 +124,7 @@ func (session *Session) Sql(query string, args ...interface{}) *Session {
 // SQL provides raw sql input parameter. When you have a complex SQL statement
 // and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
 func (session *Session) SQL(query interface{}, args ...interface{}) *Session {
+	session.IsSqlFuc = true
 	session.Statement.SQL(query, args...)
 	return session
 }
