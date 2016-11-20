@@ -110,6 +110,7 @@ func (session *Session) resetStatement() {
 	if session.AutoResetStatement {
 		session.Statement.Init()
 	}
+	session.IsSqlFuc = false
 }
 
 // Prepare set a flag to session that should be prepare statment before execute query
