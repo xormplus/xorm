@@ -691,6 +691,7 @@ func (session *Session) canCache() bool {
 		session.Statement.JoinStr != "" ||
 		session.Statement.RawSQL != "" ||
 		!session.Statement.UseCache ||
+		session.Statement.IsForUpdate ||
 		session.Tx != nil ||
 		len(session.Statement.selectStr) > 0 {
 		return false
@@ -1339,7 +1340,11 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 				}
 				colName = session.Engine.Quote(nm) + "." + colName
 			}
-			autoCond = builder.IsNull{colName}.Or(builder.Eq{colName: "0001-01-01 00:00:00"})
+			if session.Engine.dialect.DBType() == core.MSSQL {
+				autoCond = builder.IsNull{colName}
+			} else {
+				autoCond = builder.IsNull{colName}.Or(builder.Eq{colName: "0001-01-01 00:00:00"})
+			}
 		}
 	}
 
@@ -1865,15 +1870,22 @@ func (session *Session) _row2Bean(rows *core.Rows, fields []string, fieldsCount 
 
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
-						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
-							dbTZ := session.Engine.DatabaseTZ
-							if dbTZ == nil {
+						dbTZ := session.Engine.DatabaseTZ
+						if dbTZ == nil {
+							if session.Engine.dialect.DBType() == core.SQLITE {
+								dbTZ = time.UTC
+							} else {
 								dbTZ = time.Local
 							}
+						}
+
+						// set new location if database don't save timezone or give an incorrect timezone
+						if len(z) == 0 || t.Year() == 0 || t.Location().String() != dbTZ.String() { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
 							session.Engine.logger.Debugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
 								t.Minute(), t.Second(), t.Nanosecond(), dbTZ)
 						}
+
 						// !nashtsai! convert to engine location
 						if col.TimeZone == nil {
 							t = t.In(session.Engine.TZLocation)
@@ -3036,6 +3048,9 @@ func (session *Session) value2Interface(col *core.Column, fieldValue reflect.Val
 			if err != nil {
 				return 0, err
 			}
+			if col.SQLType.IsBlob() {
+				return data, nil
+			}
 			return string(data), nil
 		}
 	}
@@ -3044,6 +3059,9 @@ func (session *Session) value2Interface(col *core.Column, fieldValue reflect.Val
 		data, err := fieldConvert.ToDB()
 		if err != nil {
 			return 0, err
+		}
+		if col.SQLType.IsBlob() {
+			return data, nil
 		}
 		return string(data), nil
 	}

@@ -815,15 +815,22 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
 						z, _ := t.Zone()
-						if len(z) == 0 || t.Year() == 0 { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
-							dbTZ := session.Engine.DatabaseTZ
-							if dbTZ == nil {
+						dbTZ := session.Engine.DatabaseTZ
+						if dbTZ == nil {
+							if session.Engine.dialect.DBType() == core.SQLITE {
+								dbTZ = time.UTC
+							} else {
 								dbTZ = time.Local
 							}
+						}
+
+						// set new location if database don't save timezone or give an incorrect timezone
+						if len(z) == 0 || t.Year() == 0 || t.Location().String() != dbTZ.String() { // !nashtsai! HACK tmp work around for lib/pq doesn't properly time with location
 							session.Engine.logger.Debugf("empty zone key[%v] : %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 							t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(),
 								t.Minute(), t.Second(), t.Nanosecond(), dbTZ)
 						}
+
 						// !nashtsai! convert to engine location
 						var tz *time.Location
 						if col.TimeZone == nil {
@@ -877,7 +884,6 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 					// !<winxxp>! 增加支持sql.Scanner接口的结构，如sql.NullString
 					hasAssigned = true
 					if err := nulVal.Scan(vv.Interface()); err != nil {
-						//fmt.Println("sql.Sanner error:", err.Error())
 						session.Engine.logger.Error("sql.Sanner error:", err.Error())
 						hasAssigned = false
 					}
@@ -959,7 +965,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 								//fieldValue.Set(reflect.ValueOf(v))
 								fieldValue.Set(structInter.Elem())
 							} else {
-								return errors.New("cascade obj is not exist!")
+								return errors.New("cascade obj is not exist")
 							}
 						}
 					} else {
