@@ -119,7 +119,10 @@ func (session *Session) Prepare() *Session {
 	return session
 }
 
-// Sql !DEPRECIATED! will be deprecated, please use SQL instead.
+// Sql provides raw sql input parameter. When you have a complex SQL statement
+// and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
+//
+// Deprecated: use SQL instead.
 func (session *Session) Sql(query string, args ...interface{}) *Session {
 	return session.SQL(query, args...)
 }
@@ -150,15 +153,16 @@ func (session *Session) Or(query interface{}, args ...interface{}) *Session {
 	return session
 }
 
-// Id will be deprecated, please use ID instead
+// Id provides converting id as a query condition
+//
+// Deprecated: use ID instead
 func (session *Session) Id(id interface{}) *Session {
-	session.Statement.Id(id)
-	return session
+	return session.ID(id)
 }
 
 // ID provides converting id as a query condition
 func (session *Session) ID(id interface{}) *Session {
-	session.Statement.Id(id)
+	session.Statement.ID(id)
 	return session
 }
 
@@ -1869,6 +1873,7 @@ func (session *Session) _row2Bean(rows *core.Rows, fields []string, fieldsCount 
 						hasAssigned = true
 
 						t := vv.Convert(core.TimeType).Interface().(time.Time)
+
 						z, _ := t.Zone()
 						dbTZ := session.Engine.DatabaseTZ
 						if dbTZ == nil {
@@ -3636,7 +3641,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 		colNames = append(colNames, session.Engine.Quote(v.colName)+" = "+v.expr)
 	}
 
-	session.Statement.processIdParam()
+	session.Statement.processIDParam()
 
 	var autoCond builder.Cond
 	if !session.Statement.noAutoCondition && len(condiBean) > 0 {
