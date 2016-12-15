@@ -1,0 +1,78 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "c5QbJjMUbbQk4RT75uawdmV4Jfo=",
+			"path": "github.com/Chronokeeper/anyxml",
+			"revision": "54457d8e98c60cb91f18947facfa991ce3ea2ba3",
+			"revisionTime": "2016-05-30T17:42:08Z"
+		},
+		{
+			"checksumSHA1": "bOXGGxVxF/wJxdefTWRSctfQ7+k=",
+			"path": "github.com/Unknwon/goconfig",
+			"revision": "87a46d97951ee1ea20ed3b24c25646a79e87ba5d",
+			"revisionTime": "2016-11-21T22:43:40Z"
+		},
+		{
+			"checksumSHA1": "AxWJDQDWvHM7VjLHdl6KBKrHwiQ=",
+			"path": "github.com/agrison/go-tablib",
+			"revision": "4930582c22eec7bfc0e5b47e0246d5048a78fe49",
+			"revisionTime": "2016-03-10T14:30:25Z"
+		},
+		{
+			"checksumSHA1": "KcCHg7UtwWWtVo9XsM0hLcDUZRA=",
+			"path": "github.com/agrison/mxj",
+			"revision": "1269f8afb3b42d0e7b9cf60041e8e187727c88d6",
+			"revisionTime": "2016-03-10T14:26:25Z"
+		},
+		{
+			"checksumSHA1": "ovDoOpGIydfbUKNmYGiV2lONJLM=",
+			"path": "github.com/bndr/gotabulate",
+			"revision": "6b18276541437a930c4fd02ba0f973ec632572b9",
+			"revisionTime": "2016-10-08T17:27:12Z"
+		},
+		{
+			"checksumSHA1": "9K7s0i+FyqEFNlu6ovGX9iOMSMQ=",
+			"path": "github.com/fatih/structs",
+			"revision": "dc3312cb1a4513a366c4c9e622ad55c32df12ed3",
+			"revisionTime": "2016-08-07T23:55:29Z"
+		},
+		{
+			"checksumSHA1": "NcUSqemYhygiMcCShH4W1LMm9Eo=",
+			"path": "github.com/fsnotify/fsnotify",
+			"revision": "fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197",
+			"revisionTime": "2016-10-26T20:31:22Z"
+		},
+		{
+			"checksumSHA1": "0EbIiM2NAjPjW6FT9lf3UevJzGM=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "737072b4e32b7a5018b4a7125da8d12de90e8045",
+			"revisionTime": "2016-10-12T01:35:12Z"
+		},
+		{
+			"checksumSHA1": "S068paVxZamCnu0xh0F6KQ0aMIk=",
+			"path": "github.com/tealeg/xlsx",
+			"revision": "a8490cf686defe538b45b05af838d9eeb7d8fe64",
+			"revisionTime": "2016-10-26T16:12:24Z"
+		},
+		{
+			"checksumSHA1": "uTQtOqR0ePMMcvuvAIksiIZxhqU=",
+			"path": "golang.org/x/sys/unix",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "jkRCiYi/YHOA4m3F+eFvw2mfgc0=",
+			"path": "gopkg.in/flosch/pongo2.v3",
+			"revision": "5e81b817a0c48c1c57cdf1a9056cf76bdee02ca9",
+			"revisionTime": "2014-10-28T00:08:13Z"
+		},
+		{
+			"checksumSHA1": "21kDrz4DnDppRHgK7vVmOFwgcSQ=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "a5b47d31c556af34a302ce5d659e6fea44d90de0",
+			"revisionTime": "2016-09-28T15:37:09Z"
+		}
+	],
+	"rootPath": "github.com/xormplus/xorm"
+}
