@@ -132,7 +132,7 @@ func (resultMap *ResultMap) ListPage(firstResult int, maxResults int) ([]map[str
 	if resultMap.Results == nil {
 		return nil, nil
 	}
-	if firstResult >= maxResults {
+	if firstResult > maxResults {
 		return nil, ErrParamsFormat
 	}
 	if firstResult < 0 {
