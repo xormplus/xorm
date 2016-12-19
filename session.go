@@ -1412,7 +1412,9 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 
 	if sliceValue.Kind() != reflect.Map {
 		if session.IsSqlFuc {
-			sql := session.Statement.RawSQL
+			rownumber := "xorm" + NewShortUUID().String()
+			sql := session.genSelectSql(rownumber)
+
 			params := session.Statement.RawParams
 			i := len(params)
 			if i == 1 {
