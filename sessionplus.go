@@ -421,8 +421,8 @@ func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{
 	return r
 }
 
-func (session *Session) genSelectSql(rownumber string) string {
-	var dialect = session.Statement.Engine.Dialect()
+func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) string {
+
 	var sql = session.Statement.RawSQL
 	var orderBys = session.Statement.OrderStr
 
@@ -490,8 +490,11 @@ func (session *Session) Query() *ResultMap {
 	if session.IsAutoClose {
 		defer session.Close()
 	}
+
+	var dialect = session.Statement.Engine.Dialect()
 	rownumber := "xorm" + NewShortUUID().String()
-	sql := session.genSelectSql(rownumber)
+	sql := session.genSelectSql(dialect, rownumber)
+
 	params := session.Statement.RawParams
 	i := len(params)
 
@@ -507,7 +510,7 @@ func (session *Session) Query() *ResultMap {
 	} else {
 		result, err = session.queryAll(sql, params...)
 	}
-	var dialect = session.Statement.Engine.Dialect()
+
 	if dialect.DBType() == core.MSSQL {
 		if session.Statement.Start > 0 {
 			for i, _ := range result {
@@ -531,10 +534,14 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	if session.IsAutoClose {
 		defer session.Close()
 	}
+
+	var dialect = session.Statement.Engine.Dialect()
 	rownumber := "xorm" + NewShortUUID().String()
-	sql := session.genSelectSql(rownumber)
+	sql := session.genSelectSql(dialect, rownumber)
+
 	params := session.Statement.RawParams
 	i := len(params)
+
 	var result []map[string]interface{}
 	var err error
 	if i == 1 {
@@ -547,7 +554,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	} else {
 		result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
 	}
-	var dialect = session.Statement.Engine.Dialect()
+
 	if dialect.DBType() == core.MSSQL {
 		if session.Statement.Start > 0 {
 			for i, _ := range result {
