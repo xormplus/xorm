@@ -183,7 +183,7 @@ func (resultMap *ResultMap) SaveAsCSV(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func (resultMap *ResultMap) SaveAsTSV(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (resultMap *ResultMap) SaveAsHTML(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (resultMap *ResultMap) SaveAsXML(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (resultMap *ResultMap) SaveAsXMLWithTagNamePrefixIndent(tagName string, pri
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (resultMap *ResultMap) SaveAsYAML(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
 	if err != nil {
 		return err
 	}
@@ -288,7 +288,7 @@ func (resultMap *ResultMap) SaveAsJSON(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func (resultMap *ResultMap) SaveAsXLSX(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results)
+	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
 	if err != nil {
 		return err
 	}

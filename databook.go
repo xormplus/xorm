@@ -19,14 +19,14 @@ func NewDatabook() *Databook {
 	return db
 }
 
-func NewDatabookWithData(sheetName map[string]string, data interface{}, headers ...map[string][]string) (*Databook, error) {
+func NewDatabookWithData(sheetName map[string]string, data interface{}, mustMatch bool, headers ...map[string][]string) (*Databook, error) {
 	s := len(sheetName)
 
 	switch data.(type) {
 	case map[string]*tablib.Dataset:
 		dataModel1 := data.(map[string]*tablib.Dataset)
 		d1 := len(dataModel1)
-		if s != d1 {
+		if s != d1 && mustMatch {
 			return nil, ErrParamsType
 		}
 
@@ -49,7 +49,7 @@ func NewDatabookWithData(sheetName map[string]string, data interface{}, headers 
 
 		h := len(headers[0])
 
-		if s != h || s != d2 {
+		if (s != h || s != d2) && mustMatch {
 			return nil, ErrParamsType
 		}
 		databook := tablib.NewDatabook()
@@ -61,7 +61,7 @@ func NewDatabookWithData(sheetName map[string]string, data interface{}, headers 
 				return nil, ErrParamsType
 			}
 
-			dataset, err := NewDatasetWithData(headers[0][k], dataModel2[k])
+			dataset, err := NewDatasetWithData(headers[0][k], dataModel2[k], mustMatch)
 			if err != nil {
 				return nil, err
 			}
@@ -75,7 +75,7 @@ func NewDatabookWithData(sheetName map[string]string, data interface{}, headers 
 	}
 }
 
-func (databook *Databook) AddSheet(title string, data interface{}, headers ...[]string) error {
+func (databook *Databook) AddSheet(title string, data interface{}, mustMatch bool, headers ...[]string) error {
 
 	switch data.(type) {
 	case *tablib.Dataset:
@@ -87,7 +87,7 @@ func (databook *Databook) AddSheet(title string, data interface{}, headers ...[]
 		if len(headers) != 1 {
 			return ErrParamsType
 		}
-		dataset, err := NewDatasetWithData(headers[0], dataSlice)
+		dataset, err := NewDatasetWithData(headers[0], dataSlice, mustMatch)
 		if err != nil {
 			return err
 		}

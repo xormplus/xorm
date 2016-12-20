@@ -14,7 +14,7 @@ func NewDataset(headers []string) *tablib.Dataset {
 }
 
 // NewDatasetWithData creates a new Dataset.
-func NewDatasetWithData(headers []string, data interface{}) (*tablib.Dataset, error) {
+func NewDatasetWithData(headers []string, data interface{}, mustMatch bool) (*tablib.Dataset, error) {
 	if data == nil {
 		return tablib.NewDatasetWithData(headers, nil), nil
 	}
@@ -29,7 +29,7 @@ func NewDatasetWithData(headers []string, data interface{}) (*tablib.Dataset, er
 			if len(dataSlice[0]) == 0 {
 				return tablib.NewDatasetWithData(headers, make([][]interface{}, len(dataSlice))), nil
 			} else {
-				if n != len(dataSlice[0]) {
+				if n != len(dataSlice[0]) && mustMatch {
 					return nil, ErrParamsType
 				}
 				mapHeaders := make(map[string]int, n)
