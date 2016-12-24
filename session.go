@@ -2268,6 +2268,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 	if session.IsAutoClose {
 		defer session.Close()
 	}
+	defer session.resetStatement()
 
 	for _, bean := range beans {
 		sliceValue := reflect.Indirect(reflect.ValueOf(bean))
@@ -2276,7 +2277,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 			if size > 0 {
 				if session.Engine.SupportInsertMany() {
 					cnt, err := session.innerInsertMulti(bean)
-					//session.resetStatement()
+
 					if err != nil {
 						return affected, err
 					}
@@ -2284,7 +2285,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 				} else {
 					for i := 0; i < size; i++ {
 						cnt, err := session.innerInsert(sliceValue.Index(i).Interface())
-						//session.resetStatement()
+
 						if err != nil {
 							return affected, err
 						}
@@ -2294,7 +2295,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 			}
 		} else {
 			cnt, err := session.innerInsert(bean)
-			//session.resetStatement()
+
 			if err != nil {
 				return affected, err
 			}
