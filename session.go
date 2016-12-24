@@ -2268,6 +2268,7 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 	if session.IsAutoClose {
 		defer session.Close()
 	}
+
 	defer session.resetStatement()
 
 	for _, bean := range beans {
