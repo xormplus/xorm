@@ -11,7 +11,6 @@ import (
 )
 
 func (session *Session) query(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string][]byte, err error) {
-
 	session.queryPreprocess(&sqlStr, paramStr...)
 
 	if session.IsAutoCommit {

@@ -385,7 +385,7 @@ func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Se
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
-	session.IsSqlFuc = true
+	session.IsSqlFunc = true
 	if session.Engine.sqlTemplate.Template[sqlTagName] == nil {
 		if len(args) == 0 {
 			return session.Sql("")

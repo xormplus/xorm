@@ -145,7 +145,7 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 	}
 
 	if sliceValue.Kind() != reflect.Map {
-		if session.IsSqlFuc {
+		if session.IsSqlFunc {
 			var dialect = session.Statement.Engine.Dialect()
 			rownumber := "xorm" + NewShortUUID().String()
 			sql := session.genSelectSql(dialect, rownumber)

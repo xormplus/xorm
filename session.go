@@ -30,7 +30,7 @@ type Session struct {
 	currentTransaction     *Transaction
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
-	IsSqlFuc               bool
+	IsSqlFunc              bool
 	TransType              string
 	IsAutoClose            bool
 
@@ -72,7 +72,7 @@ func (session *Session) Init() {
 	session.IsAutoCommit = true
 	session.IsCommitedOrRollbacked = false
 	session.IsAutoClose = false
-	session.IsSqlFuc = false
+	session.IsSqlFunc = false
 	session.AutoResetStatement = true
 	session.prepareStmt = false
 
@@ -110,7 +110,7 @@ func (session *Session) resetStatement() {
 	if session.AutoResetStatement {
 		session.Statement.Init()
 	}
-	session.IsSqlFuc = false
+	session.IsSqlFunc = false
 }
 
 // Prepare set a flag to session that should be prepare statment before execute query
@@ -130,7 +130,7 @@ func (session *Session) Sql(query string, args ...interface{}) *Session {
 // SQL provides raw sql input parameter. When you have a complex SQL statement
 // and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
 func (session *Session) SQL(query interface{}, args ...interface{}) *Session {
-	session.IsSqlFuc = true
+	session.IsSqlFunc = true
 	session.Statement.SQL(query, args...)
 	return session
 }
@@ -257,8 +257,8 @@ func (session *Session) NoCascade() *Session {
 // UseBool automatically retrieve condition according struct, but
 // if struct has bool field, it will ignore them. So use UseBool
 // to tell system to do not ignore them.
-// If no paramters, it will use all the bool field of struct, or
-// it will use paramters's columns
+// If no parameters, it will use all the bool field of struct, or
+// it will use parameters's columns
 func (session *Session) UseBool(columns ...string) *Session {
 	session.Statement.UseBool(columns...)
 	return session
@@ -278,7 +278,7 @@ func (session *Session) ForUpdate() *Session {
 	return session
 }
 
-// Omit Only not use the paramters as select or update columns
+// Omit Only not use the parameters as select or update columns
 func (session *Session) Omit(columns ...string) *Session {
 	session.Statement.Omit(columns...)
 	return session
@@ -1012,7 +1012,7 @@ func (session *Session) str2Time(col *core.Column, data string) (outTime time.Ti
 		sd, err := strconv.ParseInt(sdata, 10, 64)
 		if err == nil {
 			x = time.Unix(sd, 0)
-			// !nashtsai! HACK mymysql driver is casuing Local location being change to CHAT and cause wrong time conversion
+			// !nashtsai! HACK mymysql driver is causing Local location being change to CHAT and cause wrong time conversion
 			if col.TimeZone == nil {
 				x = x.In(session.Engine.TZLocation)
 			} else {

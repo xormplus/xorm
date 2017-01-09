@@ -59,7 +59,7 @@ func (engine *Engine) ShowSQL(show ...bool) {
 	}
 }
 
-// ShowExecTime show SQL statment and execute time or not on logger if log level is great than INFO
+// ShowExecTime show SQL statement and execute time or not on logger if log level is great than INFO
 func (engine *Engine) ShowExecTime(show ...bool) {
 	if len(show) == 0 {
 		engine.showExecTime = true
@@ -120,7 +120,7 @@ func (engine *Engine) SupportInsertMany() bool {
 	return engine.dialect.SupportInsertMany()
 }
 
-// QuoteStr Engine's database use which charactor as quote.
+// QuoteStr Engine's database use which character as quote.
 // mysql, sqlite use ` and postgres use "
 func (engine *Engine) QuoteStr() string {
 	return engine.dialect.QuoteStr()
@@ -308,7 +308,7 @@ func (engine *Engine) Sql(querystring string, args ...interface{}) *Session {
 	return engine.SQL(querystring, args...)
 }
 
-// SQL method let's you manualy write raw SQL and operate
+// SQL method let's you manually write raw SQL and operate
 // For example:
 //
 //         engine.SQL("select * from user").Find(&users)
@@ -319,9 +319,9 @@ func (engine *Engine) SQL(query interface{}, args ...interface{}) *Session {
 	session.IsAutoClose = true
 	switch query.(type) {
 	case string:
-		session.IsSqlFuc = true
+		session.IsSqlFunc = true
 	default:
-		session.IsSqlFuc = false
+		session.IsSqlFunc = false
 	}
 	return session.SQL(query, args...)
 }
@@ -725,7 +725,7 @@ func (engine *Engine) Select(str string) *Session {
 	return session.Select(str)
 }
 
-// Cols only use the paramters as select or update columns
+// Cols only use the parameters as select or update columns
 func (engine *Engine) Cols(columns ...string) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
@@ -749,15 +749,15 @@ func (engine *Engine) MustCols(columns ...string) *Session {
 // UseBool xorm automatically retrieve condition according struct, but
 // if struct has bool field, it will ignore them. So use UseBool
 // to tell system to do not ignore them.
-// If no paramters, it will use all the bool field of struct, or
-// it will use paramters's columns
+// If no parameters, it will use all the bool field of struct, or
+// it will use parameters's columns
 func (engine *Engine) UseBool(columns ...string) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
 	return session.UseBool(columns...)
 }
 
-// Omit only not use the paramters as select or update columns
+// Omit only not use the parameters as select or update columns
 func (engine *Engine) Omit(columns ...string) *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
