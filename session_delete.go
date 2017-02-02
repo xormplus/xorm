@@ -1,3 +1,7 @@
+// Copyright 2016 The Xorm Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package xorm
 
 import (
@@ -222,7 +226,7 @@ func (session *Session) Delete(bean interface{}) (int64, error) {
 				session.afterDeleteBeans[bean] = &afterClosures
 			}
 		} else {
-			if _, ok := interface{}(bean).(AfterInsertProcessor); ok {
+			if _, ok := interface{}(bean).(AfterDeleteProcessor); ok {
 				session.afterDeleteBeans[bean] = nil
 			}
 		}
