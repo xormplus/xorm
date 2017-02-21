@@ -720,10 +720,10 @@ func (session *Session) queryAllToJsonStringWithDateFormat(dateFormat string, sq
 	return JSONString(results, true)
 }
 
-func (session *Session) row2BeanWithDateFormat(dateFormat string, rows *core.Rows, fields []string, fieldsCount int, bean interface{}) error {
+func (session *Session) row2BeanWithDateFormat(dateFormat string, rows *core.Rows, fields []string, fieldsCount int, bean interface{}) (core.PK, error) {
 	dataStruct := rValue(bean)
 	if dataStruct.Kind() != reflect.Struct {
-		return errors.New("Expected a pointer to a struct")
+		return nil, errors.New("Expected a pointer to a struct")
 	}
 
 	session.Statement.setRefValue(dataStruct)
@@ -731,14 +731,14 @@ func (session *Session) row2BeanWithDateFormat(dateFormat string, rows *core.Row
 	return session._row2BeanWithDateFormat(dateFormat, rows, fields, fieldsCount, bean, &dataStruct, session.Statement.RefTable)
 }
 
-func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Rows, fields []string, fieldsCount int, bean interface{}, dataStruct *reflect.Value, table *core.Table) error {
+func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Rows, fields []string, fieldsCount int, bean interface{}, dataStruct *reflect.Value, table *core.Table) (core.PK, error) {
 	scanResults := make([]interface{}, fieldsCount)
 	for i := 0; i < len(fields); i++ {
 		var cell interface{}
 		scanResults[i] = &cell
 	}
 	if err := rows.Scan(scanResults...); err != nil {
-		return err
+		return nil, err
 	}
 
 	if b, hasBeforeSet := bean.(BeforeSetProcessor); hasBeforeSet {
@@ -756,6 +756,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 	}()
 
 	var tempMap = make(map[string]int)
+	var pk core.PK
 	for ii, key := range fields {
 		var idx int
 		var ok bool
@@ -800,10 +801,12 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 
 			rawValueType := reflect.TypeOf(rawValue.Interface())
 			vv := reflect.ValueOf(rawValue.Interface())
-
+			col := table.GetColumnIdx(key, idx)
+			if col.IsPrimaryKey {
+				pk = append(pk, rawValue.Interface())
+			}
 			fieldType := fieldValue.Type()
 			hasAssigned := false
-			col := table.GetColumnIdx(key, idx)
 
 			if col.SQLType.IsJson() {
 				var bs []byte
@@ -812,7 +815,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 				} else if rawValueType.ConvertibleTo(core.BytesType) {
 					bs = vv.Bytes()
 				} else {
-					return fmt.Errorf("unsupported database data type: %s %v", key, rawValueType.Kind())
+					return nil, fmt.Errorf("unsupported database data type: %s %v", key, rawValueType.Kind())
 				}
 
 				hasAssigned = true
@@ -822,14 +825,14 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						err := json.Unmarshal(bs, fieldValue.Addr().Interface())
 						if err != nil {
 							session.Engine.logger.Error(key, err)
-							return err
+							return nil, err
 						}
 					} else {
 						x := reflect.New(fieldType)
 						err := json.Unmarshal(bs, x.Interface())
 						if err != nil {
 							session.Engine.logger.Error(key, err)
-							return err
+							return nil, err
 						}
 						fieldValue.Set(x.Elem())
 					}
@@ -854,14 +857,14 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						err := json.Unmarshal(bs, fieldValue.Addr().Interface())
 						if err != nil {
 							session.Engine.logger.Error(err)
-							return err
+							return nil, err
 						}
 					} else {
 						x := reflect.New(fieldType)
 						err := json.Unmarshal(bs, x.Interface())
 						if err != nil {
 							session.Engine.logger.Error(err)
-							return err
+							return nil, err
 						}
 						fieldValue.Set(x.Elem())
 					}
@@ -995,7 +998,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 							err := json.Unmarshal([]byte(vv.String()), x.Interface())
 							if err != nil {
 								session.Engine.logger.Error(err)
-								return err
+								return nil, err
 							}
 							fieldValue.Set(x.Elem())
 						}
@@ -1006,7 +1009,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 							err := json.Unmarshal(vv.Bytes(), x.Interface())
 							if err != nil {
 								session.Engine.logger.Error(err)
-								return err
+								return nil, err
 							}
 							fieldValue.Set(x.Elem())
 						}
@@ -1058,14 +1061,14 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 							defer newsession.Close()
 							has, err := newsession.Id(pk).NoCascade().Get(structInter.Interface())
 							if err != nil {
-								return err
+								return nil, err
 							}
 							if has {
 								//v := structInter.Elem().Interface()
 								//fieldValue.Set(reflect.ValueOf(v))
 								fieldValue.Set(structInter.Elem())
 							} else {
-								return errors.New("cascade obj is not exist")
+								return nil, errors.New("cascade obj is not exist")
 							}
 						}
 					} else {
@@ -1205,7 +1208,7 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 			}
 		}
 	}
-	return nil
+	return pk, nil
 
 }
 
