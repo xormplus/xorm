@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-xorm/builder"
 	"github.com/xormplus/core"
 )
 
@@ -119,53 +118,6 @@ func (session *Session) Prepare() *Session {
 	return session
 }
 
-// Sql provides raw sql input parameter. When you have a complex SQL statement
-// and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
-//
-// Deprecated: use SQL instead.
-func (session *Session) Sql(query string, args ...interface{}) *Session {
-	return session.SQL(query, args...)
-}
-
-// SQL provides raw sql input parameter. When you have a complex SQL statement
-// and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
-func (session *Session) SQL(query interface{}, args ...interface{}) *Session {
-	session.IsSqlFunc = true
-	session.Statement.SQL(query, args...)
-	return session
-}
-
-// Where provides custom query condition.
-func (session *Session) Where(query interface{}, args ...interface{}) *Session {
-	session.Statement.Where(query, args...)
-	return session
-}
-
-// And provides custom query condition.
-func (session *Session) And(query interface{}, args ...interface{}) *Session {
-	session.Statement.And(query, args...)
-	return session
-}
-
-// Or provides custom query condition.
-func (session *Session) Or(query interface{}, args ...interface{}) *Session {
-	session.Statement.Or(query, args...)
-	return session
-}
-
-// Id provides converting id as a query condition
-//
-// Deprecated: use ID instead
-func (session *Session) Id(id interface{}) *Session {
-	return session.ID(id)
-}
-
-// ID provides converting id as a query condition
-func (session *Session) ID(id interface{}) *Session {
-	session.Statement.ID(id)
-	return session
-}
-
 // Before Apply before Processor, affected bean is passed to closure arg
 func (session *Session) Before(closures func(interface{})) *Session {
 	if closures != nil {
@@ -191,18 +143,6 @@ func (session *Session) Table(tableNameOrBean interface{}) *Session {
 // Alias set the table alias
 func (session *Session) Alias(alias string) *Session {
 	session.Statement.Alias(alias)
-	return session
-}
-
-// In provides a query string like "id in (1, 2, 3)"
-func (session *Session) In(column string, args ...interface{}) *Session {
-	session.Statement.In(column, args...)
-	return session
-}
-
-// NotIn provides a query string like "id in (1, 2, 3)"
-func (session *Session) NotIn(column string, args ...interface{}) *Session {
-	session.Statement.NotIn(column, args...)
 	return session
 }
 
@@ -380,11 +320,6 @@ func (session *Session) DB() *core.DB {
 		session.stmtCache = make(map[uint32]*core.Stmt, 0)
 	}
 	return session.db
-}
-
-// Conds returns session query conditions
-func (session *Session) Conds() builder.Cond {
-	return session.Statement.cond
 }
 
 func cleanupProcessorsClosures(slices *[]func(interface{})) {
