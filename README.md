@@ -372,13 +372,47 @@ id := engine.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查�
 id := engine.SqlTemplateClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
-* 事务处理，当使用事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法。注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。示例代码如下：
+* 本xorm版本同时支持简单事务模型和嵌套事务模型进行事务处理，当使用简单事务模型进行事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法。注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。示例代码如下：
 
 ```go
 session := engine.NewSession()
 defer session.Close()
 // add Begin() before any action
-tx, err := session.Begin()
+err := session.Begin()
+user1 := Userinfo{Username: "xiaoxiao", Departname: "dev", Alias: "lunny", Created: time.Now()}
+_, err = session.Insert(&user1)
+if err != nil {
+    session.Rollback()
+    return
+}
+user2 := Userinfo{Username: "yyy"}
+_, err = session.Where("id = ?", 2).Update(&user2)
+if err != nil {
+    session.Rollback()
+    return
+}
+
+_, err = session.Exec("delete from userinfo where username = ?", user2.Username)
+if err != nil {
+    session.Rollback()
+    return
+}
+
+// add Commit() after all actions
+err = session.Commit()
+if err != nil {
+    return
+}
+```
+
+在实际业务开发过程中我们会发现依然还有一些特殊场景，我们需要借助嵌套事务来进行事务处理。本xorm版本也提供了嵌套事务的支持。当使用嵌套事务模型进行事务处理时，同样也需要创建Session对象，与使用简单事务模型进行事务处理不同在于，使用session.Begin()创建简单事务时，直接在同一个session下操作，而使用嵌套事务模型进行事务处理时候，使用session.BeginTrans()创建嵌套事务时，将返回Transaction实例，后续操作则在同一个Transaction实例下操作。在进行具体数据库操作时候，则使用tx.Session() API可以获得当前事务所持有的session会话，从而进行Get()，Find()，Execute()等具体数据库操作。
+
+
+```go
+session := engine.NewSession()
+defer session.Close()
+// add BeginTrans() before any action
+tx, err := session.BeginTrans()
 if err != nil {
     return
 }
@@ -393,32 +427,32 @@ if err != nil {
 user2 := Userinfo{Username: "yyy"}
 _, err = tx.Session().Where("id = ?", 2).Update(&user2)
 if err != nil {
-    tx.Rollback()
+    tx.RollbackTrans()
     return
 }
 
 _, err = tx.Session().Exec("delete from userinfo where username = ?", user2.Username)
 if err != nil {
-    tx.Rollback()
+    tx.RollbackTrans()
     return
 }
 
 _, err = tx.Session().SqlMapClient("delete.userinfo", user2.Username).Execute()
 if err != nil {
-    tx.Rollback()
+    tx.RollbackTrans()
     return
 }
 
-// add Commit() after all actions
-err = tx.Commit()
+// add CommitTrans() after all actions
+err = tx.CommitTrans()
 if err != nil {
-	...
+    ...
     return
 }
 ```
 
 
-本定制版xorm还支持嵌套事务（类JAVA Spring的事务传播机制），这部分内容较多，详细了解请您移步本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
+本定制版xorm支持嵌套事务（类JAVA Spring的事务传播机制），这部分内容较多，详细了解请您移步本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
 
 # SqlMap及SqlTemplate
 * <b>SqlMap及SqlTemplate相关功能API</b>
