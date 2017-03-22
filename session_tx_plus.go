@@ -14,6 +14,7 @@ const (
 	PROPAGATION_NOT_SUPPORTED = 4 //Do not support a current transaction; rather always execute non-transactionally.
 	PROPAGATION_NEVER         = 5 //Do not support a current transaction; return an error if a current transaction exists.
 	PROPAGATION_NESTED        = 6 //Execute within a nested transaction if a current transaction exists, behave like PROPAGATION_REQUIRED else.
+	PROPAGATION_NOT_REQUIRED  = 7
 )
 
 type Transaction struct {
@@ -165,6 +166,15 @@ func (transaction *Transaction) BeginTrans() error {
 
 		}
 		return nil
+	case PROPAGATION_NOT_REQUIRED:
+		if transaction.IsExistingTransaction() {
+			return ErrNestedTransaction
+		}
+
+		if err := transaction.txSession.Begin(); err != nil {
+			return err
+		}
+		return nil
 	default:
 		return ErrTransactionDefinition
 	}
@@ -242,6 +252,19 @@ func (transaction *Transaction) CommitTrans() error {
 				transaction.txSession.rollbackSavePointID = ""
 				return err
 			}
+		}
+		return nil
+	case PROPAGATION_NOT_REQUIRED:
+		if !transaction.IsExistingTransaction() {
+			return ErrNotInTransaction
+		}
+		if !transaction.isNested {
+			err := transaction.txSession.Commit()
+			if err != nil {
+				return err
+			}
+		} else {
+			return ErrNestedTransaction
 		}
 		return nil
 	default:
@@ -333,6 +356,16 @@ func (transaction *Transaction) RollbackTrans() error {
 			}
 			return nil
 		}
+	case PROPAGATION_NOT_REQUIRED:
+		if !transaction.IsExistingTransaction() {
+			return ErrNotInTransaction
+		}
+
+		err := transaction.txSession.Rollback()
+		if err != nil {
+			return err
+		}
+		return nil
 	default:
 		return ErrTransactionDefinition
 	}
