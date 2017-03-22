@@ -29,7 +29,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 	sqlModel := 1
 
 	if sqlMapsExecutor.session.IsSqlFunc == true {
-		err := sqlMapsExecutor.session.begin()
+		err := sqlMapsExecutor.session.Begin()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -85,7 +85,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 			default:
 				if sqlMapsExecutor.session.IsSqlFunc == true {
-					err1 := sqlMapsExecutor.session.rollback()
+					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -99,7 +99,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		if sqlModel == 1 {
 			if model_1_results.Error != nil {
 				if sqlMapsExecutor.session.IsSqlFunc == true {
-					err1 := sqlMapsExecutor.session.rollback()
+					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -112,7 +112,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		} else if sqlModel == 2 {
 			if err != nil {
 				if sqlMapsExecutor.session.IsSqlFunc == true {
-					err1 := sqlMapsExecutor.session.rollback()
+					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -163,7 +163,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -176,7 +176,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -194,7 +194,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -218,7 +218,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 			default:
 				if sqlMapsExecutor.session.IsSqlFunc == true {
-					err1 := sqlMapsExecutor.session.rollback()
+					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -258,7 +258,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -271,7 +271,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -289,7 +289,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -308,7 +308,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		}
 
 		if sqlMapsExecutor.session.IsSqlFunc == true {
-			err1 := sqlMapsExecutor.session.commit()
+			err1 := sqlMapsExecutor.session.Commit()
 			if err1 != nil {
 				return nil, nil, err1
 			}
@@ -342,7 +342,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -355,7 +355,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -373,7 +373,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -397,7 +397,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 			default:
 				if sqlMapsExecutor.session.IsSqlFunc == true {
-					err1 := sqlMapsExecutor.session.rollback()
+					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
 					}
@@ -437,7 +437,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -450,7 +450,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				} else if sqlModel == 2 {
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -468,7 +468,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
 						if sqlMapsExecutor.session.IsSqlFunc == true {
-							err1 := sqlMapsExecutor.session.rollback()
+							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
 							}
@@ -486,7 +486,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 		}
 
 		if sqlMapsExecutor.session.IsSqlFunc == true {
-			err1 := sqlMapsExecutor.session.commit()
+			err1 := sqlMapsExecutor.session.Commit()
 			if err1 != nil {
 				return nil, nil, err1
 			}

@@ -95,7 +95,7 @@ func (session *Session) Close() {
 		// When Close be called, if session is a transaction and do not call
 		// Commit or Rollback, then call Rollback.
 		if session.Tx != nil && !session.IsCommitedOrRollbacked {
-			session.rollback()
+			session.Rollback()
 		}
 		session.Tx = nil
 		session.stmtCache = nil

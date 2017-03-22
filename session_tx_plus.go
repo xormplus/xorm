@@ -65,7 +65,7 @@ func (transaction *Transaction) WaitForDo(doFunc func(params ...interface{}), pa
 	}
 }
 
-func (session *Session) Begin(transactionDefinition ...int) (*Transaction, error) {
+func (session *Session) BeginTrans(transactionDefinition ...int) (*Transaction, error) {
 	var tx *Transaction
 	if len(transactionDefinition) == 0 {
 		tx = session.transaction(PROPAGATION_REQUIRED)
@@ -73,7 +73,7 @@ func (session *Session) Begin(transactionDefinition ...int) (*Transaction, error
 		tx = session.transaction(transactionDefinition[0])
 	}
 
-	err := tx.Begin()
+	err := tx.BeginTrans()
 	if err != nil {
 		return nil, err
 	}
@@ -88,11 +88,11 @@ func (session *Session) transaction(transactionDefinition int) *Transaction {
 }
 
 // Begin a transaction
-func (transaction *Transaction) Begin() error {
+func (transaction *Transaction) BeginTrans() error {
 	switch transaction.transactionDefinition {
 	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
-			if err := transaction.txSession.begin(); err != nil {
+			if err := transaction.txSession.Begin(); err != nil {
 				return err
 			}
 		} else {
@@ -125,7 +125,7 @@ func (transaction *Transaction) Begin() error {
 		return nil
 	case PROPAGATION_REQUIRES_NEW:
 		transaction.txSession = transaction.txSession.Engine.NewSession()
-		if err := transaction.txSession.begin(); err != nil {
+		if err := transaction.txSession.Begin(); err != nil {
 			return err
 		}
 		transaction.isNested = false
@@ -144,7 +144,7 @@ func (transaction *Transaction) Begin() error {
 		return nil
 	case PROPAGATION_NESTED:
 		if !transaction.IsExistingTransaction() {
-			if err := transaction.txSession.begin(); err != nil {
+			if err := transaction.txSession.Begin(); err != nil {
 				return err
 			}
 		} else {
@@ -172,14 +172,14 @@ func (transaction *Transaction) Begin() error {
 }
 
 // Commit When using transaction, Commit will commit all operations.
-func (transaction *Transaction) Commit() error {
+func (transaction *Transaction) CommitTrans() error {
 	switch transaction.transactionDefinition {
 	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.txSession.commit()
+			err := transaction.txSession.Commit()
 			if err != nil {
 				return err
 			}
@@ -188,7 +188,7 @@ func (transaction *Transaction) Commit() error {
 	case PROPAGATION_SUPPORTS:
 		if transaction.IsExistingTransaction() {
 			if !transaction.isNested {
-				err := transaction.txSession.commit()
+				err := transaction.txSession.Commit()
 				if err != nil {
 					return err
 				}
@@ -200,7 +200,7 @@ func (transaction *Transaction) Commit() error {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.txSession.commit()
+			err := transaction.txSession.Commit()
 			if err != nil {
 				return err
 			}
@@ -211,7 +211,7 @@ func (transaction *Transaction) Commit() error {
 			return ErrNotInTransaction
 		}
 		if !transaction.isNested {
-			err := transaction.txSession.commit()
+			err := transaction.txSession.Commit()
 			if err != nil {
 				return err
 			}
@@ -233,7 +233,7 @@ func (transaction *Transaction) Commit() error {
 		}
 
 		if !transaction.isNested {
-			err := transaction.txSession.commit()
+			err := transaction.txSession.Commit()
 			if err != nil {
 				return err
 			}
@@ -250,14 +250,14 @@ func (transaction *Transaction) Commit() error {
 }
 
 // Rollback When using transaction, you can rollback if any error
-func (transaction *Transaction) Rollback() error {
+func (transaction *Transaction) RollbackTrans() error {
 	switch transaction.transactionDefinition {
 	case PROPAGATION_REQUIRED:
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
 		if transaction.savePointID == "" {
-			err := transaction.txSession.rollback()
+			err := transaction.txSession.Rollback()
 			if err != nil {
 				return err
 			}
@@ -269,7 +269,7 @@ func (transaction *Transaction) Rollback() error {
 	case PROPAGATION_SUPPORTS:
 		if transaction.IsExistingTransaction() {
 			if transaction.savePointID == "" {
-				err := transaction.txSession.rollback()
+				err := transaction.txSession.Rollback()
 				if err != nil {
 					return err
 				}
@@ -284,7 +284,7 @@ func (transaction *Transaction) Rollback() error {
 			return ErrNotInTransaction
 		}
 		if transaction.savePointID == "" {
-			err := transaction.txSession.rollback()
+			err := transaction.txSession.Rollback()
 			if err != nil {
 				return err
 			}
@@ -297,7 +297,7 @@ func (transaction *Transaction) Rollback() error {
 		if !transaction.IsExistingTransaction() {
 			return ErrNotInTransaction
 		}
-		err := transaction.txSession.rollback()
+		err := transaction.txSession.Rollback()
 		if err != nil {
 			return err
 		}
@@ -327,7 +327,7 @@ func (transaction *Transaction) Rollback() error {
 			}
 			return nil
 		} else {
-			err := transaction.txSession.rollback()
+			err := transaction.txSession.Rollback()
 			if err != nil {
 				return err
 			}
