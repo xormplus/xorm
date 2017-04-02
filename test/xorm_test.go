@@ -73,6 +73,7 @@ func Test_InitDB(t *testing.T) {
 	}
 
 	db.ShowSQL(true)
+
 	log.Println(db)
 	//	db.NewSession().SqlMapClient().Execute()
 	log.Println(db.GetSqlMap("json_category-16-17"))
@@ -303,7 +304,7 @@ func Test_QueryByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMap_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).Query().Json()
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).Query().Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,7 +313,7 @@ func Test_SqlMapClient_QueryByParamMap_Json(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMapWithDateFormat_Json(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").Json()
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").Json()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -321,7 +322,7 @@ func Test_SqlMapClient_QueryByParamMapWithDateFormat_Json(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMap_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).Query().Xml()
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).Query().Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,7 +331,7 @@ func Test_SqlMapClient_QueryByParamMap_Xml(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMapWithDateFormat_Xml(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").Xml()
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").Xml()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +340,7 @@ func Test_SqlMapClient_QueryByParamMapWithDateFormat_Xml(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMap_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).Query().XmlIndent("", "  ", "article")
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).Query().XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -348,7 +349,7 @@ func Test_SqlMapClient_QueryByParamMap_XmlIndent(t *testing.T) {
 
 func Test_SqlMapClient_QueryByParamMapWithDateFormat_XmlIndent(t *testing.T) {
 	paramMap := map[string]interface{}{"1": 2, "2": 5}
-	rows, err := db.SqlMapClient("selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").XmlIndent("", "  ", "article")
+	rows, err := db.SqlMapClient("json_selectAllArticle", &paramMap).QueryWithDateFormat("2006-01-02 15:04").XmlIndent("", "  ", "article")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -659,4 +660,18 @@ func Test_GetSqlTemplates(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("[Test_GetSqlTemplates]->Test_GetSqlTemplates_2->strSqlTemplate:\n", strSqlTemplate)
+}
+
+func Test_Limit_Func(t *testing.T) {
+	res, _ := db.Sql("SELECT b.id,a.name,b.title FROM category a,article b where a.id=b.categorysubid ORDER BY b.id").Limit(10, 3).Query().List()
+	t.Log(res)
+}
+
+func Test_Find(t *testing.T) {
+	var category []Category
+	err := db.Find(&category)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(category)
 }
