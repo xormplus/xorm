@@ -12,8 +12,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-
-	"strconv"
 	"strings"
 	"time"
 
@@ -1026,64 +1024,39 @@ func (session *Session) _row2BeanWithDateFormat(dateFormat string, rows *core.Ro
 						}
 					}
 				} else if session.Statement.UseCascade {
-					table := session.Engine.autoMapType(*fieldValue)
-					if table != nil {
-						hasAssigned = true
-						if len(table.PrimaryKeys) != 1 {
-							panic("unsupported non or composited primary key cascade")
-						}
-						var pk = make(core.PK, len(table.PrimaryKeys))
+					table, err := session.Engine.autoMapType(*fieldValue)
+					if err != nil {
+						return nil, err
+					}
 
-						switch rawValueType.Kind() {
-						case reflect.Int64:
-							pk[0] = vv.Int()
-						case reflect.Int:
-							pk[0] = int(vv.Int())
-						case reflect.Int32:
-							pk[0] = int32(vv.Int())
-						case reflect.Int16:
-							pk[0] = int16(vv.Int())
-						case reflect.Int8:
-							pk[0] = int8(vv.Int())
-						case reflect.Uint64:
-							pk[0] = vv.Uint()
-						case reflect.Uint:
-							pk[0] = uint(vv.Uint())
-						case reflect.Uint32:
-							pk[0] = uint32(vv.Uint())
-						case reflect.Uint16:
-							pk[0] = uint16(vv.Uint())
-						case reflect.Uint8:
-							pk[0] = uint8(vv.Uint())
-						case reflect.String:
-							pk[0] = vv.String()
-						case reflect.Slice:
-							pk[0], _ = strconv.ParseInt(string(rawValue.Interface().([]byte)), 10, 64)
-						default:
-							panic(fmt.Sprintf("unsupported primary key type: %v, %v", rawValueType, fieldValue))
-						}
+					hasAssigned = true
+					if len(table.PrimaryKeys) != 1 {
+						panic("unsupported non or composited primary key cascade")
+					}
+					var pk = make(core.PK, len(table.PrimaryKeys))
+					pk[0], err = asKind(vv, rawValueType)
+					if err != nil {
+						return nil, err
+					}
 
-						if !isPKZero(pk) {
-							// !nashtsai! TODO for hasOne relationship, it's preferred to use join query for eager fetch
-							// however, also need to consider adding a 'lazy' attribute to xorm tag which allow hasOne
-							// property to be fetched lazily
-							structInter := reflect.New(fieldValue.Type())
-							newsession := session.Engine.NewSession()
-							defer newsession.Close()
-							has, err := newsession.Id(pk).NoCascade().Get(structInter.Interface())
-							if err != nil {
-								return nil, err
-							}
-							if has {
-								//v := structInter.Elem().Interface()
-								//fieldValue.Set(reflect.ValueOf(v))
-								fieldValue.Set(structInter.Elem())
-							} else {
-								return nil, errors.New("cascade obj is not exist")
-							}
+					if !isPKZero(pk) {
+						// !nashtsai! TODO for hasOne relationship, it's preferred to use join query for eager fetch
+						// however, also need to consider adding a 'lazy' attribute to xorm tag which allow hasOne
+						// property to be fetched lazily
+						structInter := reflect.New(fieldValue.Type())
+						newsession := session.Engine.NewSession()
+						defer newsession.Close()
+						has, err := newsession.Id(pk).NoCascade().Get(structInter.Interface())
+						if err != nil {
+							return nil, err
 						}
-					} else {
-						session.Engine.logger.Error("unsupported struct type in Scan: ", fieldValue.Type().String())
+						if has {
+							//v := structInter.Elem().Interface()
+							//fieldValue.Set(reflect.ValueOf(v))
+							fieldValue.Set(structInter.Elem())
+						} else {
+							return nil, errors.New("cascade obj is not exist")
+						}
 					}
 				}
 			case reflect.Ptr:

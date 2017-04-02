@@ -47,6 +47,8 @@ type Engine struct {
 	DatabaseTZ *time.Location // The timezone of the database
 
 	disableGlobalCache bool
+
+	tagHandlers map[string]tagHandler
 }
 
 // ShowSQL show SQL statement or not on logger if log level is great than INFO
@@ -218,10 +220,15 @@ func (engine *Engine) NoCascade() *Session {
 }
 
 // MapCacher Set a table use a special cacher
-func (engine *Engine) MapCacher(bean interface{}, cacher core.Cacher) {
+func (engine *Engine) MapCacher(bean interface{}, cacher core.Cacher) error {
 	v := rValue(bean)
-	tb := engine.autoMapType(v)
+	tb, err := engine.autoMapType(v)
+	if err != nil {
+		return err
+	}
+
 	tb.Cacher = cacher
+	return nil
 }
 
 // NewDB provides an interface to operate database directly
@@ -819,10 +826,19 @@ type Table struct {
 	Name string
 }
 
+// IsValid if table is valid
+func (t *Table) IsValid() bool {
+	return t.Table != nil && len(t.Name) > 0
+}
+
 // TableInfo get table info according to bean's content
 func (engine *Engine) TableInfo(bean interface{}) *Table {
 	v := rValue(bean)
-	return &Table{engine.autoMapType(v), engine.tbName(v)}
+	tb, err := engine.autoMapType(v)
+	if err != nil {
+		engine.logger.Error(err)
+	}
+	return &Table{tb, engine.tbName(v)}
 }
 
 func addIndex(indexName string, table *core.Table, col *core.Column, indexType int) {
@@ -1072,8 +1088,21 @@ func (engine *Engine) IdOfV(rv reflect.Value) core.PK {
 
 // IDOfV get id from one value of struct
 func (engine *Engine) IDOfV(rv reflect.Value) core.PK {
+	pk, err := engine.idOfV(rv)
+	if err != nil {
+		engine.logger.Error(err)
+		return nil
+	}
+	return pk
+}
+
+func (engine *Engine) idOfV(rv reflect.Value) (core.PK, error) {
 	v := reflect.Indirect(rv)
-	table := engine.autoMapType(v)
+	table, err := engine.autoMapType(v)
+	if err != nil {
+		return nil, err
+	}
+
 	pk := make([]interface{}, len(table.PrimaryKeys))
 	for i, col := range table.PKColumns() {
 		pkField := v.FieldByName(col.FieldName)
@@ -1086,7 +1115,7 @@ func (engine *Engine) IDOfV(rv reflect.Value) core.PK {
 			pk[i] = pkField.Uint()
 		}
 	}
-	return core.PK(pk)
+	return core.PK(pk), nil
 }
 
 // CreateIndexes create indexes
@@ -1107,13 +1136,6 @@ func (engine *Engine) getCacher2(table *core.Table) core.Cacher {
 	return table.Cacher
 }
 
-func (engine *Engine) getCacher(v reflect.Value) core.Cacher {
-	if table := engine.autoMapType(v); table != nil {
-		return table.Cacher
-	}
-	return engine.Cacher
-}
-
 // ClearCacheBean if enabled cache, clear the cache bean
 func (engine *Engine) ClearCacheBean(bean interface{}, id string) error {
 	v := rValue(bean)
@@ -1122,7 +1144,10 @@ func (engine *Engine) ClearCacheBean(bean interface{}, id string) error {
 		return errors.New("error params")
 	}
 	tableName := engine.tbName(v)
-	table := engine.autoMapType(v)
+	table, err := engine.autoMapType(v)
+	if err != nil {
+		return err
+	}
 	cacher := table.Cacher
 	if cacher == nil {
 		cacher = engine.Cacher
@@ -1143,7 +1168,11 @@ func (engine *Engine) ClearCache(beans ...interface{}) error {
 			return errors.New("error params")
 		}
 		tableName := engine.tbName(v)
-		table := engine.autoMapType(v)
+		table, err := engine.autoMapType(v)
+		if err != nil {
+			return err
+		}
+
 		cacher := table.Cacher
 		if cacher == nil {
 			cacher = engine.Cacher
@@ -1163,7 +1192,11 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 	for _, bean := range beans {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
-		table := engine.autoMapType(v)
+		table, err := engine.autoMapType(v)
+		fmt.Println(v, table, err)
+		if err != nil {
+			return err
+		}
 
 		s := engine.NewSession()
 		defer s.Close()
