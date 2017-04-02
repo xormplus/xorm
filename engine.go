@@ -1435,11 +1435,11 @@ func (engine *Engine) Query(sql string, paramStr ...interface{}) (resultsSlice [
 	return session.query(sql, paramStr...)
 }
 
-// Exec a raw sql and return records as []map[string][]byte
-func (engine *Engine) Query2(sql string, paramStr ...interface{}) (resultsSlice []map[string]string, err error) {
+// QueryString runs a raw sql and return records as []map[string]string
+func (engine *Engine) QueryString(sqlStr string, args ...interface{}) ([]map[string]string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.query2(sql, paramStr...)
+	return session.QueryString(sqlStr, args...)
 }
 
 // Insert one or more records

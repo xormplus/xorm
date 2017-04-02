@@ -80,6 +80,15 @@ func (session *Session) query1(sqlStr string, paramStr ...interface{}) (resultsS
 	return session.query(sqlStr, paramStr...)
 }
 
+// QueryString runs a raw sql and return records as []map[string]string
+func (session *Session) QueryString(sqlStr string, args ...interface{}) ([]map[string]string, error) {
+	defer session.resetStatement()
+	if session.IsAutoClose {
+		defer session.Close()
+	}
+	return session.query2(sqlStr, args...)
+}
+
 // =============================
 // for string
 // =============================
