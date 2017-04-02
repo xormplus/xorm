@@ -37,17 +37,12 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * Tidb: [github.com/pingcap/tidb](https://github.com/pingcap/tidb)
 * SQLite: [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
 * MsSql: [github.com/denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb)
-* MsSql: [github.com/lunny/godbc](https://github.com/lunny/godbc)
 * Oracle: [github.com/mattn/go-oci8](https://github.com/mattn/go-oci8) (试验性支持)
 
 
 ## 安装
 
-推荐使用 [gopm](https://github.com/gpmgo/gopm) 进行安装：
-
-	gopm get github.com/xormplus/xorm
-
-或者您也可以使用go工具进行安装：
+使用go工具进行安装：
 
 	go get -u github.com/xormplus/xorm
 
@@ -212,10 +207,33 @@ sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 var users []User
 paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
 err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
+
+
+/*-------------------------------------------------------------------------------------
+ * 第8种方式：查询单条数据
+ * 使用Sql,SqlMapClient,SqlTemplateClient函数与Get函数组合可以查询单条数据，以Sql与Get函数组合为例：
+-------------------------------------------------------------------------------------*/
+//获得单条数据的值，并存为结构体
+var article Article
+has, err := db.Sql("select * from article where id=?", 2).Get(&article)
+
+//获得单条数据的值并存为map
+var valuesMap1 = make(map[string]string)
+has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap1)
+
+var valuesMap2 = make(map[string]interface{})
+has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap2)
+
+//获得单条数据某个字段的值
+var title string
+has, err := db.Sql("select title from article where id=?", 2).Get(&title)
+
+var id int
+has, err := db.Sql("select id from article where id=?", 2).Get(&id)
 ```
 
 * 注：
-	* 除以上7种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 除以上8种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
 * 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法中的参数，即结构体的名字不需要与数据库表的名字映射（因为前面的Sql()方法已经确定了SQL语句），但字段名需要和数据库中的字段名字做映射。使用Find()方法需要自己定义查询返回结果集的结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，两种方式请依据实际需要选用。
@@ -913,6 +931,18 @@ has, err := engine.Get(&user)
 // SELECT * FROM user LIMIT 1
 has, err := engine.Where("name = ?", name).Desc("id").Get(&user)
 // SELECT * FROM user WHERE name = ? ORDER BY id DESC LIMIT 1
+var name string
+has, err := engine.Where("id = ?", id).Cols("name").Get(&name)
+// SELECT name FROM user WHERE id = ?
+var id int64
+has, err := engine.Where("name = ?", name).Cols("id").Get(&id)
+// SELECT id FROM user WHERE name = ?
+var valuesMap = make(map[string]string)
+has, err := engine.Where("id = ?", id).Get(&valuesMap)
+// SELECT * FROM user WHERE id = ?
+var valuesSlice = make([]interface{}, len(cols))
+has, err := engine.Where("id = ?", id).Cols(cols...).Get(&valuesSlice)
+// SELECT col1, col2, col3 FROM user WHERE id = ?
 ```
 
 * ORM方式查询多条记录，当然可以使用Join和extends来组合使用
