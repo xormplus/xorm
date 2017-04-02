@@ -5,6 +5,7 @@
 package xorm
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -334,9 +335,9 @@ func (db *mssql) TableCheckSql(tableName string) (string, []interface{}) {
 func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{}
 	s := `select a.name as name, b.name as ctype,a.max_length,a.precision,a.scale,a.is_nullable as nullable,
-	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault   
-          from sys.columns a left join sys.types b on a.user_type_id=b.user_type_id 
-          left join  sys.syscomments c  on a.default_object_id=c.id 
+	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault
+          from sys.columns a left join sys.types b on a.user_type_id=b.user_type_id
+          left join  sys.syscomments c  on a.default_object_id=c.id
           where a.object_id=object_id('` + tableName + `')`
 	db.LogSQL(s, args)
 
@@ -525,4 +526,26 @@ func (db *mssql) ForUpdateSql(query string) string {
 
 func (db *mssql) Filters() []core.Filter {
 	return []core.Filter{&core.IdFilter{}, &core.QuoteFilter{}}
+}
+
+type odbcDriver struct {
+}
+
+func (p *odbcDriver) Parse(driverName, dataSourceName string) (*core.Uri, error) {
+	kv := strings.Split(dataSourceName, ";")
+	var dbName string
+
+	for _, c := range kv {
+		vv := strings.Split(strings.TrimSpace(c), "=")
+		if len(vv) == 2 {
+			switch strings.ToLower(vv[0]) {
+			case "database":
+				dbName = vv[1]
+			}
+		}
+	}
+	if dbName == "" {
+		return nil, errors.New("no db name provided")
+	}
+	return &core.Uri{DbName: dbName, DbType: core.MSSQL}, nil
 }
