@@ -335,9 +335,9 @@ func (db *mssql) TableCheckSql(tableName string) (string, []interface{}) {
 func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column, error) {
 	args := []interface{}{}
 	s := `select a.name as name, b.name as ctype,a.max_length,a.precision,a.scale,a.is_nullable as nullable,
-	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault
-          from sys.columns a left join sys.types b on a.user_type_id=b.user_type_id
-          left join  sys.syscomments c  on a.default_object_id=c.id
+	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault   
+          from sys.columns a left join sys.types b on a.user_type_id=b.user_type_id 
+          left join  sys.syscomments c  on a.default_object_id=c.id 
           where a.object_id=object_id('` + tableName + `')`
 	db.LogSQL(s, args)
 
