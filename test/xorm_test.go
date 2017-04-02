@@ -92,6 +92,89 @@ func Test_Get_Struct(t *testing.T) {
 	t.Log("[Test_Get_Struct]->rows:\n", article)
 }
 
+func Test_Sql_Get_Struct(t *testing.T) {
+	var article Article
+	has, err := db.Sql("select * from article where id=?", 2).Get(&article)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_Struct]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_Struct]->rows:\n", article)
+}
+
+func Test_Sql_Get_String(t *testing.T) {
+	var title string
+	has, err := db.Sql("select title from article where id=?", 2).Get(&title)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_String]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_String]->titles:\n", title)
+}
+
+func Test_Sql_Get_Int(t *testing.T) {
+	var id int
+	has, err := db.Sql("select id from article where id=?", 2).Get(&id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_Int]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_Int]->id:\n", id)
+}
+
+func Test_Sql_Get_Map(t *testing.T) {
+	var valuesMap = make(map[string]string)
+	has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_Map]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_Map]->id:\n", valuesMap)
+}
+
+func Test_Sql_Get_Map2(t *testing.T) {
+	var valuesMap = make(map[string]interface{})
+	has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_Map2]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_Map2]->id:\n", valuesMap)
+	id, ok := valuesMap["id"].(int64)
+	if ok {
+		t.Log("[Test_Sql_Get_Map2]->id:\n", id)
+	}
+
+}
+
+func Test_Sql_Get_Slice(t *testing.T) {
+	var valuesSlice = make([]interface{}, 2)
+	has, err := db.Sql("select id,title from article where id=?", 2).Get(&valuesSlice)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !has {
+		t.Log("[Test_Sql_Get_Slice]->rows: not exist\n")
+	}
+
+	t.Log("[Test_Sql_Get_Slice]->id:\n", valuesSlice)
+}
+
 func Test_GetFirst_Json(t *testing.T) {
 
 	var article Article
