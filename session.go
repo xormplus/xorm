@@ -28,8 +28,8 @@ type Session struct {
 	IsAutoCommit           bool
 	IsCommitedOrRollbacked bool
 	IsSqlFunc              bool
-	TransType              string
-	IsAutoClose            bool
+
+	IsAutoClose bool
 
 	// Automatically reset the statement after operations that execute a SQL
 	// query such as Count(), Find(), Get(), ...
