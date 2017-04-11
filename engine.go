@@ -24,7 +24,7 @@ import (
 )
 
 // Engine is the major struct of xorm, it means a database manager.
-// Commonly, an application only need one engine.
+// Commonly, an application only need one engine
 type Engine struct {
 	db      *core.DB
 	dialect core.Dialect
@@ -933,6 +933,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 
 					k := strings.ToUpper(key)
 					ctx.tagName = k
+					ctx.params = []string{}
 
 					pStart := strings.Index(k, "(")
 					if pStart == 0 {
@@ -1232,8 +1233,10 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 				}
 				if !isExist {
 					session := engine.NewSession()
-					session.Statement.setRefValue(v)
 					defer session.Close()
+					if err := session.Statement.setRefValue(v); err != nil {
+						return err
+					}
 					err = session.addColumn(col.Name)
 					if err != nil {
 						return err
@@ -1243,8 +1246,10 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 
 			for name, index := range table.Indexes {
 				session := engine.NewSession()
-				session.Statement.setRefValue(v)
 				defer session.Close()
+				if err := session.Statement.setRefValue(v); err != nil {
+					return err
+				}
 				if index.Type == core.UniqueType {
 					//isExist, err := session.isIndexExist(table.Name, name, true)
 					isExist, err := session.isIndexExist2(tableName, index.Cols, true)
@@ -1253,8 +1258,11 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 					}
 					if !isExist {
 						session := engine.NewSession()
-						session.Statement.setRefValue(v)
 						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
+
 						err = session.addUnique(tableName, name)
 						if err != nil {
 							return err
@@ -1267,8 +1275,11 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 					}
 					if !isExist {
 						session := engine.NewSession()
-						session.Statement.setRefValue(v)
 						defer session.Close()
+						if err := session.Statement.setRefValue(v); err != nil {
+							return err
+						}
+
 						err = session.addIndex(tableName, name)
 						if err != nil {
 							return err
