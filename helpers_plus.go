@@ -28,7 +28,7 @@ func reflect2objectWithDateFormat(rawValue *reflect.Value, dateFormat string) (v
 		default:
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
-	//时间类型
+	// time type
 	case reflect.Struct:
 		if aa.ConvertibleTo(core.TimeType) {
 			value = vv.Convert(core.TimeType).Interface().(time.Time).Format(dateFormat)
@@ -175,7 +175,7 @@ func reflect2object(rawValue *reflect.Value) (value interface{}, err error) {
 		default:
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
-	//时间类型
+	// time type
 	case reflect.Struct:
 		if aa.ConvertibleTo(core.TimeType) {
 			value = vv.Convert(core.TimeType).Interface().(time.Time)
@@ -251,7 +251,6 @@ func rows2mapObject(rows *core.Rows, fields []string) (resultsMap map[string]int
 	return result, nil
 }
 
-//xiaolipeng
 func txQuery3(tx *core.Tx, sqlStr string, params ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	rows, err := tx.Query(sqlStr, params...)
 	if err != nil {
@@ -261,7 +260,6 @@ func txQuery3(tx *core.Tx, sqlStr string, params ...interface{}) (resultsSlice [
 	return rows2mapObjects(rows)
 }
 
-//xiaolipeng
 func query3(db *core.DB, sqlStr string, params ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	s, err := db.Prepare(sqlStr)
 	if err != nil {
