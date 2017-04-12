@@ -1194,7 +1194,7 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
 		table, err := engine.autoMapType(v)
-		fmt.Println(v, table, err)
+
 		if err != nil {
 			return err
 		}
