@@ -945,14 +945,14 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 						}
 
 						ctx.tagName = k[:pStart]
-						ctx.params = strings.Split(k[pStart+1:len(k)-1], ",")
+						ctx.params = strings.Split(key[pStart+1:len(k)-1], ",")
 					}
 
 					if j > 0 {
 						ctx.preTag = strings.ToUpper(tags[j-1])
 					}
 					if j < len(tags)-1 {
-						ctx.nextTag = strings.ToUpper(tags[j+1])
+						ctx.nextTag = tags[j+1]
 					} else {
 						ctx.nextTag = ""
 					}
@@ -1194,7 +1194,6 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
 		table, err := engine.autoMapType(v)
-
 		if err != nil {
 			return err
 		}
@@ -1299,18 +1298,6 @@ func (engine *Engine) Sync2(beans ...interface{}) error {
 	s := engine.NewSession()
 	defer s.Close()
 	return s.Sync2(beans...)
-}
-
-func (engine *Engine) unMap(beans ...interface{}) (e error) {
-	engine.mutex.Lock()
-	defer engine.mutex.Unlock()
-	for _, bean := range beans {
-		t := rType(bean)
-		if _, ok := engine.Tables[t]; ok {
-			delete(engine.Tables, t)
-		}
-	}
-	return
 }
 
 // Drop all mapped table
