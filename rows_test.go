@@ -8,30 +8,34 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/xormplus/core"
 )
 
-func TestSetExpr(t *testing.T) {
+func TestRows(t *testing.T) {
 	assert.NoError(t, prepareEngine())
 
-	type User struct {
-		Id   int64
-		Show bool
+	type UserRows struct {
+		Id    int64
+		IsMan bool
 	}
 
-	assert.NoError(t, testEngine.Sync2(new(User)))
+	assert.NoError(t, testEngine.Sync2(new(UserRows)))
 
-	cnt, err := testEngine.Insert(&User{
-		Show: true,
+	cnt, err := testEngine.Insert(&UserRows{
+		IsMan: true,
 	})
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, cnt)
 
-	var not = "NOT"
-	if testEngine.dialect.DBType() == core.MSSQL {
-		not = "~"
-	}
-	cnt, err = testEngine.SetExpr("show", not+" `show`").Id(1).Update(new(User))
+	rows, err := testEngine.Rows(new(UserRows))
 	assert.NoError(t, err)
+	defer rows.Close()
+
+	cnt = 0
+	user := new(UserRows)
+	for rows.Next() {
+		err = rows.Scan(user)
+		assert.NoError(t, err)
+		cnt++
+	}
 	assert.EqualValues(t, 1, cnt)
 }
