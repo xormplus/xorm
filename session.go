@@ -350,15 +350,6 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 		}
 	}()
 
-	dbTZ := session.Engine.DatabaseTZ
-	if dbTZ == nil {
-		if session.Engine.dialect.DBType() == core.SQLITE {
-			dbTZ = time.UTC
-		} else {
-			dbTZ = time.Local
-		}
-	}
-
 	var tempMap = make(map[string]int)
 	var pk core.PK
 	for ii, key := range fields {
@@ -534,11 +525,9 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 				}
 			case reflect.Struct:
 				if fieldType.ConvertibleTo(core.TimeType) {
-					var tz *time.Location
-					if col.TimeZone == nil {
-						tz = session.Engine.TZLocation
-					} else {
-						tz = col.TimeZone
+					dbTZ := session.Engine.DatabaseTZ
+					if col.TimeZone != nil {
+						dbTZ = col.TimeZone
 					}
 
 					if rawValueType == core.TimeType {
@@ -554,19 +543,13 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 								t.Minute(), t.Second(), t.Nanosecond(), dbTZ)
 						}
 
-						// !nashtsai! convert to engine location
-						t = t.In(tz)
+						t = t.In(session.Engine.TZLocation)
 						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
-
-						// t = fieldValue.Interface().(time.Time)
-						// z, _ = t.Zone()
-						// session.Engine.LogDebug("fieldValue key[%v]: %v | zone: %v | location: %+v\n", key, t, z, *t.Location())
 					} else if rawValueType == core.IntType || rawValueType == core.Int64Type ||
 						rawValueType == core.Int32Type {
 						hasAssigned = true
 
-						t := time.Unix(vv.Int(), 0).In(tz)
-						//vv = reflect.ValueOf(t)
+						t := time.Unix(vv.Int(), 0).In(session.Engine.TZLocation)
 						fieldValue.Set(reflect.ValueOf(t).Convert(fieldType))
 					} else {
 						if d, ok := vv.Interface().([]uint8); ok {
@@ -648,8 +631,6 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 							return nil, err
 						}
 						if has {
-							//v := structInter.Elem().Interface()
-							//fieldValue.Set(reflect.ValueOf(v))
 							fieldValue.Set(structInter.Elem())
 						} else {
 							return nil, errors.New("cascade obj is not exist")
@@ -658,7 +639,6 @@ func (session *Session) row2Bean(rows *core.Rows, fields []string, fieldsCount i
 				}
 			case reflect.Ptr:
 				// !nashtsai! TODO merge duplicated codes above
-				//typeStr := fieldType.String()
 				switch fieldType {
 				// following types case matching ptr's native type, therefore assign ptr directly
 				case core.PtrStringType:
