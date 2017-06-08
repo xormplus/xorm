@@ -7,9 +7,10 @@ package xorm
 import (
 	"errors"
 	"testing"
+	"time"
 
-	"github.com/go-xorm/core"
 	"github.com/stretchr/testify/assert"
+	"github.com/xormplus/core"
 )
 
 type IntId struct {
@@ -1116,4 +1117,51 @@ func TestSingleAutoIncrColumn(t *testing.T) {
 
 	_, err := testEngine.Insert(&Account{})
 	assert.NoError(t, err)
+}
+
+func TestCompositePK(t *testing.T) {
+	type TaskSolution struct {
+		UID     string    `xorm:"notnull pk UUID 'uid'"`
+		TID     string    `xorm:"notnull pk UUID 'tid'"`
+		Created time.Time `xorm:"created"`
+		Updated time.Time `xorm:"updated"`
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(TaskSolution))
+
+	assert.NoError(t, testEngine.Sync2(new(TaskSolution)))
+	tables, err := testEngine.DBMetas()
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(tables))
+	pkCols := tables[0].PKColumns()
+	assert.EqualValues(t, 2, len(pkCols))
+	assert.EqualValues(t, "uid", pkCols[0].Name)
+	assert.EqualValues(t, "tid", pkCols[1].Name)
+}
+
+func TestNoPKIdQueryUpdate(t *testing.T) {
+	type NoPKTable struct {
+		Username string
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(NoPKTable))
+
+	cnt, err := testEngine.Insert(&NoPKTable{
+		Username: "test",
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var res NoPKTable
+	has, err := testEngine.ID("test").Get(&res)
+	assert.Error(t, err)
+	assert.False(t, has)
+
+	cnt, err = testEngine.ID("test").Update(&NoPKTable{
+		Username: "test1",
+	})
+	assert.Error(t, err)
+	assert.EqualValues(t, 0, cnt)
 }
