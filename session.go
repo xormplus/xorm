@@ -52,6 +52,8 @@ type Session struct {
 	lastSQLArgs []interface{}
 
 	rollbackSavePointID string
+
+	err error
 }
 
 // Clone copy all the session's content and return a new session.
