@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/go-xorm/builder"
 	"github.com/xormplus/core"
 )
 
@@ -1587,4 +1588,12 @@ func (engine *Engine) Unscoped() *Session {
 	session := engine.NewSession()
 	session.IsAutoClose = true
 	return session.Unscoped()
+}
+
+// CondDeleted returns the conditions whether a record is soft deleted.
+func (engine *Engine) CondDeleted(colName string) builder.Cond {
+	if engine.dialect.DBType() == core.MSSQL {
+		return builder.IsNull{colName}
+	}
+	return builder.IsNull{colName}.Or(builder.Eq{colName: zeroTime1})
 }
