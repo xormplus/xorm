@@ -258,11 +258,11 @@ AND category. ID = 4`
 //我们可以定义一个结构体,注意：结构体中的字段名和上面执行的SQL语句字段名映射，字段数据类型正确
 //当然你还可以给这个结构体加更多其他字段，但是如果执行上面的SQL语句时，这些其他字段只会被赋值对应数据类型的零值
 type CategoryInfo struct {
-	Id             int     
-	Title          string    
-	Categoryname   string    
-	Isdraft        int       
-	Lastupdatetime time.Time 
+	Id             int
+	Title          string
+	Categoryname   string
+	Isdraft        int
+	Lastupdatetime time.Time
 }
 
 var categoryinfo []CategoryInfo
@@ -943,6 +943,25 @@ has, err := engine.Where("id = ?", id).Get(&valuesMap)
 var valuesSlice = make([]interface{}, len(cols))
 has, err := engine.Where("id = ?", id).Cols(cols...).Get(&valuesSlice)
 // SELECT col1, col2, col3 FROM user WHERE id = ?
+```
+
+* 检测记录是否存在
+
+```Go
+has, err := testEngine.Exist(new(RecordExist))
+// SELECT * FROM record_exist LIMIT 1
+has, err = testEngine.Exist(&RecordExist{
+		Name: "test1",
+	})
+// SELECT * FROM record_exist WHERE name = ? LIMIT 1
+has, err = testEngine.Where("name = ?", "test1").Exist(&RecordExist{})
+// SELECT * FROM record_exist WHERE name = ? LIMIT 1
+has, err = testEngine.SQL("select * from record_exist where name = ?", "test1").Exist()
+// select * from record_exist where name = ?
+has, err = testEngine.Table("record_exist").Exist()
+// SELECT * FROM record_exist LIMIT 1
+has, err = testEngine.Table("record_exist").Where("name = ?", "test1").Exist()
+// SELECT * FROM record_exist WHERE name = ? LIMIT 1
 ```
 
 * ORM方式查询多条记录，当然可以使用Join和extends来组合使用
