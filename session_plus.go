@@ -377,12 +377,12 @@ func (resultStructs *ResultStructs) XmlIndent(prefix string, indent string, reco
 }
 
 func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
-	return session.Sql(session.Engine.sqlMap.Sql[sqlTagName], args...)
+	return session.Sql(session.engine.sqlMap.Sql[sqlTagName], args...)
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
-	session.IsSqlFunc = true
-	if session.Engine.sqlTemplate.Template[sqlTagName] == nil {
+	session.isSqlFunc = true
+	if session.engine.sqlTemplate.Template[sqlTagName] == nil {
 		if len(args) == 0 {
 			return session.Sql("")
 		} else {
@@ -393,17 +393,17 @@ func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}
 
 	if len(args) == 0 {
 		parmap := &pongo2.Context{"1": 1}
-		sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
+		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
 		if err != nil {
-			session.Engine.logger.Error(err)
+			session.engine.logger.Error(err)
 
 		}
 		return session.Sql(sql)
 	} else {
 		map1 := args[0].(*map[string]interface{})
-		sql, err := session.Engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
+		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
 		if err != nil {
-			session.Engine.logger.Error(err)
+			session.engine.logger.Error(err)
 
 		}
 		return session.Sql(sql, map1)
@@ -419,27 +419,27 @@ func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{
 
 func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) string {
 
-	var sql = session.Statement.RawSQL
-	var orderBys = session.Statement.OrderStr
+	var sql = session.statement.RawSQL
+	var orderBys = session.statement.OrderStr
 
 	if dialect.DBType() != core.MSSQL && dialect.DBType() != core.ORACLE {
-		if session.Statement.Start > 0 {
-			sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, session.Statement.LimitN, session.Statement.Start)
-		} else if session.Statement.LimitN > 0 {
-			sql = fmt.Sprintf("%v LIMIT %v", sql, session.Statement.LimitN)
+		if session.statement.Start > 0 {
+			sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, session.statement.LimitN, session.statement.Start)
+		} else if session.statement.LimitN > 0 {
+			sql = fmt.Sprintf("%v LIMIT %v", sql, session.statement.LimitN)
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.Statement.Start != 0 || session.Statement.LimitN != 0 {
+		if session.statement.Start != 0 || session.statement.LimitN != 0 {
 			sql = fmt.Sprintf("SELECT aat.* FROM (SELECT at.*,ROWNUM %v FROM (%v) at WHERE ROWNUM <= %d) aat WHERE %v > %d",
-				rownumber, sql, session.Statement.Start+session.Statement.LimitN, rownumber, session.Statement.Start)
+				rownumber, sql, session.statement.Start+session.statement.LimitN, rownumber, session.statement.Start)
 		}
 	} else {
 		keepSelect := false
 		var fullQuery string
-		if session.Statement.Start > 0 {
+		if session.statement.Start > 0 {
 			fullQuery = fmt.Sprintf("SELECT sq.* FROM (SELECT ROW_NUMBER() OVER (ORDER BY %v) AS %v,", orderBys, rownumber)
-		} else if session.Statement.LimitN > 0 {
-			fullQuery = fmt.Sprintf("SELECT TOP %d", session.Statement.LimitN)
+		} else if session.statement.LimitN > 0 {
+			fullQuery = fmt.Sprintf("SELECT TOP %d", session.statement.LimitN)
 		} else {
 			keepSelect = true
 		}
@@ -457,12 +457,12 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 			}
 		}
 
-		if session.Statement.Start > 0 {
+		if session.statement.Start > 0 {
 			// T-SQL offset starts with 1, not like MySQL with 0;
-			if session.Statement.LimitN > 0 {
-				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v BETWEEN %d AND %d", fullQuery, rownumber, session.Statement.Start+1, session.Statement.Start+session.Statement.LimitN)
+			if session.statement.LimitN > 0 {
+				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v BETWEEN %d AND %d", fullQuery, rownumber, session.statement.Start+1, session.statement.Start+session.statement.LimitN)
 			} else {
-				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v >= %d", fullQuery, rownumber, session.Statement.Start+1)
+				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v >= %d", fullQuery, rownumber, session.statement.Start+1)
 			}
 		} else {
 			fullQuery = fmt.Sprintf("%v ORDER BY %v", fullQuery, orderBys)
@@ -483,15 +483,15 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 // Exec a raw sql and return records as ResultMap
 func (session *Session) Query() *ResultMap {
 	defer session.resetStatement()
-	if session.IsAutoClose {
+	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	var dialect = session.Statement.Engine.Dialect()
+	var dialect = session.statement.Engine.Dialect()
 	rownumber := "xorm" + NewShortUUID().String()
 	sql := session.genSelectSql(dialect, rownumber)
 
-	params := session.Statement.RawParams
+	params := session.statement.RawParams
 	i := len(params)
 
 	var result []map[string]interface{}
@@ -508,13 +508,13 @@ func (session *Session) Query() *ResultMap {
 	}
 
 	if dialect.DBType() == core.MSSQL {
-		if session.Statement.Start > 0 {
+		if session.statement.Start > 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.Statement.Start != 0 || session.Statement.LimitN != 0 {
+		if session.statement.Start != 0 || session.statement.LimitN != 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
@@ -527,15 +527,15 @@ func (session *Session) Query() *ResultMap {
 // Exec a raw sql and return records as ResultMap
 func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	defer session.resetStatement()
-	if session.IsAutoClose {
+	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	var dialect = session.Statement.Engine.Dialect()
+	var dialect = session.statement.Engine.Dialect()
 	rownumber := "xorm" + NewShortUUID().String()
 	sql := session.genSelectSql(dialect, rownumber)
 
-	params := session.Statement.RawParams
+	params := session.statement.RawParams
 	i := len(params)
 
 	var result []map[string]interface{}
@@ -552,13 +552,13 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	}
 
 	if dialect.DBType() == core.MSSQL {
-		if session.Statement.Start > 0 {
+		if session.statement.Start > 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.Statement.Start != 0 || session.Statement.LimitN != 0 {
+		if session.statement.Start != 0 || session.statement.LimitN != 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
@@ -571,12 +571,12 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 // Execute raw sql
 func (session *Session) Execute() (sql.Result, error) {
 	defer session.resetStatement()
-	if session.IsAutoClose {
+	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr := session.Statement.RawSQL
-	params := session.Statement.RawParams
+	sqlStr := session.statement.RawSQL
+	params := session.statement.RawParams
 
 	i := len(params)
 	if i == 1 {
@@ -598,10 +598,10 @@ func (session *Session) Execute() (sql.Result, error) {
 func (session *Session) queryAll(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
-	if session.IsAutoCommit {
+	if session.isAutoCommit {
 		return query3(session.DB(), sqlStr, paramStr...)
 	}
-	return txQuery3(session.Tx, sqlStr, paramStr...)
+	return txQuery3(session.tx, sqlStr, paramStr...)
 }
 
 func (session *Session) queryAllByMap(sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
@@ -609,29 +609,29 @@ func (session *Session) queryAllByMap(sqlStr string, paramMap interface{}) (resu
 
 	session.queryPreprocess(&sqlStr1, param...)
 
-	if session.IsAutoCommit {
+	if session.isAutoCommit {
 		return query3(session.DB(), sqlStr1, param...)
 	}
-	return txQuery3(session.Tx, sqlStr1, param...)
+	return txQuery3(session.tx, sqlStr1, param...)
 }
 
 func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr string, paramMap interface{}) (resultsSlice []map[string]interface{}, err error) {
 	sqlStr1, param, _ := core.MapToSlice(sqlStr, paramMap)
 	session.queryPreprocess(&sqlStr1, param...)
 
-	if session.IsAutoCommit {
+	if session.isAutoCommit {
 		return query3WithDateFormat(session.DB(), dateFormat, sqlStr1, param...)
 	}
-	return txQuery3WithDateFormat(session.Tx, dateFormat, sqlStr1, param...)
+	return txQuery3WithDateFormat(session.tx, dateFormat, sqlStr1, param...)
 }
 
 func (session *Session) queryAllWithDateFormat(dateFormat string, sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
-	if session.IsAutoCommit {
+	if session.isAutoCommit {
 		return query3WithDateFormat(session.DB(), dateFormat, sqlStr, paramStr...)
 	}
-	return txQuery3WithDateFormat(session.Tx, dateFormat, sqlStr, paramStr...)
+	return txQuery3WithDateFormat(session.tx, dateFormat, sqlStr, paramStr...)
 }
 
 func (session *Session) queryAllToJsonString(sql string, paramStr ...interface{}) (string, error) {
@@ -727,12 +727,12 @@ func (session *Session) queryPreprocessByMap(sqlStr *string, paramMap interface{
 		return "?"
 	})
 
-	for _, filter := range session.Engine.dialect.Filters() {
-		query = filter.Do(query, session.Engine.dialect, session.Statement.RefTable)
+	for _, filter := range session.engine.dialect.Filters() {
+		query = filter.Do(query, session.engine.dialect, session.statement.RefTable)
 	}
 
 	*sqlStr = query
-	session.Engine.logSQL(*sqlStr, paramMap)
+	session.engine.logSQL(*sqlStr, paramMap)
 }
 
 func (session *Session) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {

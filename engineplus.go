@@ -16,15 +16,15 @@ func (engine *Engine) SetSqlTemplateRootDir(sqlTemplateRootDir string) *Engine {
 
 func (engine *Engine) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
 	session := engine.NewSession()
-	session.IsAutoClose = true
-	session.IsSqlFunc = true
+	session.isAutoClose = true
+	session.isSqlFunc = true
 	return session.Sql(engine.sqlMap.Sql[sqlTagName], args...)
 }
 
 func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
 	session := engine.NewSession()
-	session.IsAutoClose = true
-	session.IsSqlFunc = true
+	session.isAutoClose = true
+	session.isSqlFunc = true
 	return session.SqlTemplateClient(sqlTagName, args...)
 
 }
@@ -63,21 +63,21 @@ func JSONString(v interface{}, IndentJSON bool) (string, error) {
 
 func (engine *Engine) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
 	session := engine.NewSession()
-	session.IsAutoClose = true
-	session.IsSqlFunc = true
+	session.isAutoClose = true
+	session.isSqlFunc = true
 	return session.Sqls(sqls, parmas...)
 }
 
 func (engine *Engine) SqlMapsClient(sqlkeys interface{}, parmas ...interface{}) *SqlMapsExecutor {
 	session := engine.NewSession()
-	session.IsAutoClose = true
-	session.IsSqlFunc = true
+	session.isAutoClose = true
+	session.isSqlFunc = true
 	return session.SqlMapsClient(sqlkeys, parmas...)
 }
 
 func (engine *Engine) SqlTemplatesClient(sqlkeys interface{}, parmas ...interface{}) *SqlTemplatesExecutor {
 	session := engine.NewSession()
-	session.IsAutoClose = true
-	session.IsSqlFunc = true
+	session.isAutoClose = true
+	session.isSqlFunc = true
 	return session.SqlTemplatesClient(sqlkeys, parmas...)
 }

@@ -29,7 +29,7 @@ func (transaction *Transaction) TransactionDefinition() int {
 }
 
 func (transaction *Transaction) IsExistingTransaction() bool {
-	if transaction.txSession.Tx == nil {
+	if transaction.txSession.tx == nil {
 		return false
 	} else {
 		return true
@@ -125,7 +125,7 @@ func (transaction *Transaction) BeginTrans() error {
 		}
 		return nil
 	case PROPAGATION_REQUIRES_NEW:
-		transaction.txSession = transaction.txSession.Engine.NewSession()
+		transaction.txSession = transaction.txSession.engine.NewSession()
 		if err := transaction.txSession.Begin(); err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func (transaction *Transaction) BeginTrans() error {
 	case PROPAGATION_NOT_SUPPORTED:
 		if transaction.IsExistingTransaction() {
 			transaction.isNested = true
-			transaction.txSession = transaction.txSession.Engine.NewSession()
+			transaction.txSession = transaction.txSession.engine.NewSession()
 		}
 		return nil
 	case PROPAGATION_NEVER:
@@ -150,7 +150,7 @@ func (transaction *Transaction) BeginTrans() error {
 			}
 		} else {
 			transaction.isNested = true
-			dbtype := transaction.txSession.Engine.Dialect().DBType()
+			dbtype := transaction.txSession.engine.Dialect().DBType()
 			if dbtype == core.MSSQL {
 				transaction.savePointID = "xorm" + NewShortUUID().String()
 			} else {
@@ -160,8 +160,8 @@ func (transaction *Transaction) BeginTrans() error {
 			if err := transaction.SavePoint(transaction.savePointID); err != nil {
 				return err
 			}
-			transaction.txSession.IsAutoCommit = false
-			transaction.txSession.IsCommitedOrRollbacked = false
+			transaction.txSession.isAutoCommit = false
+			transaction.txSession.isCommitedOrRollbacked = false
 			transaction.txSession.currentTransaction = transaction
 
 		}
@@ -372,12 +372,12 @@ func (transaction *Transaction) RollbackTrans() error {
 }
 
 func (transaction *Transaction) SavePoint(savePointID string) error {
-	if transaction.txSession.Tx == nil {
+	if transaction.txSession.tx == nil {
 		return ErrNotInTransaction
 	}
 
 	var lastSQL string
-	dbtype := transaction.txSession.Engine.Dialect().DBType()
+	dbtype := transaction.txSession.engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
 		lastSQL = "save tran " + savePointID
 	} else {
@@ -385,7 +385,7 @@ func (transaction *Transaction) SavePoint(savePointID string) error {
 	}
 
 	transaction.txSession.saveLastSQL(lastSQL)
-	if _, err := transaction.txSession.Tx.Exec(lastSQL); err != nil {
+	if _, err := transaction.txSession.tx.Exec(lastSQL); err != nil {
 		return err
 	}
 
@@ -393,12 +393,12 @@ func (transaction *Transaction) SavePoint(savePointID string) error {
 }
 
 func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
-	if transaction.txSession.Tx == nil {
+	if transaction.txSession.tx == nil {
 		return ErrNotInTransaction
 	}
 
 	var lastSQL string
-	dbtype := transaction.txSession.Engine.Dialect().DBType()
+	dbtype := transaction.txSession.engine.Dialect().DBType()
 	if dbtype == core.MSSQL {
 		lastSQL = "rollback tran " + savePointID
 	} else {
@@ -406,7 +406,7 @@ func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
 	}
 
 	transaction.txSession.saveLastSQL(lastSQL)
-	if _, err := transaction.txSession.Tx.Exec(lastSQL); err != nil {
+	if _, err := transaction.txSession.tx.Exec(lastSQL); err != nil {
 		return err
 	}
 

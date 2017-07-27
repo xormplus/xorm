@@ -14,7 +14,7 @@ type SqlMapsExecutor struct {
 
 func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
 	defer sqlMapsExecutor.session.resetStatement()
-	if sqlMapsExecutor.session.IsAutoClose {
+	if sqlMapsExecutor.session.isAutoClose {
 		defer sqlMapsExecutor.session.Close()
 	}
 
@@ -28,7 +28,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 	sqlModel := 1
 
-	if sqlMapsExecutor.session.IsSqlFunc == true {
+	if sqlMapsExecutor.session.isSqlFunc == true {
 		err := sqlMapsExecutor.session.Begin()
 		if err != nil {
 			return nil, nil, err
@@ -38,7 +38,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 	switch sqlMapsExecutor.sqlkeys.(type) {
 	case string:
 		sqlkey := sqlMapsExecutor.sqlkeys.(string)
-		sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkey)
+		sqlStr := sqlMapsExecutor.session.engine.GetSql(sqlkey)
 		sqlStr = strings.TrimSpace(sqlStr)
 		sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
@@ -84,7 +84,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				}
 
 			default:
-				if sqlMapsExecutor.session.IsSqlFunc == true {
+				if sqlMapsExecutor.session.isSqlFunc == true {
 					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
@@ -98,7 +98,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 		if sqlModel == 1 {
 			if model_1_results.Error != nil {
-				if sqlMapsExecutor.session.IsSqlFunc == true {
+				if sqlMapsExecutor.session.isSqlFunc == true {
 					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
@@ -111,7 +111,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 			return resultSlice, nil, nil
 		} else if sqlModel == 2 {
 			if err != nil {
-				if sqlMapsExecutor.session.IsSqlFunc == true {
+				if sqlMapsExecutor.session.isSqlFunc == true {
 					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
@@ -145,7 +145,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 		if sqlMapsExecutor.parmas == nil {
 			for i, _ := range sqlkeysSlice {
-				sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkeysSlice[i])
+				sqlStr := sqlMapsExecutor.session.engine.GetSql(sqlkeysSlice[i])
 				sqlStr = strings.TrimSpace(sqlStr)
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
@@ -162,7 +162,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -175,7 +175,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				} else if sqlModel == 2 {
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -193,7 +193,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					resultMap[0]["LastInsertId"] = LastInsertId
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -217,7 +217,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				parmaSlice = sqlMapsExecutor.parmas.([]map[string]interface{})
 
 			default:
-				if sqlMapsExecutor.session.IsSqlFunc == true {
+				if sqlMapsExecutor.session.isSqlFunc == true {
 					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
@@ -227,7 +227,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 			}
 
 			for i, _ := range sqlkeysSlice {
-				sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkeysSlice[i])
+				sqlStr := sqlMapsExecutor.session.engine.GetSql(sqlkeysSlice[i])
 				sqlStr = strings.TrimSpace(sqlStr)
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
@@ -257,7 +257,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -270,7 +270,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				} else if sqlModel == 2 {
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -288,7 +288,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					resultMap[0]["LastInsertId"] = LastInsertId
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -307,7 +307,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 		}
 
-		if sqlMapsExecutor.session.IsSqlFunc == true {
+		if sqlMapsExecutor.session.isSqlFunc == true {
 			err1 := sqlMapsExecutor.session.Commit()
 			if err1 != nil {
 				return nil, nil, err1
@@ -324,7 +324,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 		if sqlMapsExecutor.parmas == nil {
 			for k, _ := range sqlkeysMap {
-				sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkeysMap[k])
+				sqlStr := sqlMapsExecutor.session.engine.GetSql(sqlkeysMap[k])
 				sqlStr = strings.TrimSpace(sqlStr)
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
@@ -341,7 +341,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -354,7 +354,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				} else if sqlModel == 2 {
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -372,7 +372,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					resultMap[0]["LastInsertId"] = LastInsertId
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -396,7 +396,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 				parmasMap = sqlMapsExecutor.parmas.(map[string]map[string]interface{})
 
 			default:
-				if sqlMapsExecutor.session.IsSqlFunc == true {
+				if sqlMapsExecutor.session.isSqlFunc == true {
 					err1 := sqlMapsExecutor.session.Rollback()
 					if err1 != nil {
 						return nil, nil, err1
@@ -406,7 +406,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 			}
 
 			for k, _ := range sqlkeysMap {
-				sqlStr := sqlMapsExecutor.session.Engine.GetSql(sqlkeysMap[k])
+				sqlStr := sqlMapsExecutor.session.engine.GetSql(sqlkeysMap[k])
 				sqlStr = strings.TrimSpace(sqlStr)
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmasMap[k] == nil {
@@ -436,7 +436,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -449,7 +449,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 
 				} else if sqlModel == 2 {
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -467,7 +467,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 					resultMap[0]["LastInsertId"] = LastInsertId
 					RowsAffected, err := model_2_results.RowsAffected()
 					if err != nil {
-						if sqlMapsExecutor.session.IsSqlFunc == true {
+						if sqlMapsExecutor.session.isSqlFunc == true {
 							err1 := sqlMapsExecutor.session.Rollback()
 							if err1 != nil {
 								return nil, nil, err1
@@ -485,7 +485,7 @@ func (sqlMapsExecutor *SqlMapsExecutor) Execute() ([][]map[string]interface{}, m
 			}
 		}
 
-		if sqlMapsExecutor.session.IsSqlFunc == true {
+		if sqlMapsExecutor.session.isSqlFunc == true {
 			err1 := sqlMapsExecutor.session.Commit()
 			if err1 != nil {
 				return nil, nil, err1
