@@ -262,7 +262,6 @@ func (engine *Engine) Close() error {
 func (engine *Engine) Ping() error {
 	session := engine.NewSession()
 	defer session.Close()
-	engine.logger.Infof("PING DATABASE %v", engine.DriverName())
 	return session.Ping()
 }
 
@@ -1224,6 +1223,9 @@ func (engine *Engine) ClearCache(beans ...interface{}) error {
 // table, column, index, unique. but will not delete or change anything.
 // If you change some field, you should change the database manually.
 func (engine *Engine) Sync(beans ...interface{}) error {
+	session := engine.NewSession()
+	defer session.Close()
+
 	for _, bean := range beans {
 		v := rValue(bean)
 		tableName := engine.tbName(v)
@@ -1232,14 +1234,12 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 			return err
 		}
 
-		s := engine.NewSession()
-		defer s.Close()
-		isExist, err := s.Table(bean).isTableExist(tableName)
+		isExist, err := session.Table(bean).isTableExist(tableName)
 		if err != nil {
 			return err
 		}
 		if !isExist {
-			err = engine.CreateTables(bean)
+			err = session.createTable(bean)
 			if err != nil {
 				return err
 			}
@@ -1250,11 +1250,11 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 		  }*/
 		var isEmpty bool
 		if isEmpty {
-			err = engine.DropTables(bean)
+			err = session.dropTable(bean)
 			if err != nil {
 				return err
 			}
-			err = engine.CreateTables(bean)
+			err = session.createTable(bean)
 			if err != nil {
 				return err
 			}
@@ -1265,8 +1265,6 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 					return err
 				}
 				if !isExist {
-					session := engine.NewSession()
-					defer session.Close()
 					if err := session.statement.setRefValue(v); err != nil {
 						return err
 					}
@@ -1278,8 +1276,6 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 			}
 
 			for name, index := range table.Indexes {
-				session := engine.NewSession()
-				defer session.Close()
 				if err := session.statement.setRefValue(v); err != nil {
 					return err
 				}
@@ -1289,8 +1285,6 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 						return err
 					}
 					if !isExist {
-						session := engine.NewSession()
-						defer session.Close()
 						if err := session.statement.setRefValue(v); err != nil {
 							return err
 						}
@@ -1306,8 +1300,6 @@ func (engine *Engine) Sync(beans ...interface{}) error {
 						return err
 					}
 					if !isExist {
-						session := engine.NewSession()
-						defer session.Close()
 						if err := session.statement.setRefValue(v); err != nil {
 							return err
 						}
@@ -1333,23 +1325,6 @@ func (engine *Engine) Sync2(beans ...interface{}) error {
 	return s.Sync2(beans...)
 }
 
-// Drop all mapped table
-func (engine *Engine) dropAll() error {
-	session := engine.NewSession()
-	defer session.Close()
-
-	err := session.Begin()
-	if err != nil {
-		return err
-	}
-	err = session.dropAll()
-	if err != nil {
-		session.Rollback()
-		return err
-	}
-	return session.Commit()
-}
-
 // CreateTables create tabls according bean
 func (engine *Engine) CreateTables(beans ...interface{}) error {
 	session := engine.NewSession()
@@ -1361,7 +1336,7 @@ func (engine *Engine) CreateTables(beans ...interface{}) error {
 	}
 
 	for _, bean := range beans {
-		err = session.CreateTable(bean)
+		err = session.createTable(bean)
 		if err != nil {
 			session.Rollback()
 			return err
@@ -1381,7 +1356,7 @@ func (engine *Engine) DropTables(beans ...interface{}) error {
 	}
 
 	for _, bean := range beans {
-		err = session.DropTable(bean)
+		err = session.dropTable(bean)
 		if err != nil {
 			session.Rollback()
 			return err
@@ -1491,10 +1466,10 @@ func (engine *Engine) Rows(bean interface{}) (*Rows, error) {
 }
 
 // Count counts the records. bean's non-empty fields are conditions.
-func (engine *Engine) Count(bean interface{}) (int64, error) {
+func (engine *Engine) Count(bean ...interface{}) (int64, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Count(bean)
+	return session.Count(bean...)
 }
 
 // Sum sum the records by some column. bean's non-empty fields are conditions.
