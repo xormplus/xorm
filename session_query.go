@@ -14,7 +14,7 @@ import (
 )
 
 // Query runs a raw sql and return records as []map[string][]byte
-func (session *Session) query(sqlStr string, args ...interface{}) ([]map[string][]byte, error) {
+func (session *Session) QueryBytes(sqlStr string, args ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
