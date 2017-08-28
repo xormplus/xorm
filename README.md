@@ -16,7 +16,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 使用连写来简化调用
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
 * 支持级联加载Struct
-* 支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件和pongo2模板3种方式）
+* 支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件、pongo2模板和自定义实现配置4种方式）
 * 支持动态SQL功能
 * 支持一次批量混合执行多个CRUD操作，并返回多个结果集
 * 支持数据库查询结果直接返回Json字符串和xml字符串
@@ -48,7 +48,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 
 # 文档
 
-## 本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
+## 传送门：本定制版[《xorm操作指南》](http://www.kancloud.cn/xormplus/xorm/167077)
 
 
 # 快速开始
