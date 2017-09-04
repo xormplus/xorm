@@ -50,7 +50,18 @@ func (session *Session) get(bean interface{}) (bool, error) {
 		}
 	} else {
 		sqlStr = session.statement.RawSQL
-		args = session.statement.RawParams
+		params := session.statement.RawParams
+		i := len(params)
+		if i == 1 {
+			vv := reflect.ValueOf(params[0])
+			if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+				args = params
+			} else {
+				sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+			}
+		} else {
+			args = params
+		}
 	}
 
 	if session.canCache() && beanValue.Elem().Kind() == reflect.Struct {

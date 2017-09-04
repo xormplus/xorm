@@ -169,7 +169,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 					sqlStr = sql
 					args = params
 				} else {
-					sqlStr, args, _ = core.MapToSlice(sqlStr, params[0])
+					sqlStr, args, _ = core.MapToSlice(sql, params[0])
 				}
 			} else {
 				sqlStr = sql
