@@ -309,6 +309,7 @@ func (session *Session) rows2Beans(rows *core.Rows, fields []string, fieldsCount
 		var newValue = newElemFunc(fields)
 		bean := newValue.Interface()
 		dataStruct := rValue(bean)
+
 		// handle beforeClosures
 		scanResults, err := session.row2Slice(rows, fields, fieldsCount, bean)
 		if err != nil {
@@ -318,7 +319,6 @@ func (session *Session) rows2Beans(rows *core.Rows, fields []string, fieldsCount
 		if err != nil {
 			return err
 		}
-
 		err = sliceValueSetFunc(&newValue, pk)
 		if err != nil {
 			return err
