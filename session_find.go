@@ -179,7 +179,6 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 
 	}
 	return session.noCacheFind(table, sliceValue, sqlStr, args...)
-
 }
 
 func (session *Session) noCacheFind(table *core.Table, containerValue reflect.Value, sqlStr string, args ...interface{}) error {
@@ -317,12 +316,11 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 	}
 
 	tableName := session.statement.TableName()
-
 	table := session.statement.RefTable
 	cacher := session.engine.getCacher2(table)
 	ids, err := core.GetCacheSql(cacher, tableName, newsql, args)
 	if err != nil {
-		rows, err := session.NoCache().queryRows(newsql, args...)
+		rows, err := session.queryRows(newsql, args...)
 		if err != nil {
 			return err
 		}
@@ -352,13 +350,13 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			ids = append(ids, pk)
 		}
 
-		session.engine.logger.Debug("[cacheFind] cache sql:", ids, tableName, newsql, args)
+		session.engine.logger.Debug("[cacheFind] cache sql:", ids, tableName, sqlStr, newsql, args)
 		err = core.PutCacheSql(cacher, ids, tableName, newsql, args)
 		if err != nil {
 			return err
 		}
 	} else {
-		session.engine.logger.Debug("[cacheFind] cache hit sql:", newsql, args)
+		session.engine.logger.Debug("[cacheFind] cache hit sql:", tableName, sqlStr, newsql, args)
 	}
 
 	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
@@ -373,7 +371,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			return err
 		}
 		bean := cacher.GetBean(tableName, sid)
-		if bean == nil {
+		if bean == nil || reflect.ValueOf(bean).Elem().Type() != t {
 			ides = append(ides, id)
 			ididxes[sid] = idx
 		} else {
@@ -414,7 +412,7 @@ func (session *Session) cacheFind(t reflect.Type, sqlStr string, rowsSlicePtr in
 			}
 		}
 
-		err = session.NoCache().find(beans)
+		err = session.NoCache().Table(tableName).find(beans)
 		if err != nil {
 			return err
 		}

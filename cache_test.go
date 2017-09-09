@@ -20,6 +20,7 @@ func TestCacheFind(t *testing.T) {
 		Password string
 	}
 
+	oldCacher := testEngine.Cacher
 	cacher := NewLRUCacher2(NewMemoryStore(), time.Hour, 10000)
 	testEngine.SetDefaultCacher(cacher)
 
@@ -58,7 +59,31 @@ func TestCacheFind(t *testing.T) {
 		assert.Equal(t, inserts[i].Password, box.Password)
 	}
 
-	testEngine.SetDefaultCacher(nil)
+	boxes = make([]MailBox, 0, 2)
+	assert.NoError(t, testEngine.Alias("a").Where("a.id > -1").Asc("a.id").Find(&boxes))
+	assert.EqualValues(t, 2, len(boxes))
+	for i, box := range boxes {
+		assert.Equal(t, inserts[i].Id, box.Id)
+		assert.Equal(t, inserts[i].Username, box.Username)
+		assert.Equal(t, inserts[i].Password, box.Password)
+	}
+
+	type MailBox4 struct {
+		Id       int64
+		Username string
+		Password string
+	}
+
+	boxes2 := make([]MailBox4, 0, 2)
+	assert.NoError(t, testEngine.Table("mail_box").Where("mail_box.id > -1").Asc("mail_box.id").Find(&boxes2))
+	assert.EqualValues(t, 2, len(boxes2))
+	for i, box := range boxes2 {
+		assert.Equal(t, inserts[i].Id, box.Id)
+		assert.Equal(t, inserts[i].Username, box.Username)
+		assert.Equal(t, inserts[i].Password, box.Password)
+	}
+
+	testEngine.SetDefaultCacher(oldCacher)
 }
 
 func TestCacheFind2(t *testing.T) {
@@ -70,6 +95,7 @@ func TestCacheFind2(t *testing.T) {
 		Password string
 	}
 
+	oldCacher := testEngine.Cacher
 	cacher := NewLRUCacher2(NewMemoryStore(), time.Hour, 10000)
 	testEngine.SetDefaultCacher(cacher)
 
@@ -108,7 +134,7 @@ func TestCacheFind2(t *testing.T) {
 		assert.Equal(t, inserts[i].Password, box.Password)
 	}
 
-	testEngine.SetDefaultCacher(nil)
+	testEngine.SetDefaultCacher(oldCacher)
 }
 
 func TestCacheGet(t *testing.T) {
@@ -120,6 +146,7 @@ func TestCacheGet(t *testing.T) {
 		Password string
 	}
 
+	oldCacher := testEngine.Cacher
 	cacher := NewLRUCacher2(NewMemoryStore(), time.Hour, 10000)
 	testEngine.SetDefaultCacher(cacher)
 
@@ -148,5 +175,5 @@ func TestCacheGet(t *testing.T) {
 	assert.EqualValues(t, "user1", box2.Username)
 	assert.EqualValues(t, "pass1", box2.Password)
 
-	testEngine.SetDefaultCacher(nil)
+	testEngine.SetDefaultCacher(oldCacher)
 }
