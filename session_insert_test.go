@@ -515,6 +515,31 @@ func (j JsonTime) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + j.format() + `"`), nil
 }
 
+func TestDefaultTime3(t *testing.T) {
+	type PrepareTask struct {
+		Id int `xorm:"not null pk autoincr INT(11)" json:"id"`
+		// ...
+		StartTime JsonTime `xorm:"not null default '2006-01-02 15:04:05' TIMESTAMP index" json:"start_time"`
+		EndTime   JsonTime `xorm:"not null default '2006-01-02 15:04:05' TIMESTAMP" json:"end_time"`
+		Cuser     string   `xorm:"not null default '' VARCHAR(64) index" json:"cuser"`
+		Muser     string   `xorm:"not null default '' VARCHAR(64)" json:"muser"`
+		Ctime     JsonTime `xorm:"not null default CURRENT_TIMESTAMP TIMESTAMP created" json:"ctime"`
+		Mtime     JsonTime `xorm:"not null default CURRENT_TIMESTAMP TIMESTAMP updated" json:"mtime"`
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(PrepareTask))
+
+	prepareTask := &PrepareTask{
+		StartTime: JsonTime(time.Now()),
+		Cuser:     "userId",
+		Muser:     "userId",
+	}
+	cnt, err := testEngine.Omit("end_time").InsertOne(prepareTask)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+}
+
 type MyJsonTime struct {
 	Id      int64    `json:"id"`
 	Created JsonTime `xorm:"created" json:"created_at"`
@@ -626,4 +651,30 @@ func TestInsertTwoTable(t *testing.T) {
 		t.Error(err)
 		panic(err)
 	}
+}
+
+func TestInsertCreatedInt64(t *testing.T) {
+	assert.NoError(t, prepareEngine())
+
+	type TestCreatedInt64 struct {
+		Id      int64  `xorm:"autoincr pk"`
+		Msg     string `xorm:"varchar(255)"`
+		Created int64  `xorm:"created"`
+	}
+
+	assert.NoError(t, testEngine.Sync2(new(TestCreatedInt64)))
+
+	data := TestCreatedInt64{Msg: "hi"}
+	now := time.Now()
+	cnt, err := testEngine.Insert(&data)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+	assert.True(t, now.Unix() <= data.Created)
+
+	var data2 TestCreatedInt64
+	has, err := testEngine.Get(&data2)
+	assert.NoError(t, err)
+	assert.True(t, has)
+
+	assert.EqualValues(t, data.Created, data2.Created)
 }
