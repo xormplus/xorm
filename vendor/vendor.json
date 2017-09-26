@@ -27,34 +27,35 @@
 			"revisionTime": "2016-03-10T14:26:25Z"
 		},
 		{
-			"checksumSHA1": "ovDoOpGIydfbUKNmYGiV2lONJLM=",
+			"checksumSHA1": "tNw6Ta2KSe3pfE3pDvDbLjStGVg=",
 			"path": "github.com/bndr/gotabulate",
-			"revision": "6b18276541437a930c4fd02ba0f973ec632572b9",
-			"revisionTime": "2016-10-08T17:27:12Z"
+			"revision": "bc555436bfd5d4e93a2dd35b462ce37e067afdda",
+			"revisionTime": "2017-03-15T14:24:10Z"
 		},
 		{
-			"checksumSHA1": "9K7s0i+FyqEFNlu6ovGX9iOMSMQ=",
+			"checksumSHA1": "r1PrPAfdXzpLjmIobYRaRMsKZlc=",
 			"path": "github.com/fatih/structs",
-			"revision": "dc3312cb1a4513a366c4c9e622ad55c32df12ed3",
-			"revisionTime": "2016-08-07T23:55:29Z"
+			"revision": "7e5a8eef611ee84dd359503f3969f80df4c50723",
+			"revisionTime": "2017-06-12T12:55:44Z"
 		},
 		{
-			"checksumSHA1": "NcUSqemYhygiMcCShH4W1LMm9Eo=",
+			"checksumSHA1": "hycyx9fdrMKhXX9lguWeUIOwPVM=",
 			"path": "github.com/fsnotify/fsnotify",
-			"revision": "fd9ec7deca8bf46ecd2a795baaacf2b3a9be1197",
-			"revisionTime": "2016-10-26T20:31:22Z"
+			"revision": "4da3e2cfbabc9f751898f250b49f2439785783a1",
+			"revisionTime": "2017-03-29T04:21:07Z"
 		},
 		{
-			"checksumSHA1": "0EbIiM2NAjPjW6FT9lf3UevJzGM=",
+			"checksumSHA1": "b64yVZEKG21+a/xvcKEvqfai1ik=",
 			"path": "github.com/mattn/go-runewidth",
-			"revision": "737072b4e32b7a5018b4a7125da8d12de90e8045",
-			"revisionTime": "2016-10-12T01:35:12Z"
+			"revision": "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",
+			"revisionTime": "2017-05-10T07:48:58Z"
 		},
 		{
-			"checksumSHA1": "S068paVxZamCnu0xh0F6KQ0aMIk=",
+			"checksumSHA1": "gMuymsdp77XlJETMWU+UB7CjI7U=",
 			"path": "github.com/tealeg/xlsx",
-			"revision": "a8490cf686defe538b45b05af838d9eeb7d8fe64",
-			"revisionTime": "2016-10-26T16:12:24Z"
+			"revision": "466a0a69fccec6236a79c9214acb5502dbc6fa9a",
+			"revisionTime": "2017-09-26T07:13:59Z",
+			"tree": true
 		},
 		{
 			"checksumSHA1": "uTQtOqR0ePMMcvuvAIksiIZxhqU=",
