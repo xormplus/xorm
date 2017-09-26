@@ -5,14 +5,14 @@
 package xorm
 
 // Incr provides a query string like "count = count + 1"
-func (session *Session) Incr(column string, arg ...interface{}) *Session {
-	session.statement.Incr(column, arg...)
+func (session *Session) Incr(column string, args ...interface{}) *Session {
+	session.statement.Incr(column, args...)
 	return session
 }
 
 // Decr provides a query string like "count = count - 1"
-func (session *Session) Decr(column string, arg ...interface{}) *Session {
-	session.statement.Decr(column, arg...)
+func (session *Session) Decr(column string, args ...interface{}) *Session {
+	session.statement.Decr(column, args...)
 	return session
 }
 

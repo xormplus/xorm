@@ -282,8 +282,8 @@ func (engine *Engine) logSQL(sqlStr string, sqlArgs ...interface{}) {
 // and cannot use Where, Id, In and etc. Methods to describe, you can use SQL.
 //
 // Deprecated: use SQL instead.
-func (engine *Engine) Sql(querystring string, args ...interface{}) *Session {
-	return engine.SQL(querystring, args...)
+func (engine *Engine) Sql(query interface{}, args ...interface{}) *Session {
+	return engine.SQL(query, args...)
 }
 
 // SQL method let's you manually write raw SQL and operate
@@ -680,17 +680,17 @@ func (engine *Engine) NotIn(column string, args ...interface{}) *Session {
 }
 
 // Incr provides a update string like "column = column + ?"
-func (engine *Engine) Incr(column string, arg ...interface{}) *Session {
+func (engine *Engine) Incr(column string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.isAutoClose = true
-	return session.Incr(column, arg...)
+	return session.Incr(column, args...)
 }
 
 // Decr provides a update string like "column = column - ?"
-func (engine *Engine) Decr(column string, arg ...interface{}) *Session {
+func (engine *Engine) Decr(column string, args ...interface{}) *Session {
 	session := engine.NewSession()
 	session.isAutoClose = true
-	return session.Decr(column, arg...)
+	return session.Decr(column, args...)
 }
 
 // SetExpr provides a update string like "column = {expression}"
