@@ -50,6 +50,8 @@ type Engine struct {
 	disableGlobalCache bool
 
 	tagHandlers map[string]tagHandler
+
+	engineGroup *EngineGroup
 }
 
 // ShowSQL show SQL statement or not on logger if log level is great than INFO
