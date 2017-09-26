@@ -14,6 +14,7 @@ type TableFormat struct {
 	LineBottom      Line
 	HeaderRow       Row
 	DataRow         Row
+	TitleRow        Row
 	Padding         int
 	HeaderHide      bool
 	FitScreen       bool
@@ -44,11 +45,13 @@ var TableFormats = map[string]TableFormat{
 		LineBottom:      Line{"", "-", "  ", ""},
 		HeaderRow:       Row{"", "  ", ""},
 		DataRow:         Row{"", "  ", ""},
+		TitleRow:        Row{"", "  ", ""},
 		Padding:         1,
 	},
 	"plain": TableFormat{
 		HeaderRow: Row{"", "  ", ""},
 		DataRow:   Row{"", "  ", ""},
+		TitleRow:  Row{"", "  ", ""},
 		Padding:   1,
 	},
 	"grid": TableFormat{
@@ -58,6 +61,7 @@ var TableFormats = map[string]TableFormat{
 		LineBottom:      Line{"+", "-", "+", "+"},
 		HeaderRow:       Row{"|", "|", "|"},
 		DataRow:         Row{"|", "|", "|"},
+		TitleRow:        Row{"|", " ", "|"},
 		Padding:         1,
 	},
 }
@@ -68,6 +72,8 @@ var MIN_PADDING = 5
 // Main Tabulate structure
 type Tabulate struct {
 	Data          []*TabulateRow
+	Title         string
+	TitleAlign    string
 	Headers       []string
 	FloatFormat   byte
 	TableFormat   TableFormat
@@ -251,7 +257,24 @@ func (t *Tabulate) Render(format ...interface{}) string {
 		padded_widths[i] = cols[i] + MIN_PADDING*t.TableFormat.Padding
 	}
 
+	// Calculate total width of the table
+	totalWidth := len(t.TableFormat.DataRow.sep) * (len(cols) - 1) // Include all but the final separator
+	for _, w := range padded_widths {
+		totalWidth += w
+	}
+
 	// Start appending lines
+	if len(t.Title) > 0 {
+		if !inSlice("aboveTitle", t.HideLines) {
+			lines = append(lines, t.buildLine(padded_widths, cols, t.TableFormat.LineTop))
+		}
+		savedAlign := t.Align
+		if len(t.TitleAlign) > 0 {
+			t.SetAlign(t.TitleAlign) // Temporary replace alignment with the title alignment
+		}
+		lines = append(lines, t.buildRow([]string{t.Title}, []int{totalWidth}, nil, t.TableFormat.TitleRow))
+		t.SetAlign(savedAlign)
+	}
 
 	// Append top line if not hidden
 	if !inSlice("top", t.HideLines) {
@@ -270,7 +293,7 @@ func (t *Tabulate) Render(format ...interface{}) string {
 	for index, element := range t.Data {
 		lines = append(lines, t.buildRow(t.padRow(element.Elements, t.TableFormat.Padding), padded_widths, cols, t.TableFormat.DataRow))
 		if index < len(t.Data)-1 {
-			if element.Continuos != true {
+			if element.Continuos != true && !inSlice("betweenLine", t.HideLines) {
 				lines = append(lines, t.buildLine(padded_widths, cols, t.TableFormat.LineBetweenRows))
 			}
 		}
@@ -310,6 +333,17 @@ func (t *Tabulate) getWidths(headers []string, data []*TabulateRow) []int {
 	}
 
 	return widths
+}
+
+// SetTitle sets the title of the table can also accept a second string to define an alignment for the title
+func (t *Tabulate) SetTitle(title ...string) *Tabulate {
+
+	t.Title = title[0]
+	if len(title) > 1 {
+		t.TitleAlign = title[1]
+	}
+
+	return t
 }
 
 // Set Headers of the table
@@ -407,6 +441,9 @@ func (t *Tabulate) wrapCellData() []*TabulateRow {
 	var arr []*TabulateRow
 	var cleanSplit bool
 	var addr int
+	if len(t.Data) == 0 {
+		return arr
+	}
 	next := t.Data[0]
 	for index := 0; index <= len(t.Data); index++ {
 		elements := next.Elements
