@@ -81,6 +81,7 @@ func (session *Session) Init() {
 	session.afterDeleteBeans = make(map[interface{}]*[]func(interface{}), 0)
 	session.beforeClosures = make([]func(interface{}), 0)
 	session.afterClosures = make([]func(interface{}), 0)
+	session.stmtCache = make(map[uint32]*core.Stmt)
 
 	session.afterProcessors = make([]executedProcessor, 0)
 
@@ -118,7 +119,7 @@ func (session *Session) resetStatement() {
 	session.isSqlFunc = false
 }
 
-// Prepare set a flag to session that should be prepare statment before execute query
+// Prepare set a flag to session that should be prepare statement before execute query
 func (session *Session) Prepare() *Session {
 	session.prepareStmt = true
 	return session

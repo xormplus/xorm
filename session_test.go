@@ -11,7 +11,6 @@ import (
 )
 
 func TestClose(t *testing.T) {
-
 	assert.NoError(t, prepareEngine())
 
 	sess1 := testEngine.NewSession()

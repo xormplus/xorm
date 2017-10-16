@@ -154,7 +154,7 @@ func TestConversion(t *testing.T) {
 
 	c := new(ConvStruct)
 	assert.NoError(t, testEngine.DropTables(c))
-	assert.NoError(t, testEngine.Sync(c))
+	assert.NoError(t, testEngine.Sync2(c))
 
 	var s ConvString = "sssss"
 	c.Conv = "tttt"
