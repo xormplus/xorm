@@ -16,7 +16,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 使用连写来简化调用
 * 支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件
 * 支持级联加载Struct
-* 支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件、pongo2模板和自定义实现配置4种方式）
+* 支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件,支持[pongo2](https://github.com/flosch/pongo2)、[jet](https://github.com/CloudyKit/jet)、[html/template](https://github.com/golang/go/tree/master/src/html/template)模板和自定义实现配置多种方式）
 * 支持动态SQL功能
 * 支持一次批量混合执行多个CRUD操作，并返回多个结果集
 * 支持数据库查询结果直接返回Json字符串和xml字符串
@@ -76,18 +76,20 @@ if err != nil {
 }
 
 /*--------------------------------------------------------------------------------------------------
-1、使用SetSqlMapRootDir()方法设置SqlMap配置文件总根目录，返回Engine实例本身，如采用sql/xormcfg.ini配置文件中的配置，可直接使用InitSqlMap()初始化
-2、使用SetSqlTemplateRootDir()方法设置SqlTemplate模板配置文件总根目录，返回Engine实例本身，如采用sql/xormcfg.ini配置文件中的配置，可直接使用InitSqlTemplate()初始化
-3、SqlMap配置文件总根目录和SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，代码指定优先级高于配置
+1、使用RegisterSqlMap()注册SqlMap配置
+2、RegisterSqlTemplate()方法注册SSqlTemplate模板配置
+3、SqlMap配置文件总根目录和SqlTemplate模板配置文件总根目录可为同一目录
 --------------------------------------------------------------------------------------------------*/
 
-//初始化SqlMap配置，可选功能，如应用中无需使用SqlMap，可无需初始化
-err = engine.SetSqlMapRootDir("./sql/oracle").InitSqlMap()
+//注册SqlMap配置，可选功能，如应用中无需使用SqlMap，可无需初始化
+//此处使用xml格式的配置，配置文件根目录为"./sql/oracle"，配置文件后缀为".xml"
+err = x.RegisterSqlMap(xorm.Xml("./sql/oracle", ".xml"))
 if err != nil {
 	t.Fatal(err)
 }
-//初始化动态SQL模板配置，可选功能，如应用中无需使用SqlTemplate，可无需初始化
-err = engine.SetSqlTemplateRootDir("./sql/oracle").InitSqlTemplate(xorm.SqlTemplateOptions{Extension: ".xx"})
+//注册动态SQL模板配置，可选功能，如应用中无需使用SqlTemplate，可无需初始化
+//此处注册动态SQL模板配置，使用Pongo2模板引擎，配置文件根目录为"./sql/oracle"，配置文件后缀为".stpl"
+err = x.RegisterSqlTemplate(xorm.Pongo2("./sql/oracle", ".stpl"))
 if err != nil {
 	t.Fatal(err)
 }
@@ -100,9 +102,8 @@ if err != nil {
 
 ```
 
-* <b>db.InitSqlMap()过程</b>
-    * 如使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则InitSqlMap()方法按指定目录遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例</a>）或json配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/test.json">配置文件样例</a>）
-    * 如未使用SetSqlMapRootDir()方法指定SqlMap配置文件总根目录，则读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlMapRootDir配置项，遍历SqlMapRootDir所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例</a>）或json配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/test.json">配置文件样例</a>）
+* <b>db.RegisterSqlMap()过程</b>
+    * 使用RegisterSqlMap()方法指定SqlMap配置文件文件格式，配置文件总根目录，配置文件后缀名，RegisterSqlMap()方法按指定目录遍历所配置的目录及其子目录下的所有xml配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/studygolang.xml">配置文件样例</a>）或json配置文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/test.json">配置文件样例</a>）
     * 解析所有配置SqlMap的xml配置文件或json配置文件
     * xml配置文件中sql标签的id属性值作为SqlMap的key，如有重名id，则后加载的覆盖之前加载的配置sql条目
     * json配置文件中key值作为SqlMap的key，如有重名key，则后加载的覆盖之前加载的配置sql条目
@@ -110,10 +111,9 @@ if err != nil {
     * 配置文件中sql配置会读入内存并缓存
     * 由于SqlTemplate模板能完成更多复杂组装和特殊场景需求等强大功能，故SqlMap的xml或json只提供这种极简配置方式，非ibatis的OGNL的表达式实现方式
 
-* <b>db.InitSqlTemplate()过程</b>
-    * 如使用SetSqlTemplateRootDir()方法指定SqlTemplate模板配置文件总根目录，则InitSqlTemplate()方法按指定目录遍历SqlTemplateRootDir所配置的目录及其子目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
-    * 如指使用SetSqlTemplateRootDir()方法指定SqlTemplate模板配置文件总根目录，则InitSqlTemplate()方法读取程序所在目下的sql/xormcfg.ini配置文件(<a href="https://github.com/xormplus/xorm/blob/master/test/sql/xormcfg.ini">样例</a>)中的SqlTemplateRootDir配置项，遍历SqlTemplateRootDir所配置的目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
-    * 解析stpl模板文件
+* <b>db.RegisterSqlTemplate()过程</b>
+    * 使用RegisterSqlTemplate()方法指定SqlTemplate模板的模板引擎（支持[pongo2](https://github.com/flosch/pongo2)、[jet](https://github.com/CloudyKit/jet)、[html/template](https://github.com/golang/go/tree/master/src/html/template)3种模板引擎，但只能选用一种，不能同时混用），配置文件总根目录，配置文件后缀名，RegisterSqlTemplate()方法按指定目录遍历所配置的目录及其子目录及其子目录下的所有stpl模板文件（<a href="https://github.com/xormplus/xorm/blob/master/test/sql/oracle/select.example.stpl">模板文件样例</a>）
+    * 使用指定模板引擎解析stpl模板文件
     * stpl模板文件名作为SqlTemplate存储的key（不包含目录路径），如有不同路径下出现同名文件，则后加载的覆盖之前加载的配置模板内容
     * stpl模板内容会读入内存并缓存
 
@@ -477,25 +477,17 @@ if err != nil {
 * <b>SqlMap及SqlTemplate相关功能API</b>
 
 ```go
-//设置SqlMap文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
-engine.SetSqlMapRootDir()
-//设置SqlTemplate模板配置文件总根目录，可代码指定，也可在配置文件中配置，如使用配置文件中的配置则无需调用该方法，代码指定优先级高于配置
-engine.SetSqlTemplateRootDir()
+//注册SqlMap配置，xml格式
+err := engine.RegisterSqlMap(xorm.Xml("./sql/oracle", ".xml"))
+//注册SqlMap配置，json格式
+err := engine.RegisterSqlMap(xorm.Json("./sql/oracle", ".json"))
+//注册SqlTemplate配置，使用Pongo2模板引擎
+err := engine.RegisterSqlTemplate(xorm.Pongo2("./sql/oracle", ".stpl"))
+//注册SqlTemplate配置，使用Jet模板引擎
+err := engine.RegisterSqlTemplate(xorm.Jet("./sql/oracle", ".jet"))
+//注册SqlTemplate配置，使用html/template模板引擎
+err := engine.RegisterSqlTemplate(xorm.Default("./sql/oracle", ".tpl"))
 
-//初始化加载SqlMap配置文件，默认初始化xml格式内容后缀为".xml",json格式内容后缀为".json"，默认初始化容量100
-err := engine.InitSqlMap()
-err := engine.InitSqlTemplate()//初始化加载SqlTemplate配置文件，默认初始化后缀为".stpl"，初始化容量100
-
-//SqlMap配置文件和SqlTemplate配置文件后缀不要相同
-//指定SqlMap配置文件xml格式内容后缀为".xx"，但配置内容必须为样例的xml格式，如不指定，默认后缀为".xml"
-//指定SqlMap配置文件json格式内容后缀为".json"，但配置内容必须为样例的json格式，如不指定，默认后缀为".json"
-//同时还可以指定初始化容量，如不指定，默认初始化容量100
-opt := xorm.SqlMapOptions{Extension: map[string]string{"xml": ".xxx", "json": ".json"}}
-err := engine.InitSqlMap(opt) //按指定SqlMap配置文件xml格式内容后缀为".xxx"初始化,配置文件json格式内容后缀为".json"初始化
-
-//指定SqlTemplate配置文件后缀为".yy"，初始化容量200，如不指定，默认后缀为".stpl"，初始化容量100
-option := xorm.SqlTemplateOptions{Extension: ".yy", Capacity: 200}
-err = engine.InitSqlTemplate(option) //按指定SqlTemplate配置文件后缀为".yy"初始化
 
 //开启SqlMap配置文件和SqlTemplate配置文件更新监控功能，将配置文件更新内容实时更新到内存，如无需要可以不调用该方法
 //该监控模式下，如删除配置文件，内存中不会删除相关配置
@@ -504,8 +496,8 @@ engine.StartFSWatcher()
 engine.StopFSWatcher()
 
 /*------------------------------------------------------------------------------------
-1、以下方法是在没有engine.InitSqlMap()和engine.InitSqlTemplate()初始化相关配置文件的情况下让您在代码中可以轻松的手动管理SqlMap配置及SqlTemplate模板。
-2、engine.InitSqlMap()和engine.InitSqlTemplate()初始化相关配置文件之后也可以使用以下方法灵活的对SqlMap配置及SqlTemplate模板进行管理
+1、以下方法是在没有engine.RegisterSqlMap()和engine.RegisterSqlTemplate()初始化相关配置文件的情况下让您在代码中可以轻松的手动管理SqlMap配置及SqlTemplate模板。
+2、engine.RegisterSqlMap()和engine.RegisterSqlTemplate()初始化相关配置文件之后也可以使用以下方法灵活的对SqlMap配置及SqlTemplate模板进行管理
 3、方便支持您系统中其他初始化配置源，可不依赖于本库的初始化配置方式
 4、可在代码中依据业务场景，动态的添加、更新、删除SqlMap配置及SqlTemplate模板
 5、手工管理的SqlMap配置及SqlTemplate模板，与xorm初始化方法一样会将相关配置缓存，但不会生成相关配置文件
@@ -525,15 +517,15 @@ engine.BatchAddSql(map[key]sql) //批量新增SqlMap配置
 engine.BatchUpdateSql(map[key]sql) //批量更新SqlMap配置
 engine.BatchRemoveSql([]key) //批量删除SqlMap配置
 
-engine.LoadSqlTemplate(filepath) //加载指定文件的SqlTemplate模板
-engine.ReloadSqlTemplate(filepath) //重新加载指定文件的SqlTemplate模板
+engine.SqlTemplate.LoadSqlTemplate(filepath) //加载指定文件的SqlTemplate模板
+engine.SqlTemplate.ReloadSqlTemplate(filepath) //重新加载指定文件的SqlTemplate模板
 
-engine.BatchLoadSqlTemplate([]filepath) //批量加载SqlTemplate模板
-engine.BatchReloadSqlTemplate([]filepath) //批量加载SqlTemplate模板
+engine.SqlTemplate.BatchLoadSqlTemplate([]filepath) //批量加载SqlTemplate模板
+engine.SqlTemplate.BatchReloadSqlTemplate([]filepath) //批量加载SqlTemplate模板
 
-engine.AddSqlTemplate(key, sql) //新增一条SqlTemplate模板，sql为SqlTemplate模板内容字符串
-engine.UpdateSqlTemplate(key, sql) //更新一条SqlTemplate模板，sql为SqlTemplate模板内容字符串
-engine.RemoveSqlTemplate(key) //删除一条SqlTemplate模板
+engine.SqlTemplate.AddSqlTemplate(key, sql) //新增一条SqlTemplate模板，sql为SqlTemplate模板内容字符串
+engine.SqlTemplate.UpdateSqlTemplate(key, sql) //更新一条SqlTemplate模板，sql为SqlTemplate模板内容字符串
+engine.SqlTemplate.RemoveSqlTemplate(key) //删除一条SqlTemplate模板
 
 engine.BatchAddSqlTemplate(map[key]sql) //批量新增SqlTemplate配置，sql为SqlTemplate模板内容字符串
 engine.BatchUpdateSqlTemplate(map[key]sql) //批量更新SqlTemplate配置，sql为SqlTemplate模板内容字符串
@@ -564,7 +556,7 @@ engine.GetSqlMap(...key)
 3、如不传任何参数，调用engine.GetSqlTemplates()，则返回整个内存中当前缓存的所有SqlTemplate配置
 4、engine.GetSqlTemplates()返回类型为map[string]*pongo2.Template，可以方便的实现链式调用pongo2的Execute()，ExecuteBytes()，ExecuteWriter()方法
 */
-engine.GetSqlTemplates(...key)
+engine.SqlTemplate.GetSqlTemplates(...key)
 ```
 
 * <b>SqlMap配置文件及SqlTemplate模板加密存储及解析</b>
@@ -605,18 +597,17 @@ if err != nil {
 	t.Fatal(err)
 }
 
-puk := "sdlfj2_++1111111111"
-enc := new(xorm.TripleDesEncrypt)
-enc.PubKey = puk
+enc := &xorm.AesEncrypt{
+		PubKey: "122334",
+	}
 //如自定义加解密算法，则此处传入的enc为自己实现的加解密算法，后续代码与本示例一致
-cipher := xorm.Cipher(enc)
-opt := xorm.SqlMapOptions{Cipher: cipher}
-err = engine.SetSqlMapRootDir("./sql/3des").InitSqlMap(opt)
+err = x.RegisterSqlMap(xorm.Xml("./sql/aes", ".xml"), enc)
+
 if err != nil {
 	t.Fatal(err)
 }
 //这里也可以new其他加密解密算法，SqlMap配置文件和SqlTemplate模板的加密结算算法可不相同
-err = engine.SetSqlTemplateRootDir("./sql/3des").InitSqlTemplate(xorm.SqlTemplateOptions{Cipher: cipher})
+err = x.RegisterSqlTemplate(xorm.Pongo2("./sql/aes", ".stpl"), enc)
 if err != nil {
 	t.Fatal(err)
 }
@@ -672,14 +663,12 @@ if err != nil {
 enc := new(xorm.RsaEncrypt)
 enc.PubKey = pukeyStr
 enc.DecryptMode = xorm.RSA_PUBKEY_DECRYPT_MODE
-cipher := xorm.Cipher(enc)
-opt := xorm.SqlMapOptions{Cipher: cipher}
-err = engine.SetSqlMapRootDir("./sql/rsa").InitSqlMap(opt)
+err = engine.RegisterSqlMap(xorm.Xml("./sql/rsa", ".xml"), enc)
 if err != nil {
 	t.Fatal(err)
 }
 
-err = engine.SetSqlTemplateRootDir("./sql/rsa").InitSqlTemplate(xorm.SqlTemplateOptions{Cipher: cipher})
+err = engine.RegisterSqlTemplate(xorm.Pongo2("./sql/rsa", ".stpl"), enc)
 if err != nil {
 	t.Fatal(err)
 }

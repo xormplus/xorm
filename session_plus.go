@@ -15,7 +15,7 @@ import (
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
-	"gopkg.in/flosch/pongo2.v3"
+	//	"gopkg.in/flosch/pongo2.v3"
 )
 
 type ResultBean struct {
@@ -377,35 +377,51 @@ func (resultStructs *ResultStructs) XmlIndent(prefix string, indent string, reco
 }
 
 func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
-	return session.Sql(session.engine.sqlMap.Sql[sqlTagName], args...)
+	return session.Sql(session.engine.SqlMap.Sql[sqlTagName], args...)
 }
+
+//func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
+//	session.isSqlFunc = true
+//	if session.engine.sqlTemplate.Template[sqlTagName] == nil {
+//		if len(args) == 0 {
+//			return session.Sql("")
+//		} else {
+//			map1 := args[0].(*map[string]interface{})
+//			return session.Sql("", map1)
+//		}
+//	}
+
+//	if len(args) == 0 {
+//		parmap := &pongo2.Context{"1": 1}
+//		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
+//		if err != nil {
+//			session.engine.logger.Error(err)
+
+//		}
+//		return session.Sql(sql)
+//	} else {
+//		map1 := args[0].(*map[string]interface{})
+//		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
+//		if err != nil {
+//			session.engine.logger.Error(err)
+
+//		}
+//		return session.Sql(sql, map1)
+//	}
+
+//}
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
 	session.isSqlFunc = true
-	if session.engine.sqlTemplate.Template[sqlTagName] == nil {
-		if len(args) == 0 {
-			return session.Sql("")
-		} else {
-			map1 := args[0].(*map[string]interface{})
-			return session.Sql("", map1)
-		}
+	sql, err := session.engine.SqlTemplate.Execute(sqlTagName, args...)
+	if err != nil {
+		session.engine.logger.Error(err)
 	}
 
 	if len(args) == 0 {
-		parmap := &pongo2.Context{"1": 1}
-		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
-		if err != nil {
-			session.engine.logger.Error(err)
-
-		}
 		return session.Sql(sql)
 	} else {
 		map1 := args[0].(*map[string]interface{})
-		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
-		if err != nil {
-			session.engine.logger.Error(err)
-
-		}
 		return session.Sql(sql, map1)
 	}
 

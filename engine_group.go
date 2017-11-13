@@ -192,3 +192,31 @@ func (eg *EngineGroup) Slave() *Engine {
 func (eg *EngineGroup) Slaves() []*Engine {
 	return eg.slaves
 }
+
+func (eg *EngineGroup) RegisterSqlTemplate(sqlt SqlTemplate, Cipher ...Cipher) error {
+	err := eg.Engine.RegisterSqlTemplate(sqlt, Cipher...)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(eg.slaves); i++ {
+		err = eg.slaves[i].RegisterSqlTemplate(sqlt, Cipher...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (eg *EngineGroup) RegisterSqlMap(sqlm SqlM, Cipher ...Cipher) error {
+	err := eg.Engine.RegisterSqlMap(sqlm, Cipher...)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(eg.slaves); i++ {
+		err = eg.slaves[i].RegisterSqlMap(sqlm, Cipher...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

@@ -21,14 +21,14 @@ func (engine *Engine) StartFSWatcher() error {
 			select {
 			case event := <-engine.watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					if strings.HasSuffix(event.Name, engine.sqlTemplate.Extension) {
-						err = engine.reloadSqlTemplate(event.Name)
+					if strings.HasSuffix(event.Name, engine.SqlTemplate.Extension()) {
+						err = engine.ReloadSqlTemplate(event.Name)
 						if err != nil {
 							engine.logger.Error(err)
 						}
 					}
 
-					if strings.HasSuffix(event.Name, engine.sqlMap.Extension["xml"]) || strings.HasSuffix(event.Name, engine.sqlMap.Extension["json"]) {
+					if strings.HasSuffix(event.Name, engine.SqlMap.Extension["xml"]) || strings.HasSuffix(event.Name, engine.SqlMap.Extension["json"]) {
 						err = engine.reloadSqlMap(event.Name)
 						if err != nil {
 							engine.logger.Error(err)
@@ -44,15 +44,15 @@ func (engine *Engine) StartFSWatcher() error {
 		}
 	}()
 
-	if engine.sqlMap.SqlMapRootDir != "" {
-		err = engine.watcher.Add(engine.sqlMap.SqlMapRootDir)
+	if engine.SqlMap.SqlMapRootDir != "" {
+		err = engine.watcher.Add(engine.SqlMap.SqlMapRootDir)
 		if err != nil {
 			return err
 		}
 	}
 
-	if engine.sqlTemplate.SqlTemplateRootDir != "" {
-		err = engine.watcher.Add(engine.sqlTemplate.SqlTemplateRootDir)
+	if engine.SqlTemplate.RootDir() != "" {
+		err = engine.watcher.Add(engine.SqlTemplate.RootDir())
 		if err != nil {
 			return err
 		}

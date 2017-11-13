@@ -5,12 +5,7 @@ import (
 )
 
 func (engine *Engine) SetSqlMapRootDir(sqlMapRootDir string) *Engine {
-	engine.sqlMap.SqlMapRootDir = sqlMapRootDir
-	return engine
-}
-
-func (engine *Engine) SetSqlTemplateRootDir(sqlTemplateRootDir string) *Engine {
-	engine.sqlTemplate.SqlTemplateRootDir = sqlTemplateRootDir
+	engine.SqlMap.SqlMapRootDir = sqlMapRootDir
 	return engine
 }
 
@@ -18,7 +13,7 @@ func (engine *Engine) SqlMapClient(sqlTagName string, args ...interface{}) *Sess
 	session := engine.NewSession()
 	session.isAutoClose = true
 	session.isSqlFunc = true
-	return session.Sql(engine.sqlMap.Sql[sqlTagName], args...)
+	return session.Sql(engine.SqlMap.Sql[sqlTagName], args...)
 }
 
 func (engine *Engine) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {

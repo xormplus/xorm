@@ -40,7 +40,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 	case string:
 		sqlkey := strings.TrimSpace(sqlTemplatesExecutor.sqlkeys.(string))
 		if sqlTemplatesExecutor.parmas == nil {
-			sqlStr, err = sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkey).Execute(nil)
+			sqlStr, err = sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkey)
 			if err != nil {
 				if sqlTemplatesExecutor.session.isSqlFunc == true {
 					err1 := sqlTemplatesExecutor.session.Rollback()
@@ -68,7 +68,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			case []map[string]interface{}:
 				parmaMap, _ := sqlTemplatesExecutor.parmas.([]map[string]interface{})
 
-				sqlStr, err = sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkey).Execute(parmaMap[0])
+				sqlStr, err = sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkey, parmaMap[0])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -95,7 +95,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			case map[string]interface{}:
 				parmaMap, _ := sqlTemplatesExecutor.parmas.(map[string]interface{})
 
-				sqlStr, err = sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkey).Execute(parmaMap)
+				sqlStr, err = sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkey, parmaMap)
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -163,7 +163,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 		if sqlTemplatesExecutor.parmas == nil {
 			for i, _ := range sqlkeysSlice {
-				sqlStr, err := sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkeysSlice[i]).Execute(nil)
+				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysSlice[i])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -255,7 +255,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 
 			for i, _ := range sqlkeysSlice {
-				sqlStr, err := sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkeysSlice[i]).Execute(parmaSlice[i])
+				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysSlice[i], parmaSlice[i])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -362,7 +362,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 		if sqlTemplatesExecutor.parmas == nil {
 
 			for k, _ := range sqlkeysMap {
-				sqlStr, err := sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkeysMap[k]).Execute(nil)
+				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysMap[k])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()
@@ -454,7 +454,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 
 			for k, _ := range sqlkeysMap {
-				sqlStr, err := sqlTemplatesExecutor.session.engine.GetSqlTemplate(sqlkeysMap[k]).Execute(parmasMap[k])
+				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysMap[k], parmasMap[k])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
 						err1 := sqlTemplatesExecutor.session.Rollback()

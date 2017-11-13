@@ -34,8 +34,8 @@ type Engine struct {
 	TableMapper   core.IMapper
 	TagIdentifier string
 	Tables        map[reflect.Type]*core.Table
-	sqlMap        SqlMap
-	sqlTemplate   SqlTemplate
+	SqlMap        SqlMap
+	SqlTemplate   SqlTemplate
 	watcher       *fsnotify.Watcher
 	mutex         *sync.RWMutex
 	Cacher        core.Cacher
