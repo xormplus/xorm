@@ -9,6 +9,12 @@
 			"revisionTime": "2016-05-30T17:42:08Z"
 		},
 		{
+			"checksumSHA1": "SwujWL+oEHm5IKf0owxCTtNzFGQ=",
+			"path": "github.com/CloudyKit/jet",
+			"revision": "2b064536b25ab0e9c54245f9e2cc5bd4766033fe",
+			"revisionTime": "2017-10-30T20:14:56Z"
+		},
+		{
 			"checksumSHA1": "bOXGGxVxF/wJxdefTWRSctfQ7+k=",
 			"path": "github.com/Unknwon/goconfig",
 			"revision": "87a46d97951ee1ea20ed3b24c25646a79e87ba5d",
