@@ -52,7 +52,7 @@ func (sqlTemplate *JetTemplate) paresSqlTemplate(filename string, filepath strin
 	var err error
 	var content []byte
 	if sqlTemplate.Cipher == nil {
-		templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+		templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 		sqlt, err = templates.GetTemplate(filename)
 		if err != nil {
 			return err
@@ -62,7 +62,7 @@ func (sqlTemplate *JetTemplate) paresSqlTemplate(filename string, filepath strin
 		if err != nil {
 			return err
 		}
-		templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+		templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 		sqlt, err = templates.LoadTemplate(filename, string(content))
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ func (sqlTemplate *JetTemplate) checkNilAndInit() {
 
 func (sqlTemplate *JetTemplate) AddSqlTemplate(key string, sqlTemplateStr string) error {
 
-	templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+	templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 	sqlt, err := templates.LoadTemplate(key, sqlTemplateStr)
 	if err != nil {
 		return err
@@ -201,7 +201,7 @@ func (sqlTemplate *JetTemplate) AddSqlTemplate(key string, sqlTemplateStr string
 
 func (sqlTemplate *JetTemplate) UpdateSqlTemplate(key string, sqlTemplateStr string) error {
 
-	templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+	templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 	sqlt, err := templates.LoadTemplate(key, sqlTemplateStr)
 	if err != nil {
 		return err
@@ -221,7 +221,7 @@ func (sqlTemplate *JetTemplate) RemoveSqlTemplate(key string) {
 
 func (sqlTemplate *JetTemplate) BatchAddSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
 
-	templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+	templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 
 	sqlTemplate.checkNilAndInit()
 
@@ -239,7 +239,7 @@ func (sqlTemplate *JetTemplate) BatchAddSqlTemplate(key string, sqlTemplateStrMa
 }
 
 func (sqlTemplate *JetTemplate) BatchUpdateSqlTemplate(key string, sqlTemplateStrMap map[string]string) error {
-	templates := jet.NewSet(sqlTemplate.SqlTemplateRootDir)
+	templates := jet.NewHTMLSet(sqlTemplate.SqlTemplateRootDir)
 	sqlTemplate.checkNilAndInit()
 	for k, v := range sqlTemplateStrMap {
 		sqlt, err := templates.LoadTemplate(key, v)
