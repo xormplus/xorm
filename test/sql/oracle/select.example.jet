@@ -1,6 +1,6 @@
 select id,userid,title,createdatetime,content
 from Article where
-{{if data["count"] > 1}}
+{{if data.count > 1 }}
 id=?id
 {{else}}
 userid=?userid
