@@ -1378,10 +1378,10 @@ func (engine *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) 
 }
 
 // Query a raw sql and return records as []map[string][]byte
-func (engine *Engine) Query(sql string, paramStr ...interface{}) (resultsSlice []map[string][]byte, err error) {
+func (engine *Engine) Query(sqlorArgs ...interface{}) (resultsSlice []map[string][]byte, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryBytes(sql, paramStr...)
+	return session.QueryBytes(sqlorArgs...)
 }
 
 // QueryString runs a raw sql and return records as []map[string]string
