@@ -1378,24 +1378,24 @@ func (engine *Engine) Exec(sql string, args ...interface{}) (sql.Result, error) 
 }
 
 // Query a raw sql and return records as []map[string][]byte
-func (engine *Engine) Query(sqlorArgs ...interface{}) (resultsSlice []map[string][]byte, err error) {
+func (engine *Engine) QueryBytes(sqlorArgs ...interface{}) (resultsSlice []map[string][]byte, err error) {
 	session := engine.NewSession()
 	defer session.Close()
 	return session.QueryBytes(sqlorArgs...)
 }
 
 // QueryString runs a raw sql and return records as []map[string]string
-func (engine *Engine) QueryString(sqlStr string, args ...interface{}) ([]map[string]string, error) {
+func (engine *Engine) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryString(sqlStr, args...)
+	return session.QueryString(sqlorArgs...)
 }
 
 // QueryInterface runs a raw sql and return records as []map[string]interface{}
-func (engine *Engine) QueryInterface(sqlStr string, args ...interface{}) ([]map[string]interface{}, error) {
+func (engine *Engine) QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryInterface(sqlStr, args...)
+	return session.QueryInterface(sqlorArgs...)
 }
 
 // Insert one or more records

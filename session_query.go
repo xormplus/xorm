@@ -15,69 +15,93 @@ import (
 	"github.com/xormplus/core"
 )
 
-// QueryBytes runs a raw sql and return records as []map[string][]byte
-func (session *Session) QueryBytes(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
+func (session *Session) genQuerySQL(sqlorArgs ...interface{}) (string, []interface{}, error) {
+	if len(sqlorArgs) > 0 {
+		return sqlorArgs[0].(string), sqlorArgs[1:], nil
+	}
 
+	if session.statement.RawSQL != "" {
+		var dialect = session.statement.Engine.Dialect()
+		rownumber := "xorm" + NewShortUUID().String()
+		sql := session.genSelectSql(dialect, rownumber)
+
+		params := session.statement.RawParams
+		i := len(params)
+
+		//		var result []map[string]interface{}
+		//		var err error
+		if i == 1 {
+			vv := reflect.ValueOf(params[0])
+			if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+				return sql, params, nil
+			} else {
+				sqlStr1, param, _ := core.MapToSlice(sql, params[0])
+				return sqlStr1, param, nil
+			}
+		} else {
+			return sql, params, nil
+		}
+		//		return session.statement.RawSQL, session.statement.RawParams, nil
+	}
+
+	if len(session.statement.TableName()) <= 0 {
+		return "", nil, ErrTableNotFound
+	}
+
+	var columnStr = session.statement.ColumnStr
+	if len(session.statement.selectStr) > 0 {
+		columnStr = session.statement.selectStr
+	} else {
+		if session.statement.JoinStr == "" {
+			if columnStr == "" {
+				if session.statement.GroupByStr != "" {
+					columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
+				} else {
+					columnStr = session.statement.genColumnStr()
+				}
+			}
+		} else {
+			if columnStr == "" {
+				if session.statement.GroupByStr != "" {
+					columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
+				} else {
+					columnStr = "*"
+				}
+			}
+		}
+		if columnStr == "" {
+			columnStr = "*"
+		}
+	}
+
+	condSQL, condArgs, err := builder.ToSQL(session.statement.cond)
+	if err != nil {
+		return "", nil, err
+	}
+
+	args := append(session.statement.joinArgs, condArgs...)
+	sqlStr, err := session.statement.genSelectSQL(columnStr, condSQL)
+	if err != nil {
+		return "", nil, err
+	}
+	// for mssql and use limit
+	qs := strings.Count(sqlStr, "?")
+	if len(args)*2 == qs {
+		args = append(args, args...)
+	}
+
+	return sqlStr, args, nil
+}
+
+// Query runs a raw sql and return records as []map[string][]byte
+func (session *Session) QueryBytes(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	var sqlStr string
-	var args []interface{}
-	if len(sqlorArgs) == 0 {
-		if session.statement.RawSQL != "" {
-			sqlStr = session.statement.RawSQL
-			args = session.statement.RawParams
-		} else {
-			if len(session.statement.TableName()) <= 0 {
-				return nil, ErrTableNotFound
-			}
-
-			var columnStr = session.statement.ColumnStr
-			if len(session.statement.selectStr) > 0 {
-				columnStr = session.statement.selectStr
-			} else {
-				if session.statement.JoinStr == "" {
-					if columnStr == "" {
-						if session.statement.GroupByStr != "" {
-							columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
-						} else {
-							columnStr = session.statement.genColumnStr()
-						}
-					}
-				} else {
-					if columnStr == "" {
-						if session.statement.GroupByStr != "" {
-							columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
-						} else {
-							columnStr = "*"
-						}
-					}
-				}
-				if columnStr == "" {
-					columnStr = "*"
-				}
-			}
-
-			condSQL, condArgs, err := builder.ToSQL(session.statement.cond)
-			if err != nil {
-				return nil, err
-			}
-
-			args = append(session.statement.joinArgs, condArgs...)
-			sqlStr, err = session.statement.genSelectSQL(columnStr, condSQL)
-			if err != nil {
-				return nil, err
-			}
-			// for mssql and use limit
-			qs := strings.Count(sqlStr, "?")
-			if len(args)*2 == qs {
-				args = append(args, args...)
-			}
-		}
-	} else {
-		sqlStr = sqlorArgs[0].(string)
-		args = sqlorArgs[1:]
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	return session.queryBytes(sqlStr, args...)
@@ -175,9 +199,14 @@ func rows2Strings(rows *core.Rows) (resultsSlice []map[string]string, err error)
 }
 
 // QueryString runs a raw sql and return records as []map[string]string
-func (session *Session) QueryString(sqlStr string, args ...interface{}) ([]map[string]string, error) {
+func (session *Session) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
 	if session.isAutoClose {
 		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	rows, err := session.queryRows(sqlStr, args...)
@@ -223,9 +252,14 @@ func rows2Interfaces(rows *core.Rows) (resultsSlice []map[string]interface{}, er
 }
 
 // QueryInterface runs a raw sql and return records as []map[string]interface{}
-func (session *Session) QueryInterface(sqlStr string, args ...interface{}) ([]map[string]interface{}, error) {
+func (session *Session) QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error) {
 	if session.isAutoClose {
 		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
 	}
 
 	rows, err := session.queryRows(sqlStr, args...)

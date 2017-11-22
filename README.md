@@ -123,95 +123,135 @@ if err != nil {
 /*-------------------------------------------------------------------------------------
  * 第1种方式：返回的结果类型为 []map[string][]byte
 -------------------------------------------------------------------------------------*/
-sql_1 := "select * from user"
-results, err := engine.Query(sql_1)
+sql_1_1 := "select * from user"
+results, err := engine.QueryBytes(sql_1_1)
+
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第4种方式和第5种方式
+sql_1_2 := "select id,userid,title,createdatetime,content from Article where id=?"
+results, err := db.SQL(sql_1_2, 2).QueryBytes()
+
+sql_1_3 := "select id,userid,title,createdatetime,content from Article where id=?id"
+paramMap_1_3 := map[string]interface{}{"id": 2}
+results, err := db.SQL(sql_1_3, &paramMap_1_3).QueryBytes()
 
 /*-------------------------------------------------------------------------------------
- * 第2种方式：返回的结果类型为 []map[string]interface{}
+ * 第2种方式：返回的结果类型为 []map[string]string
 -------------------------------------------------------------------------------------*/
 sql_2_1 := "select * from user"
-results, err := engine.Sql(sql_2_1).Query().List()
+results, err := engine.QueryString(sql_2_1)
+
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第种方式和第种方式
+sql_2_2 := "select id,userid,title,createdatetime,content from Article where id=?"
+results, err := db.SQL(sql_2_2, 2).QueryString()
+
+sql_2_3 := "select id,userid,title,createdatetime,content from Article where id=?id"
+paramMap_2_3 := map[string]interface{}{"id": 2}
+results, err := db.SQL(sql_2_3, &paramMap_2_3).QueryString()
+
+/*-------------------------------------------------------------------------------------
+ * 第3种方式：返回的结果类型为 []map[string]interface{}
+-------------------------------------------------------------------------------------*/
+sql_3_1 := "select * from user"
+results, err := engine.QueryInterface(sql_3_1)
+
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第种方式和第种方式
+sql_3_2 := "select id,userid,title,createdatetime,content from Article where id=?"
+results, err := db.SQL(sql_3_2, 2).QueryInterface()
+
+sql_3_3 := "select id,userid,title,createdatetime,content from Article where id=?id"
+paramMap_3_3 := map[string]interface{}{"id": 2}
+results, err := db.SQL(sql_3_3, &paramMap_3_3).QueryInterface()
+
+//Query方法返回的是一个ResultMap对象，它有List()，Count()，ListPage()，Json()，Xml()
+//Xml()，XmlIndent()，SaveAsCSV()，SaveAsTSV()，SaveAsHTML()，SaveAsXML()，SaveAsXMLWithTagNamePrefixIndent()，
+//SaveAsYAML()，SaveAsJSON()，SaveAsXLSX()系列实用函数
+sql_3_4 := "select * from user"
+//List()方法返回查询的全部结果集，类型为[]map[string]interface{}
+results, err := engine.Sql(sql_3_4).Query().List()
 //当然也支持这种方法，将数据库中的时间字段格式化，时间字段对应的golang数据类型为time.Time
 //当然你也可以在数据库中先使用函数将时间类型的字段格式化成字符串，这里只是提供另外一种方式
 //该方式会将所有时间类型的字段都格式化，所以请依据您的实际需求按需使用
-results, err := engine.Sql(sql_2_1).QueryWithDateFormat("20060102").List()
+results, err := engine.Sql(sql_3_4).QueryWithDateFormat("20060102").List()
 
-sql_2_2 := "select * from user where id = ? and age = ?"
-results, err := engine.Sql(sql_2_2, 7, 17).Query().List()
+sql_3_5 := "select * from user where id = ? and age = ?"
+results, err := engine.Sql(sql_3_5, 7, 17).Query().List()
 
-sql_2_3 := "select * from user where id = ?id and age = ?age"
-paramMap_2_3 := map[string]interface{}{"id": 7, "age": 17}
-results, err := engine.Sql(sql_2_2, &paramMap_2_3).Query().List()
+sql_3_6 := "select * from user where id = ?id and age = ?age"
+paramMap_3_6 := map[string]interface{}{"id": 7, "age": 17}
+results, err := engine.Sql(sql_3_6, &paramMap_3_6).Query().List()
 
 //此Query()方法返回对象还支持ListPage()方法和Count()方法，这两个方法都是针对数据库查询出来后的结果集进行操作
 //此Query()方法返回对象还支持Xml()方法、XmlIndent()方法和Json()方法，相关内容请阅读之后的章节
 //ListPage()方法并非数据库分页方法，只是针对数据库查询出来后的结果集[]map[string]interface{}对象取部分切片
 //例如以下例子，是取结果集的第1条到第50条记录
-results, err := engine.Sql(sql_2_2, 7, 17).Query().ListPage(1,50)
+results, err := engine.Sql(sql_3_5, 7, 17).Query().ListPage(1,50)
 //例如以下例子，是取结果集的第13条到第28条记录
-results, err := engine.Sql(sql_2_2, 7, 17).Query().ListPage(13,28)
+results, err := engine.Sql(sql_3_5, 7, 17).Query().ListPage(13,28)
 //此Count()方法也并非使用数据库count函数查询数据库某条件下的记录数，只是针对Sql语句对数据库查询出来后的结果集[]map[string]interface{}对象的数量
 //此Count()方法也并非Engine对象和Session对象下的Count()方法，使用时请区分场景
-count, err := engine.Sql(sql_2_2, 7, 17).Query().Count()
+count, err := engine.Sql(sql_3_5, 7, 17).Query().Count()
 
 /*-------------------------------------------------------------------------------------
-  第3种方式：执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+  第4种方式：执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 -------------------------------------------------------------------------------------*/
-sql_id_3_1 := "sql_3_1" //配置文件中sql标签的id属性,SqlMap的key
-results, err := engine.SqlMapClient(sql_3_1).Query().List()
+sql_id_4_1 := "sql_4_1" //配置文件中sql标签的id属性,SqlMap的key
+results, err := engine.SqlMapClient(sql_id_4_1).Query().List()
 
-sql_id_3_2 := "sql_3_2"
-results, err := engine.SqlMapClient(sql_id_3_2, 7, 17).Query().List()
+sql_id_4_2 := "sql_4_2"
+results, err := engine.SqlMapClient(sql_id_4_2, 7, 17).Query().List()
 
-sql_id_3_3 := "sql_3_3"
-paramMap_3_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
-results1, err := engine.SqlMapClient(sql_id_3_3, &paramMap_3_3).Query().List()
+sql_id_4_3 := "sql_4_3"
+paramMap_4_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
+results1, err := engine.SqlMapClient(sql_id_4_3, &paramMap_4_3).Query().List()
 
 /*-------------------------------------------------------------------------------------
- * 第4种方式：执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+ * 第5种方式：执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 -------------------------------------------------------------------------------------*/
-sql_key_4_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
+sql_key_5_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 
 //执行的 sql：select * from user where id=7
 //如部分参数未使用，请记得使用对应类型0值，如此处name参数值为空字符串，模板使用指南请详见pongo2
-paramMap_4_1 := map[string]interface{}{"count": 2, "id": 7, "name": ""}
-results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_1).Query().List()
+paramMap_5_1 := map[string]interface{}{"count": 2, "id": 7, "name": ""}
+results, err := engine.SqlTemplateClient(sql_key_5_1, &paramMap_5_1).Query().List()
 
 //执行的 sql：select * from user where name='xormplus'
 //如部分参数未使用，请记得使用对应类型0值，如此处id参数值为0，模板使用指南请详见pongo2
-paramMap_4_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-results, err := engine.SqlTemplateClient(sql_key_4_1, &paramMap_4_2).Query().List()
-
-/*-------------------------------------------------------------------------------------
- * 第5种方式：返回的结果类型为对应的[]interface{}
--------------------------------------------------------------------------------------*/
-var categories []Category
-err := engine.Sql("select * from category where id =?", 16).Find(&categories)
+paramMap_5_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
+results, err := engine.SqlTemplateClient(sql_key_5_1, &paramMap_5_2).Query().List()
 
 /*-------------------------------------------------------------------------------------
  * 第6种方式：返回的结果类型为对应的[]interface{}
 -------------------------------------------------------------------------------------*/
-sql_id_6_1 := "sql_6_1"
 var categories []Category
-err := engine.SqlMapClient(sql_id_6_1, 16).Find(&categories)
+err := engine.Sql("select * from category where id =?", 16).Find(&categories)
 
-sql_id_6_2 := "sql_6_2"
-var categories []Category
-paramMap_6_2 := map[string]interface{}{"id": 25}
-err := engine.SqlMapClient(sql_id_6_2, &paramMap_6_2).Find(&categories)
+paramMap_6 := map[string]interface{}{"id": 2}
+err := engine.Sql("select * from category where id =?id", &paramMap_6).Find(&categories)
 
 /*-------------------------------------------------------------------------------------
  * 第7种方式：返回的结果类型为对应的[]interface{}
 -------------------------------------------------------------------------------------*/
+sql_id_7_1 := "sql_7_1"
+var categories []Category
+err := engine.SqlMapClient(sql_id_7_1, 16).Find(&categories)
+
+sql_id_7_2 := "sql_7_2"
+var categories []Category
+paramMap_7_2 := map[string]interface{}{"id": 25}
+err := engine.SqlMapClient(sql_id_7_2, &paramMap_7_2).Find(&categories)
+
+/*-------------------------------------------------------------------------------------
+ * 第8种方式：返回的结果类型为对应的[]interface{}
+-------------------------------------------------------------------------------------*/
 //执行的 sql：select * from user where name='xormplus'
-sql_key_7_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
+sql_key_8_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 var users []User
-paramMap_7_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
-err := engine.SqlTemplateClient(sql_key_7_1, &paramMap_7_1).Find(&users)
+paramMap_8_1 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
+err := engine.SqlTemplateClient(sql_key_8_1, &paramMap_8_1).Find(&users)
 
 
 /*-------------------------------------------------------------------------------------
- * 第8种方式：查询单条数据
+ * 第9种方式：查询单条数据
  * 使用Sql,SqlMapClient,SqlTemplateClient函数与Get函数组合可以查询单条数据，以Sql与Get函数组合为例：
 -------------------------------------------------------------------------------------*/
 //获得单条数据的值，并存为结构体
@@ -234,7 +274,7 @@ has, err := db.Sql("select id from article where id=?", 2).Get(&id)
 ```
 
 * 注：
-	* 除以上8种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
+	* 除以上9种方式外，本库还支持另外3种方式，由于这3种方式支持一次性批量混合CRUD操作，返回多个结果集，且支持多种参数组合形式，内容较多，场景比较复杂，因此不在此处赘述。
 	* 欲了解另外3种方式相关内容您可移步[批量SQL操作](#ROP_ARM)章节，此3种方式将在此章节单独说明
 
 * 采用Sql(),SqlMapClient(),SqlTemplateClient()方法执行sql调用Find()方法，与ORM方式调用Find()方法不同（传送门：[ORM方式操作数据库](#ORM)），此时Find()方法中的参数，即结构体的名字不需要与数据库表的名字映射（因为前面的Sql()方法已经确定了SQL语句），但字段名需要和数据库中的字段名字做映射。使用Find()方法需要自己定义查询返回结果集的结构体，如不想自己定义结构体可以使用Query()方法，返回[]map[string]interface{}，两种方式请依据实际需要选用。
@@ -283,29 +323,29 @@ t.Log(categoryinfo[0].Lastupdatetime)
 ```
 
 
-* 第3种和第6种方式所使用的SqlMap配置文件内容如下
+* 第4种和第7种方式所使用的SqlMap配置文件内容如下
 
 ```xml
 <sqlMap>
-	<sql id="sql_3_1">
+	<sql id="sql_4_1">
 		select * from user
 	</sql>
-	<sql id="sql_3_2">
+	<sql id="sql_4_2">
 		select * from user where id=? and age=?
 	</sql>
-    <sql id="sql_3_3">
+    <sql id="sql_4_3">
 		select * from user where id=?id and name=?name
 	</sql>
-    <sql id="sql_id_6_1">
+    <sql id="sql_id_7_1">
 		select * from category where id =?
 	</sql>
-    <sql id="sql_id_6_2">
+    <sql id="sql_id_7_2">
 		select * from category where id =?id
 	</sql>
 </sqlMap>
 ```
 
-* 第4种和第7种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pongo2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
+* 第5种和第8种方式所使用的SqlTemplate配置文件内容如下，文件名：select.example.stpl，路径为engine.SqlMap.SqlMapRootDir配置目录下的任意子目录中。使用模板方式配置Sql较为灵活，可以使用pongo2引擎的相关功能灵活组织Sql语句以及动态SQL拼装。
 
 ```java
 select * from user
