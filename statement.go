@@ -859,12 +859,12 @@ func (statement *Statement) genCreateTableSQL() string {
 func (statement *Statement) genIndexSQL() []string {
 	var sqls []string
 	tbName := statement.TableName()
-	quote := statement.Engine.Quote
-	for idxName, index := range statement.RefTable.Indexes {
+	for _, index := range statement.RefTable.Indexes {
 		if index.Type == core.IndexType {
-			sql := fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tbName, idxName)),
-				quote(tbName), quote(strings.Join(index.Cols, quote(","))))
-			sqls = append(sqls, sql)
+			sql := statement.Engine.dialect.CreateIndexSql(tbName, index)
+			if sql != "" {
+				sqls = append(sqls, sql)
+			}
 		}
 	}
 	return sqls
