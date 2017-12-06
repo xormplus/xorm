@@ -869,19 +869,13 @@ func oracle_hash(str string) string {
 
 func oracle_index_name(index *core.Index, tableName string) string {
 
-	if !strings.HasPrefix(index.Name, "UQE_") &&
-		!strings.HasPrefix(index.Name, "IDX_") {
+	name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
 
-		name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
-
-		if index.Type == core.UniqueType {
-			return fmt.Sprintf("UQE_%v", strings.ToUpper(name))
-		}
-
-		return fmt.Sprintf("IDX_%v", strings.ToUpper(name))
+	if index.Type == core.UniqueType {
+		return fmt.Sprintf("UQE_%v", strings.ToUpper(name))
 	}
 
-	return strings.ToUpper(index.Name)
+	return fmt.Sprintf("IDX_%v", strings.ToUpper(name))
 }
 
 func (db *oracle) CreateIndexSql(tableName string, index *core.Index) string {
@@ -920,7 +914,30 @@ func (db *oracle) DropIndexSql(tableName string, index *core.Index) string {
 }
 
 func (db *oracle) Filters() []core.Filter {
-	return []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}}
+	return []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}, &UpperFilter{}}
+}
+
+// 大小写转换过滤器
+type UpperFilter struct {
+}
+
+var _id = regexp.MustCompile("(\\s|\\.)(_[A-Z][^\\s\"=]+)([^\"])")
+var keywords = regexp.MustCompile("(\\s|\\.)(USER|LEVEL)([^\"])")
+var group = regexp.MustCompile("(\\.)(GROUP)(\\s|\\||=|\\))")
+var as = regexp.MustCompile("(\\s)AS(\\s)")
+var ifnull = regexp.MustCompile("(\\s)IFNULL(\\s|\\()")
+
+func (s *UpperFilter) Do(sql string, dialect core.Dialect, table *core.Table) string {
+
+	sql = strings.ToUpper(sql)
+	sql = _id.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = keywords.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = as.ReplaceAllString(sql, `$1$2`)
+	sql = group.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = strings.Replace(sql, "`", ` "`, -1)
+	sql = ifnull.ReplaceAllString(sql, "$1 NVL $2")
+
+	return sql
 }
 
 type goracleDriver struct {

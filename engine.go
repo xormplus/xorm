@@ -187,9 +187,7 @@ func (engine *Engine) QuoteTo(buf *bytes.Buffer, value string) {
 
 	value = strings.Replace(value, ".", engine.dialect.QuoteStr()+"."+engine.dialect.QuoteStr(), -1)
 
-	buf.WriteString(engine.dialect.QuoteStr())
-	buf.WriteString(value)
-	buf.WriteString(engine.dialect.QuoteStr())
+	buf.WriteString(engine.dialect.Quote(value))
 }
 
 func (engine *Engine) quote(sql string) string {
