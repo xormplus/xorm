@@ -1157,7 +1157,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string, e
 		}
 	} else if dialect.DBType() == core.ORACLE {
 		if statement.Start != 0 || statement.LimitN != 0 {
-			a = fmt.Sprintf("SELECT %v FROM (SELECT %v,ROWNUM RN FROM (%v) at WHERE ROWNUM <= %d) aat WHERE RN > %d", columnStr, columnStr, a, statement.Start+statement.LimitN, statement.Start)
+			a = fmt.Sprintf("SELECT aaat.* FROM (SELECT aat.*,ROWNUM %v FROM (%v) aat WHERE ROWNUM <= %d) aaat WHERE %v > %d", columnStr, columnStr, a, statement.Start+statement.LimitN, statement.Start)
 		}
 	}
 	if statement.IsForUpdate {
