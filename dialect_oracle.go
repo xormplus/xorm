@@ -555,7 +555,7 @@ func (db *oracle) IsReserved(name string) bool {
 }
 
 func (db *oracle) Quote(name string) string {
-	return "\"" + name + "\""
+	return "\"" + strings.ToUpper(name) + "\""
 }
 
 func (db *oracle) QuoteStr() string {
@@ -611,9 +611,11 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 	}
 
 	sql = sql[:len(sql)-2] + ")"
+
 	if db.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
 	}
+
 	if db.SupportCharset() {
 		if len(charset) == 0 {
 			charset = db.URI().Charset
@@ -622,7 +624,8 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 			sql += " DEFAULT CHARSET " + charset
 		}
 	}
-	return sql
+
+	return strings.ToUpper(sql)
 }
 
 func (db *oracle) IndexCheckSql(tableName, idxName string) (string, []interface{}) {
@@ -650,7 +653,7 @@ func (db *oracle) MustDropTable(tableName string) error {
 		return nil
 	}
 
-	sql = "Drop Table \"" + tableName + "\""
+	sql = "DROP TABLE " + db.Quote(tableName)
 	db.LogSQL(sql, args)
 
 	_, err = db.DB().Exec(sql)
@@ -872,13 +875,13 @@ func oracle_index_name(index *core.Index, tableName string) string {
 		name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
 
 		if index.Type == core.UniqueType {
-			return fmt.Sprintf("UQE_%v", name)
+			return fmt.Sprintf("UQE_%v", strings.ToUpper(name))
 		}
 
-		return fmt.Sprintf("IDX_%v", name)
+		return fmt.Sprintf("IDX_%v", strings.ToUpper(name))
 	}
 
-	return index.Name
+	return strings.ToUpper(index.Name)
 }
 
 func (db *oracle) CreateIndexSql(tableName string, index *core.Index) string {
