@@ -546,7 +546,7 @@ func (db *oracle) AutoIncrStr() string {
 }
 
 func (db *oracle) SupportInsertMany() bool {
-	return true
+	return false
 }
 
 func (db *oracle) IsReserved(name string) bool {
@@ -921,9 +921,10 @@ func (db *oracle) Filters() []core.Filter {
 type UpperFilter struct {
 }
 
-var _id = regexp.MustCompile("(\\s|\\.)(_[A-Z][^\\s\"=]+)([^\"])")
-var keywords = regexp.MustCompile("(\\s|\\.)(USER|LEVEL)([^\"])")
-var group = regexp.MustCompile("(\\.)(GROUP)(\\s|\\||=|\\))")
+var _id = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(_[A-Z][A-Za-z0-9_]*)([\\s\\.=<>\\|,\\)]|$)")
+var keywords1 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(USER|LEVEL)([\\s\\.=<>\\|,\\)]|$)")
+var keywords2 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)([\\.=<>\\|,\\)]|$)")
+var notGroupBy = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)(\\s+[^B][^Y])")
 var as = regexp.MustCompile("(\\s)AS(\\s)")
 var ifnull = regexp.MustCompile("(\\s)IFNULL(\\s|\\()")
 
@@ -931,9 +932,10 @@ func (s *UpperFilter) Do(sql string, dialect core.Dialect, table *core.Table) st
 
 	sql = strings.ToUpper(sql)
 	sql = _id.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = keywords.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = keywords1.ReplaceAllString(sql, `$1"$2"$3`)
 	sql = as.ReplaceAllString(sql, `$1$2`)
-	sql = group.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = keywords2.ReplaceAllString(sql, `$1"$2"$3`)
+	sql = notGroupBy.ReplaceAllString(sql, `$1"$2"$3`)
 	sql = strings.Replace(sql, "`", ` "`, -1)
 	sql = ifnull.ReplaceAllString(sql, "$1 NVL $2")
 
