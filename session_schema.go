@@ -371,12 +371,16 @@ func (session *Session) Sync2(beans ...interface{}) error {
 
 				if oriIndex != nil {
 					if oriIndex.Type != index.Type {
+
 						sql := engine.dialect.DropIndexSql(tbName, oriIndex)
-						_, err = session.exec(sql)
-						if err != nil {
-							return err
+
+						if sql != "" {
+							_, err = session.exec(sql)
+							if err != nil {
+								return err
+							}
+							oriIndex = nil
 						}
-						oriIndex = nil
 					}
 				}
 
@@ -387,10 +391,14 @@ func (session *Session) Sync2(beans ...interface{}) error {
 
 			for name2, index2 := range oriTable.Indexes {
 				if _, ok := foundIndexNames[name2]; !ok {
+
 					sql := engine.dialect.DropIndexSql(tbName, index2)
-					_, err = session.exec(sql)
-					if err != nil {
-						return err
+
+					if sql != "" {
+						_, err = session.exec(sql)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}

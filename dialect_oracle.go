@@ -5,8 +5,11 @@
 package xorm
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -848,6 +851,69 @@ func (db *oracle) GetIndexes(tableName string) (map[string]*core.Index, error) {
 		index.AddColumn(colName)
 	}
 	return indexes, nil
+}
+
+func oracle_hash(str string) string {
+
+	if len(str) > 26 {
+		h := md5.New()
+		io.WriteString(h, str)
+		return base64.StdEncoding.EncodeToString(h.Sum(nil))
+	}
+
+	return str
+}
+
+func oracle_index_name(index *core.Index, tableName string) string {
+
+	if !strings.HasPrefix(index.Name, "UQE_") &&
+		!strings.HasPrefix(index.Name, "IDX_") {
+
+		name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
+
+		if index.Type == core.UniqueType {
+			return fmt.Sprintf("UQE_%v", name)
+		}
+
+		return fmt.Sprintf("IDX_%v", name)
+	}
+
+	return index.Name
+}
+
+func (db *oracle) CreateIndexSql(tableName string, index *core.Index) string {
+
+	quote := db.Quote
+	var unique string
+	var idxName string
+
+	if index.Type == core.UniqueType {
+		unique = " UNIQUE"
+	}
+
+	idxName = oracle_index_name(index, tableName)
+
+	return fmt.Sprintf("CREATE%s INDEX %v ON %v (%v)", unique,
+		quote(idxName), quote(tableName),
+		quote(strings.Join(index.Cols, quote(","))))
+}
+
+func (db *oracle) DropIndexSql(tableName string, index *core.Index) string {
+
+	if strings.HasPrefix(index.Name, "SYS_") {
+		return ""
+	}
+
+	quote := db.Quote
+	var name string
+
+	if index.IsRegular {
+		name = oracle_index_name(index, tableName)
+	} else {
+		name = index.Name
+	}
+
+	return fmt.Sprintf("DROP INDEX %v", quote(name))
 }
 
 func (db *oracle) Filters() []core.Filter {
