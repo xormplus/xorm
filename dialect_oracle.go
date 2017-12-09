@@ -926,7 +926,7 @@ var keywords1 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(USER|LEVEL)([\\s\\.=<>\
 var keywords2 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)([\\.=<>\\|,\\)]|$)")
 var notGroupBy = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)(\\s+[^B][^Y])")
 var as = regexp.MustCompile("(\\s)AS(\\s)")
-var ifnull = regexp.MustCompile("(\\s)IFNULL(\\s|\\()")
+var ifnull = regexp.MustCompile("([\\s\\.=<>\\|,\\(])IFNULL(\\s|\\()")
 
 func (s *UpperFilter) Do(sql string, dialect core.Dialect, table *core.Table) string {
 
