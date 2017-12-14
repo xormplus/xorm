@@ -340,12 +340,12 @@ func (db *mssql) GetColumns(tableName string) ([]string, map[string]*core.Column
 	s := `select a.name as name, b.name as ctype,a.max_length,a.precision,a.scale,a.is_nullable as nullable,
 	      replace(replace(isnull(c.text,''),'(',''),')','') as vdefault,
 		  ISNULL(i.is_primary_key, 0)
-          from sys.columns a 
+          from sys.columns a
 		  left join sys.types b on a.user_type_id=b.user_type_id
           left join sys.syscomments c on a.default_object_id=c.id
-		  LEFT OUTER JOIN 
+		  LEFT OUTER JOIN
     sys.index_columns ic ON ic.object_id = a.object_id AND ic.column_id = a.column_id
-		  LEFT OUTER JOIN 
+		  LEFT OUTER JOIN
     sys.indexes i ON ic.object_id = i.object_id AND ic.index_id = i.index_id
           where a.object_id=object_id('` + tableName + `')`
 	db.LogSQL(s, args)
@@ -534,6 +534,12 @@ func (db *mssql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 
 func (db *mssql) ForUpdateSql(query string) string {
 	return query
+}
+
+func (db *mssql) CreateIndexSql(tableName string, index *core.Index) string {
+	quote := db.Quote
+	return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
+		quote(tableName), quote(strings.Join(index.Cols, quote(","))))
 }
 
 func (db *mssql) Filters() []core.Filter {

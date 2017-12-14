@@ -889,6 +889,12 @@ func (db *postgres) ModifyColumnSql(tableName string, col *core.Column) string {
 		tableName, col.Name, db.SqlType(col))
 }
 
+func (db *postgres) CreateIndexSql(tableName string, index *core.Index) string {
+	quote := db.Quote
+	return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
+		quote(tableName), quote(strings.Join(index.Cols, quote(","))))
+}
+
 func (db *postgres) DropIndexSql(tableName string, index *core.Index) string {
 	//var unique string
 	quote := db.Quote

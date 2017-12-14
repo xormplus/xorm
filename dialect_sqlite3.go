@@ -232,6 +232,12 @@ func (db *sqlite3) TableCheckSql(tableName string) (string, []interface{}) {
 	return "SELECT name FROM sqlite_master WHERE type='table' and name = ?", args
 }
 
+func (db *sqlite3) CreateIndexSql(tableName string, index *core.Index) string {
+	quote := db.Quote
+	return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
+		quote(tableName), quote(strings.Join(index.Cols, quote(","))))
+}
+
 func (db *sqlite3) DropIndexSql(tableName string, index *core.Index) string {
 	//var unique string
 	quote := db.Quote
