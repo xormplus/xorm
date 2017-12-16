@@ -922,7 +922,7 @@ type UpperFilter struct {
 }
 
 var _id = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(_[A-Z][A-Za-z0-9_]*)([\\s\\.=<>\\|,\\)]|$)")
-var keywords1 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(USER|LEVEL)([\\s\\.=<>\\|,\\)]|$)")
+var keywords1 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(ACCESS|USER|LEVEL)([\\s\\.=<>\\|,\\)]|$)")
 var keywords2 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)([\\.=<>\\|,\\)]|$)")
 var notGroupBy = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)(\\s+[^B][^Y])")
 var as = regexp.MustCompile("(\\s)AS(\\s)")
