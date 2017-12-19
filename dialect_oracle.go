@@ -936,7 +936,7 @@ func (s *UpperFilter) Do(sql string, dialect core.Dialect, table *core.Table) st
 	sql = as.ReplaceAllString(sql, `$1$2`)
 	sql = keywords2.ReplaceAllString(sql, `$1"$2"$3`)
 	sql = notGroupBy.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = strings.Replace(sql, "`", ` "`, -1)
+	sql = strings.Replace(sql, "`", `"`, -1)
 	sql = ifnull.ReplaceAllString(sql, "$1 NVL $2")
 
 	return sql
