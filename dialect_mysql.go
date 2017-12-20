@@ -163,6 +163,7 @@ var (
 
 type mysql struct {
 	core.Base
+	filters           []core.Filter
 	net               string
 	addr              string
 	params            map[string]string
@@ -488,7 +489,15 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 }
 
 func (db *mysql) Filters() []core.Filter {
-	return []core.Filter{&core.IdFilter{}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.IdFilter{}}
+	}
+	return db.filters
+}
+
+func (db *mysql) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type mymysqlDriver struct {

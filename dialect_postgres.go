@@ -768,6 +768,7 @@ var (
 
 type postgres struct {
 	core.Base
+	filters []core.Filter
 }
 
 func (db *postgres) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
@@ -1100,7 +1101,16 @@ func (db *postgres) GetIndexes(tableName string) (map[string]*core.Index, error)
 }
 
 func (db *postgres) Filters() []core.Filter {
-	return []core.Filter{&core.IdFilter{}, &core.QuoteFilter{}, &core.SeqFilter{Prefix: "$", Start: 1}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.IdFilter{}, &core.QuoteFilter{}, &core.SeqFilter{Prefix: "$", Start: 1}}
+	}
+
+	return db.filters
+}
+
+func (db *postgres) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type pqDriver struct {

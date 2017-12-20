@@ -503,6 +503,7 @@ var (
 
 type oracle struct {
 	core.Base
+	filters []core.Filter
 }
 
 func (db *oracle) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
@@ -914,32 +915,16 @@ func (db *oracle) DropIndexSql(tableName string, index *core.Index) string {
 }
 
 func (db *oracle) Filters() []core.Filter {
-	return []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}, &UpperFilter{}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}}
+	}
+
+	return db.filters
 }
 
-// 大小写转换过滤器
-type UpperFilter struct {
-}
-
-var _id = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(_[A-Z][A-Za-z0-9_]*)([\\s\\.=<>\\|,\\)]|$)")
-var keywords1 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(ACCESS|USER|LEVEL)([\\s\\.=<>\\|,\\)]|$)")
-var keywords2 = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)([\\.=<>\\|,\\)]|$)")
-var notGroupBy = regexp.MustCompile("([\\s\\.=<>\\|,\\(])(GROUP|ORDER)(\\s+[^B][^Y])")
-var as = regexp.MustCompile("(\\s)AS(\\s)")
-var ifnull = regexp.MustCompile("([\\s\\.=<>\\|,\\(])IFNULL(\\s|\\()")
-
-func (s *UpperFilter) Do(sql string, dialect core.Dialect, table *core.Table) string {
-
-	sql = strings.ToUpper(sql)
-	sql = _id.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = keywords1.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = as.ReplaceAllString(sql, `$1$2`)
-	sql = keywords2.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = notGroupBy.ReplaceAllString(sql, `$1"$2"$3`)
-	sql = strings.Replace(sql, "`", `"`, -1)
-	sql = ifnull.ReplaceAllString(sql, "$1 NVL $2")
-
-	return sql
+func (db *oracle) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type goracleDriver struct {
