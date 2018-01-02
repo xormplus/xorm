@@ -906,13 +906,20 @@ func (statement *Statement) genDelIndexSQL() []string {
 }
 
 func (statement *Statement) genAddColumnStr(col *core.Column) (string, []interface{}) {
+
 	quote := statement.Engine.Quote
-	sql := fmt.Sprintf("ALTER TABLE %v ADD %v;", quote(statement.TableName()),
-		col.String(statement.Engine.dialect))
+	colStr := col.String(statement.Engine.dialect)
+
+	if statement.Engine.Dialect().DBType() == core.ORACLE {
+		colStr = " ( " + colStr + " ) "
+	}
+
+	sql := fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()), colStr)
+
 	if statement.Engine.dialect.DBType() == core.MYSQL && len(col.Comment) > 0 {
 		sql += " COMMENT '" + col.Comment + "'"
 	}
-	sql += ";"
+
 	return sql, []interface{}{}
 }
 
@@ -1157,7 +1164,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string) (a string, e
 		}
 	} else if dialect.DBType() == core.ORACLE {
 		if statement.Start != 0 || statement.LimitN != 0 {
-			a = fmt.Sprintf("SELECT %v FROM (SELECT %v,ROWNUM RN FROM (%v) at WHERE ROWNUM <= %d) aat WHERE RN > %d", columnStr, columnStr, a, statement.Start+statement.LimitN, statement.Start)
+			a = fmt.Sprintf("SELECT %v FROM (SELECT aaat.%v,ROWNUM RN FROM (%v) aaat WHERE ROWNUM <= %d) aat WHERE RN > %d", columnStr, columnStr, a, statement.Start+statement.LimitN, statement.Start)
 		}
 	}
 	if statement.IsForUpdate {

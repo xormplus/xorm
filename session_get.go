@@ -41,9 +41,7 @@ func (session *Session) get(bean interface{}) (bool, error) {
 	var err error
 
 	if session.statement.RawSQL == "" {
-		if len(session.statement.TableName()) <= 0 {
-			return false, ErrTableNotFound
-		}
+
 		session.statement.Limit(1)
 		sqlStr, args, err = session.statement.genGetSQL(bean)
 		if err != nil {

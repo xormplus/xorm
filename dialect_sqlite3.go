@@ -145,6 +145,7 @@ var (
 
 type sqlite3 struct {
 	core.Base
+	filters []core.Filter
 }
 
 func (db *sqlite3) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
@@ -450,7 +451,16 @@ func (db *sqlite3) GetIndexes(tableName string) (map[string]*core.Index, error) 
 }
 
 func (db *sqlite3) Filters() []core.Filter {
-	return []core.Filter{&core.IdFilter{}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.IdFilter{}}
+	}
+
+	return db.filters
+}
+
+func (db *sqlite3) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type sqlite3Driver struct {

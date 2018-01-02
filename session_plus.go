@@ -446,7 +446,7 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 		}
 	} else if dialect.DBType() == core.ORACLE {
 		if session.statement.Start != 0 || session.statement.LimitN != 0 {
-			sql = fmt.Sprintf("SELECT aat.* FROM (SELECT at.*,ROWNUM %v FROM (%v) at WHERE ROWNUM <= %d) aat WHERE %v > %d",
+			sql = fmt.Sprintf("SELECT aaat.* FROM (SELECT aat.*,ROWNUM %v FROM (%v) aat WHERE ROWNUM <= %d) aaat WHERE %v > %d",
 				rownumber, sql, session.statement.Start+session.statement.LimitN, rownumber, session.statement.Start)
 		}
 	} else {

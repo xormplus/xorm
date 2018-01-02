@@ -153,7 +153,9 @@ func (engine *Engine) QuoteStr() string {
 
 // Quote Use QuoteStr quote the string sql
 func (engine *Engine) Quote(value string) string {
+
 	value = strings.TrimSpace(value)
+
 	if len(value) == 0 {
 		return value
 	}
@@ -164,7 +166,7 @@ func (engine *Engine) Quote(value string) string {
 
 	value = strings.Replace(value, ".", engine.dialect.QuoteStr()+"."+engine.dialect.QuoteStr(), -1)
 
-	return engine.dialect.QuoteStr() + value + engine.dialect.QuoteStr()
+	return engine.dialect.Quote(value)
 }
 
 // QuoteTo quotes string and writes into the buffer
@@ -185,9 +187,7 @@ func (engine *Engine) QuoteTo(buf *bytes.Buffer, value string) {
 
 	value = strings.Replace(value, ".", engine.dialect.QuoteStr()+"."+engine.dialect.QuoteStr(), -1)
 
-	buf.WriteString(engine.dialect.QuoteStr())
-	buf.WriteString(value)
-	buf.WriteString(engine.dialect.QuoteStr())
+	buf.WriteString(engine.dialect.Quote(value))
 }
 
 func (engine *Engine) quote(sql string) string {

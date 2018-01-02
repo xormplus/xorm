@@ -503,6 +503,7 @@ var (
 
 type oracle struct {
 	core.Base
+	filters []core.Filter
 }
 
 func (db *oracle) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
@@ -555,7 +556,7 @@ func (db *oracle) IsReserved(name string) bool {
 }
 
 func (db *oracle) Quote(name string) string {
-	return "\"" + name + "\""
+	return "\"" + strings.ToUpper(name) + "\""
 }
 
 func (db *oracle) QuoteStr() string {
@@ -611,9 +612,11 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 	}
 
 	sql = sql[:len(sql)-2] + ")"
+
 	if db.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
 	}
+
 	if db.SupportCharset() {
 		if len(charset) == 0 {
 			charset = db.URI().Charset
@@ -622,7 +625,8 @@ func (db *oracle) CreateTableSql(table *core.Table, tableName, storeEngine, char
 			sql += " DEFAULT CHARSET " + charset
 		}
 	}
-	return sql
+
+	return strings.ToUpper(sql)
 }
 
 func (db *oracle) IndexCheckSql(tableName, idxName string) (string, []interface{}) {
@@ -650,7 +654,7 @@ func (db *oracle) MustDropTable(tableName string) error {
 		return nil
 	}
 
-	sql = "Drop Table \"" + tableName + "\""
+	sql = "DROP TABLE " + db.Quote(tableName)
 	db.LogSQL(sql, args)
 
 	_, err = db.DB().Exec(sql)
@@ -866,19 +870,13 @@ func oracle_hash(str string) string {
 
 func oracle_index_name(index *core.Index, tableName string) string {
 
-	if !strings.HasPrefix(index.Name, "UQE_") &&
-		!strings.HasPrefix(index.Name, "IDX_") {
+	name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
 
-		name := oracle_hash(fmt.Sprintf("%v_%v", tableName, index.Name))
-
-		if index.Type == core.UniqueType {
-			return fmt.Sprintf("UQE_%v", name)
-		}
-
-		return fmt.Sprintf("IDX_%v", name)
+	if index.Type == core.UniqueType {
+		return fmt.Sprintf("UQE_%v", strings.ToUpper(name))
 	}
 
-	return index.Name
+	return fmt.Sprintf("IDX_%v", strings.ToUpper(name))
 }
 
 func (db *oracle) CreateIndexSql(tableName string, index *core.Index) string {
@@ -917,7 +915,16 @@ func (db *oracle) DropIndexSql(tableName string, index *core.Index) string {
 }
 
 func (db *oracle) Filters() []core.Filter {
-	return []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.QuoteFilter{}, &core.SeqFilter{Prefix: ":", Start: 1}, &core.IdFilter{}}
+	}
+
+	return db.filters
+}
+
+func (db *oracle) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type goracleDriver struct {

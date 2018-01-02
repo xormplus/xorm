@@ -205,6 +205,7 @@ var (
 
 type mssql struct {
 	core.Base
+	filters []core.Filter
 }
 
 func (db *mssql) Init(d *core.DB, uri *core.Uri, drivername, dataSourceName string) error {
@@ -543,7 +544,15 @@ func (db *mssql) CreateIndexSql(tableName string, index *core.Index) string {
 }
 
 func (db *mssql) Filters() []core.Filter {
-	return []core.Filter{&core.IdFilter{}, &core.QuoteFilter{}}
+
+	if len(db.filters) == 0 {
+		db.filters = []core.Filter{&core.IdFilter{}, &core.QuoteFilter{}}
+	}
+	return db.filters
+}
+
+func (db *mssql) AddFilter(filters ...core.Filter) {
+	db.filters = append(db.filters, filters...)
 }
 
 type odbcDriver struct {

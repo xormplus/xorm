@@ -35,11 +35,21 @@ func (session *Session) Insert(beans ...interface{}) (int64, error) {
 					}
 					affected += cnt
 				} else {
+
+					table := session.statement.TableName()
+
 					for i := 0; i < size; i++ {
+
+						if table != "" {
+							session.Table(table)
+						}
+
 						cnt, err := session.innerInsert(sliceValue.Index(i).Interface())
+
 						if err != nil {
 							return affected, err
 						}
+
 						affected += cnt
 					}
 				}
