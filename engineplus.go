@@ -58,21 +58,21 @@ func JSONString(v interface{}, IndentJSON bool) (string, error) {
 
 func (engine *Engine) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
 	session := engine.NewSession()
-	session.isAutoClose = true
+	session.isAutoClose = false
 	session.isSqlFunc = true
 	return session.Sqls(sqls, parmas...)
 }
 
 func (engine *Engine) SqlMapsClient(sqlkeys interface{}, parmas ...interface{}) *SqlMapsExecutor {
 	session := engine.NewSession()
-	session.isAutoClose = true
+	session.isAutoClose = false
 	session.isSqlFunc = true
 	return session.SqlMapsClient(sqlkeys, parmas...)
 }
 
 func (engine *Engine) SqlTemplatesClient(sqlkeys interface{}, parmas ...interface{}) *SqlTemplatesExecutor {
 	session := engine.NewSession()
-	session.isAutoClose = true
+	session.isAutoClose = false
 	session.isSqlFunc = true
 	return session.SqlTemplatesClient(sqlkeys, parmas...)
 }

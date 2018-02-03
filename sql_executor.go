@@ -15,9 +15,7 @@ type SqlsExecutor struct {
 
 func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
 	defer sqlsExecutor.session.resetStatement()
-	if sqlsExecutor.session.isAutoClose {
-		defer sqlsExecutor.session.Close()
-	}
+	defer sqlsExecutor.session.Close()
 
 	if sqlsExecutor.err != nil {
 		return nil, nil, sqlsExecutor.err
@@ -96,7 +94,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				return nil, nil, ErrParamsType
 			}
 		}
-
+		sqlsExecutor.session.isSqlFunc = true
 		resultSlice := make([][]map[string]interface{}, 1)
 
 		if sqlModel == 1 {
@@ -112,6 +110,12 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Results))
 			resultSlice[0] = model_1_results.Results
+			if sqlsExecutor.session.isSqlFunc == true {
+				err1 := sqlsExecutor.session.Commit()
+				if err1 != nil {
+					return nil, nil, err1
+				}
+			}
 			return resultSlice, nil, nil
 		} else if sqlModel == 2 {
 			if err != nil {
@@ -137,6 +141,12 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			}
 			resultMap[0]["RowsAffected"] = RowsAffected
 			resultSlice[0] = resultMap
+			if sqlsExecutor.session.isSqlFunc == true {
+				err1 := sqlsExecutor.session.Commit()
+				if err1 != nil {
+					return nil, nil, err1
+				}
+			}
 			return resultSlice, nil, nil
 		} else {
 			resultSlice[0] = nil
@@ -150,6 +160,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 		if sqlsExecutor.parmas == nil {
 			for i, _ := range sqlsSlice {
+				sqlsExecutor.session.isSqlFunc = true
 				sqlStr := strings.TrimSpace(sqlsSlice[i])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
@@ -162,7 +173,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				default:
 					sqlModel = 3
 				}
-
+				sqlsExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.isSqlFunc == true {
@@ -230,6 +241,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			}
 
 			for i, _ := range sqlsSlice {
+				sqlsExecutor.session.isSqlFunc = true
 				sqlStr := strings.TrimSpace(sqlsSlice[i])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmaSlice[i] == nil {
@@ -258,7 +270,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					}
 					sqlsExecutor.session.engine.RemoveSql(key)
 				}
-
+				sqlsExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.isSqlFunc == true {
@@ -328,6 +340,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 
 		if sqlsExecutor.parmas == nil {
 			for k, _ := range sqlsMap {
+				sqlsExecutor.session.isSqlFunc = true
 				sqlStr := strings.TrimSpace(sqlsMap[k])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 
@@ -343,7 +356,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				default:
 					sqlModel = 3
 				}
-
+				sqlsExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.isSqlFunc == true {
@@ -395,6 +408,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				}
 
 			}
+
 		} else {
 			switch sqlsExecutor.parmas.(type) {
 			case map[string]map[string]interface{}:
@@ -411,6 +425,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			}
 
 			for k, _ := range sqlsMap {
+				sqlsExecutor.session.isSqlFunc = true
 				sqlStr := strings.TrimSpace(sqlsMap[k])
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				if parmasMap[k] == nil {
@@ -444,7 +459,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					}
 					sqlsExecutor.session.engine.RemoveSql(key)
 				}
-
+				sqlsExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlsExecutor.session.isSqlFunc == true {

@@ -14,9 +14,7 @@ type SqlTemplatesExecutor struct {
 
 func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]interface{}, map[string][]map[string]interface{}, error) {
 	defer sqlTemplatesExecutor.session.resetStatement()
-	if sqlTemplatesExecutor.session.isAutoClose {
-		defer sqlTemplatesExecutor.session.Close()
-	}
+	defer sqlTemplatesExecutor.session.Close()
 
 	if sqlTemplatesExecutor.err != nil {
 		return nil, nil, sqlTemplatesExecutor.err
@@ -131,6 +129,12 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 
 			resultSlice[0] = model_1_results.Results
+			if sqlTemplatesExecutor.session.isSqlFunc == true {
+				err1 := sqlTemplatesExecutor.session.Commit()
+				if err1 != nil {
+					return nil, nil, err1
+				}
+			}
 			return resultSlice, nil, nil
 		} else if sqlModel == 2 {
 			if err != nil {
@@ -150,6 +154,12 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 			resultMap[0]["RowsAffected"] = RowsAffected
 			resultSlice[0] = resultMap
+			if sqlTemplatesExecutor.session.isSqlFunc == true {
+				err1 := sqlTemplatesExecutor.session.Commit()
+				if err1 != nil {
+					return nil, nil, err1
+				}
+			}
 			return resultSlice, nil, nil
 		} else {
 			resultSlice[0] = nil
@@ -163,6 +173,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 
 		if sqlTemplatesExecutor.parmas == nil {
 			for i, _ := range sqlkeysSlice {
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysSlice[i])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -186,7 +197,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				default:
 					sqlModel = 3
 				}
-
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -255,6 +266,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 
 			for i, _ := range sqlkeysSlice {
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysSlice[i], parmaSlice[i])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -291,7 +303,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						sqlModel = 3
 					}
 				}
-
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -362,6 +374,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 		if sqlTemplatesExecutor.parmas == nil {
 
 			for k, _ := range sqlkeysMap {
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysMap[k])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -385,7 +398,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				default:
 					sqlModel = 3
 				}
-
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -454,6 +467,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 			}
 
 			for k, _ := range sqlkeysMap {
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				sqlStr, err := sqlTemplatesExecutor.session.engine.SqlTemplate.Execute(sqlkeysMap[k], parmasMap[k])
 				if err != nil {
 					if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -490,7 +504,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						sqlModel = 3
 					}
 				}
-
+				sqlTemplatesExecutor.session.isSqlFunc = true
 				if sqlModel == 1 {
 					if model_1_results.Error != nil {
 						if sqlTemplatesExecutor.session.isSqlFunc == true {
@@ -540,7 +554,6 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 					resultsMap[k] = nil
 				}
 			}
-
 		}
 
 		if sqlTemplatesExecutor.session.isSqlFunc == true {
