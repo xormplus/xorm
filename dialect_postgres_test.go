@@ -30,7 +30,6 @@ func TestParsePostgres(t *testing.T) {
 
 	for _, test := range tests {
 		uri, err := driver.Parse("postgres", test.in)
-
 		if err != nil && test.valid {
 			t.Errorf("%q got unexpected error: %s", test.in, err)
 		} else if err == nil && !reflect.DeepEqual(test.expected, uri.DbName) {

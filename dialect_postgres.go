@@ -904,7 +904,6 @@ func (db *postgres) ModifyColumnSql(tableName string, col *core.Column) string {
 	}
 	return fmt.Sprintf("alter table %s.%s ALTER COLUMN %s TYPE %s",
 		db.Schema, tableName, col.Name, db.SqlType(col))
-
 }
 
 func (db *postgres) CreateIndexSql(tableName string, index *core.Index) string {
