@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -57,7 +56,7 @@ func (sqlMap *SqlMap) walkFunc(path string, info os.FileInfo, err error) error {
 func (sqlMap *SqlMap) paresSql(filepath string) error {
 
 	content, err := ioutil.ReadFile(filepath)
-	fmt.Println("filepath:", filepath)
+
 	if err != nil {
 		return err
 	}
