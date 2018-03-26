@@ -56,7 +56,12 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 		session.statement.selectStr = ""
 	}
 
+	if session.statement.OrderStr != "" {
+		session.statement.OrderStr = ""
+	}
+
 	return session.Count(reflect.New(sliceElementType).Interface())
+
 }
 
 func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{}) error {
@@ -199,7 +204,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 				//	sqlStr = sql
 				//	args = params
 				//}
-				if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map{
+				if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
 					sqlStr = sql
 					args = params
 				} else {
