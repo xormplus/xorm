@@ -35,32 +35,51 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 		defer session.Close()
 	}
 
-	session.autoResetStatement = false
-	err := session.find(rowsSlicePtr, condiBean...)
-	if err != nil {
-		return 0, err
-	}
+	if session.isSqlFunc {
+		session.autoResetStatement = false
+		err := session.find(rowsSlicePtr, condiBean...)
+		if err != nil {
+			return 0, err
+		}
 
-	sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
-	if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
-		return 0, errors.New("needs a pointer to a slice or a map")
-	}
+		var sql = session.statement.RawSQL
+		session.autoResetStatement = true
+		sql = "select count(1) from (" + sql + ") t"
+		var count int64
+		_, err = session.SQL(sql).Get(&count)
+		if err != nil {
+			return 0, err
+		}
+		return count, nil
 
-	sliceElementType := sliceValue.Type().Elem()
-	if sliceElementType.Kind() == reflect.Ptr {
-		sliceElementType = sliceElementType.Elem()
-	}
-	session.autoResetStatement = true
+	} else {
+		session.autoResetStatement = false
+		err := session.find(rowsSlicePtr, condiBean...)
+		if err != nil {
+			return 0, err
+		}
 
-	if session.statement.selectStr != "" {
-		session.statement.selectStr = ""
-	}
+		sliceValue := reflect.Indirect(reflect.ValueOf(rowsSlicePtr))
+		if sliceValue.Kind() != reflect.Slice && sliceValue.Kind() != reflect.Map {
+			return 0, errors.New("needs a pointer to a slice or a map")
+		}
 
-	if session.statement.OrderStr != "" {
-		session.statement.OrderStr = ""
-	}
+		sliceElementType := sliceValue.Type().Elem()
+		if sliceElementType.Kind() == reflect.Ptr {
+			sliceElementType = sliceElementType.Elem()
+		}
+		session.autoResetStatement = true
 
-	return session.Count(reflect.New(sliceElementType).Interface())
+		if session.statement.selectStr != "" {
+			session.statement.selectStr = ""
+		}
+
+		if session.statement.OrderStr != "" {
+			session.statement.OrderStr = ""
+		}
+
+		return session.Count(reflect.New(sliceElementType).Interface())
+	}
 
 }
 
