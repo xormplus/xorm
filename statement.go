@@ -766,12 +766,19 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 		var table string
 		if l > 0 {
 			f := t[0]
-			v := rValue(f)
-			t := v.Type()
-			if t.Kind() == reflect.String {
+			switch f.(type) {
+			case string:
 				table = f.(string)
-			} else if t.Kind() == reflect.Struct {
-				table = statement.Engine.tbName(v)
+			case TableName:
+				table = f.(TableName).TableName()
+			default:
+				v := rValue(f)
+				t := v.Type()
+				if t.Kind() == reflect.Struct {
+					fmt.Fprintf(&buf, statement.Engine.tbName(v))
+				} else {
+					fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", f)))
+				}
 			}
 		}
 		if l > 1 {
@@ -780,8 +787,18 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 		} else if l == 1 {
 			fmt.Fprintf(&buf, statement.Engine.Quote(table))
 		}
+	case TableName:
+		fmt.Fprintf(&buf, tablename.(TableName).TableName())
+	case string:
+		fmt.Fprintf(&buf, tablename.(string))
 	default:
-		fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
+		v := rValue(tablename)
+		t := v.Type()
+		if t.Kind() == reflect.Struct {
+			fmt.Fprintf(&buf, statement.Engine.tbName(v))
+		} else {
+			fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
+		}
 	}
 
 	fmt.Fprintf(&buf, " ON %v", condition)
@@ -907,7 +924,7 @@ func (statement *Statement) genDelIndexSQL() []string {
 
 func (statement *Statement) genAddColumnStr(col *core.Column) (string, []interface{}) {
 	quote := statement.Engine.Quote
-	sql := fmt.Sprintf("ALTER TABLE %v ADD %v;", quote(statement.TableName()),
+	sql := fmt.Sprintf("ALTER TABLE %v ADD %v", quote(statement.TableName()),
 		col.String(statement.Engine.dialect))
 	if statement.Engine.dialect.DBType() == core.MYSQL && len(col.Comment) > 0 {
 		sql += " COMMENT '" + col.Comment + "'"
