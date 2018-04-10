@@ -84,10 +84,15 @@ func TestGetVar(t *testing.T) {
 	assert.Equal(t, "1.5", fmt.Sprintf("%.1f", money))
 
 	var money2 float64
-	has, err = testEngine.SQL("SELECT money FROM get_var LIMIT 1").Get(&money2)
+	has, err = testEngine.SQL("SELECT money FROM " + testEngine.TableName("get_var", true) + " LIMIT 1").Get(&money2)
 	assert.NoError(t, err)
 	assert.Equal(t, true, has)
 	assert.Equal(t, "1.5", fmt.Sprintf("%.1f", money2))
+
+	var money3 float64
+	has, err = testEngine.SQL("SELECT money FROM " + testEngine.TableName("get_var", true) + " WHERE money > 20").Get(&money3)
+	assert.NoError(t, err)
+	assert.Equal(t, false, has)
 
 	var valuesString = make(map[string]string)
 	has, err = testEngine.Table("get_var").Get(&valuesString)
@@ -278,4 +283,30 @@ func TestGetActionMapping(t *testing.T) {
 		Cols("script_id", "rollback_id").
 		ID(1).Get(&valuesSlice)
 	assert.NoError(t, err)
+}
+
+func TestGetStructId(t *testing.T) {
+	type TestGetStruct struct {
+		Id int64
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(TestGetStruct))
+
+	_, err := testEngine.Insert(&TestGetStruct{})
+	assert.NoError(t, err)
+	_, err = testEngine.Insert(&TestGetStruct{})
+	assert.NoError(t, err)
+
+	type maxidst struct {
+		Id int64
+	}
+
+	//var id int64
+	var maxid maxidst
+	sql := "select max(id) as id from " + testEngine.TableName(&TestGetStruct{}, true)
+	has, err := testEngine.SQL(sql).Get(&maxid)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, 2, maxid.Id)
 }

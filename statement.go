@@ -221,26 +221,18 @@ func (statement *Statement) setRefValue(v reflect.Value) error {
 	if err != nil {
 		return err
 	}
-	statement.tableName = statement.Engine.tbName(v)
+	statement.tableName = statement.Engine.TableName(v.Interface(), true)
 	return nil
 }
 
-// Table tempororily set table name, the parameter could be a string or a pointer of struct
-func (statement *Statement) Table(tableNameOrBean interface{}) *Statement {
-	v := rValue(tableNameOrBean)
-	t := v.Type()
-	if t.Kind() == reflect.String {
-		statement.AltTableName = tableNameOrBean.(string)
-	} else if t.Kind() == reflect.Struct {
-		var err error
-		statement.RefTable, err = statement.Engine.autoMapType(v)
-		if err != nil {
-			statement.Engine.logger.Error(err)
-			return statement
-		}
-		statement.AltTableName = statement.Engine.tbName(v)
+func (statement *Statement) setRefBean(bean interface{}) error {
+	var err error
+	statement.RefTable, err = statement.Engine.autoMapType(rValue(bean))
+	if err != nil {
+		return err
 	}
-	return statement
+	statement.tableName = statement.Engine.TableName(bean, true)
+	return nil
 }
 
 // Auto generating update columnes and values according a struct
@@ -743,6 +735,23 @@ func (statement *Statement) Asc(colNames ...string) *Statement {
 	return statement
 }
 
+// Table tempororily set table name, the parameter could be a string or a pointer of struct
+func (statement *Statement) Table(tableNameOrBean interface{}) *Statement {
+	v := rValue(tableNameOrBean)
+	t := v.Type()
+	if t.Kind() == reflect.Struct {
+		var err error
+		statement.RefTable, err = statement.Engine.autoMapType(v)
+		if err != nil {
+			statement.Engine.logger.Error(err)
+			return statement
+		}
+	}
+
+	statement.AltTableName = statement.Engine.TableName(tableNameOrBean, true)
+	return statement
+}
+
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
 func (statement *Statement) Join(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
 	var buf bytes.Buffer
@@ -752,56 +761,9 @@ func (statement *Statement) Join(joinOP string, tablename interface{}, condition
 		fmt.Fprintf(&buf, "%v JOIN ", joinOP)
 	}
 
-	switch tablename.(type) {
-	case []string:
-		t := tablename.([]string)
-		if len(t) > 1 {
-			fmt.Fprintf(&buf, "%v AS %v", statement.Engine.Quote(t[0]), statement.Engine.Quote(t[1]))
-		} else if len(t) == 1 {
-			fmt.Fprintf(&buf, statement.Engine.Quote(t[0]))
-		}
-	case []interface{}:
-		t := tablename.([]interface{})
-		l := len(t)
-		var table string
-		if l > 0 {
-			f := t[0]
-			switch f.(type) {
-			case string:
-				table = f.(string)
-			case TableName:
-				table = f.(TableName).TableName()
-			default:
-				v := rValue(f)
-				t := v.Type()
-				if t.Kind() == reflect.Struct {
-					fmt.Fprintf(&buf, statement.Engine.tbName(v))
-				} else {
-					fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", f)))
-				}
-			}
-		}
-		if l > 1 {
-			fmt.Fprintf(&buf, "%v AS %v", statement.Engine.Quote(table),
-				statement.Engine.Quote(fmt.Sprintf("%v", t[1])))
-		} else if l == 1 {
-			fmt.Fprintf(&buf, statement.Engine.Quote(table))
-		}
-	case TableName:
-		fmt.Fprintf(&buf, tablename.(TableName).TableName())
-	case string:
-		fmt.Fprintf(&buf, tablename.(string))
-	default:
-		v := rValue(tablename)
-		t := v.Type()
-		if t.Kind() == reflect.Struct {
-			fmt.Fprintf(&buf, statement.Engine.tbName(v))
-		} else {
-			fmt.Fprintf(&buf, statement.Engine.Quote(fmt.Sprintf("%v", tablename)))
-		}
-	}
+	tbName := statement.Engine.TableName(tablename, true)
 
-	fmt.Fprintf(&buf, " ON %v", condition)
+	fmt.Fprintf(&buf, "%s ON %v", tbName, condition)
 	statement.JoinStr = buf.String()
 	statement.joinArgs = append(statement.joinArgs, args...)
 	return statement
@@ -906,16 +868,18 @@ func (statement *Statement) genUniqueSQL() []string {
 func (statement *Statement) genDelIndexSQL() []string {
 	var sqls []string
 	tbName := statement.TableName()
+	idxPrefixName := strings.Replace(tbName, `"`, "", -1)
+	idxPrefixName = strings.Replace(idxPrefixName, `.`, "_", -1)
 	for idxName, index := range statement.RefTable.Indexes {
 		var rIdxName string
 		if index.Type == core.UniqueType {
-			rIdxName = uniqueName(tbName, idxName)
+			rIdxName = uniqueName(idxPrefixName, idxName)
 		} else if index.Type == core.IndexType {
-			rIdxName = indexName(tbName, idxName)
+			rIdxName = indexName(idxPrefixName, idxName)
 		}
-		sql := fmt.Sprintf("DROP INDEX %v", statement.Engine.Quote(rIdxName))
+		sql := fmt.Sprintf("DROP INDEX %v", statement.Engine.Quote(statement.Engine.TableName(rIdxName, true)))
 		if statement.Engine.dialect.IndexOnTable() {
-			sql += fmt.Sprintf(" ON %v", statement.Engine.Quote(statement.TableName()))
+			sql += fmt.Sprintf(" ON %v", statement.Engine.Quote(tbName))
 		}
 		sqls = append(sqls, sql)
 	}
@@ -966,7 +930,7 @@ func (statement *Statement) genGetSQL(bean interface{}) (string, []interface{}, 
 	v := rValue(bean)
 	isStruct := v.Kind() == reflect.Struct
 	if isStruct {
-		statement.setRefValue(v)
+		statement.setRefBean(bean)
 	}
 
 	var columnStr = statement.ColumnStr
@@ -1005,7 +969,7 @@ func (statement *Statement) genGetSQL(bean interface{}) (string, []interface{}, 
 		return "", nil, err
 	}
 
-	sqlStr, err := statement.genSelectSQL(columnStr, condSQL, true)
+	sqlStr, err := statement.genSelectSQL(columnStr, condSQL, true, true)
 	if err != nil {
 		return "", nil, err
 	}
@@ -1018,7 +982,7 @@ func (statement *Statement) genCountSQL(beans ...interface{}) (string, []interfa
 	var condArgs []interface{}
 	var err error
 	if len(beans) > 0 {
-		statement.setRefValue(rValue(beans[0]))
+		statement.setRefBean(beans[0])
 		condSQL, condArgs, err = statement.genConds(beans[0])
 	} else {
 		condSQL, condArgs, err = builder.ToSQL(statement.cond)
@@ -1035,7 +999,7 @@ func (statement *Statement) genCountSQL(beans ...interface{}) (string, []interfa
 			selectSQL = "count(*)"
 		}
 	}
-	sqlStr, err := statement.genSelectSQL(selectSQL, condSQL, false)
+	sqlStr, err := statement.genSelectSQL(selectSQL, condSQL, false, false)
 	if err != nil {
 		return "", nil, err
 	}
@@ -1044,7 +1008,7 @@ func (statement *Statement) genCountSQL(beans ...interface{}) (string, []interfa
 }
 
 func (statement *Statement) genSumSQL(bean interface{}, columns ...string) (string, []interface{}, error) {
-	statement.setRefValue(rValue(bean))
+	statement.setRefBean(bean)
 
 	var sumStrs = make([]string, 0, len(columns))
 	for _, colName := range columns {
@@ -1060,7 +1024,7 @@ func (statement *Statement) genSumSQL(bean interface{}, columns ...string) (stri
 		return "", nil, err
 	}
 
-	sqlStr, err := statement.genSelectSQL(sumSelect, condSQL, true)
+	sqlStr, err := statement.genSelectSQL(sumSelect, condSQL, true, true)
 	if err != nil {
 		return "", nil, err
 	}
@@ -1068,7 +1032,7 @@ func (statement *Statement) genSumSQL(bean interface{}, columns ...string) (stri
 	return sqlStr, append(statement.joinArgs, condArgs...), nil
 }
 
-func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit bool) (a string, err error) {
+func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit, needOrderBy bool) (a string, err error) {
 	var distinct string
 	if statement.IsDistinct && !strings.HasPrefix(columnStr, "count") {
 		distinct = "DISTINCT "
@@ -1135,9 +1099,10 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit bo
 			}
 
 			var orderStr string
-			if len(statement.OrderStr) > 0 {
+			if needOrderBy && len(statement.OrderStr) > 0 {
 				orderStr = " ORDER BY " + statement.OrderStr
 			}
+
 			var groupStr string
 			if len(statement.GroupByStr) > 0 {
 				groupStr = " GROUP BY " + statement.GroupByStr
@@ -1163,7 +1128,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit bo
 	if statement.HavingStr != "" {
 		a = fmt.Sprintf("%v %v", a, statement.HavingStr)
 	}
-	if statement.OrderStr != "" {
+	if needOrderBy && statement.OrderStr != "" {
 		a = fmt.Sprintf("%v ORDER BY %v", a, statement.OrderStr)
 	}
 	if needLimit {

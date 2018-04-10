@@ -301,10 +301,11 @@ type UserCus struct {
 func TestCustomType2(t *testing.T) {
 	assert.NoError(t, prepareEngine())
 
-	err := testEngine.CreateTables(&UserCus{})
+	var uc UserCus
+	err := testEngine.CreateTables(&uc)
 	assert.NoError(t, err)
 
-	tableName := testEngine.TableMapper.Obj2Table("UserCus")
+	tableName := testEngine.TableName(&uc, true)
 	_, err = testEngine.Exec("delete from " + testEngine.Quote(tableName))
 	assert.NoError(t, err)
 
@@ -327,7 +328,7 @@ func TestCustomType2(t *testing.T) {
 	fmt.Println(user)
 
 	users := make([]UserCus, 0)
-	err = testEngine.Where("`"+testEngine.ColumnMapper.Obj2Table("Status")+"` = ?", "Registed").Find(&users)
+	err = testEngine.Where("`"+testEngine.GetColumnMapper().Obj2Table("Status")+"` = ?", "Registed").Find(&users)
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, len(users))
 

@@ -635,7 +635,7 @@ func Test_SqlTemplateClient_Search_Json(t *testing.T) {
 
 func Test_Query(t *testing.T) {
 
-	result, err := db.Query("select * from category where id =25")
+	result, err := db.QueryInterface("select * from category where id =25")
 	if err != nil {
 		t.Fatal(err)
 	}
