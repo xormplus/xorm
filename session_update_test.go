@@ -1164,3 +1164,53 @@ func TestUpdateMapCondition(t *testing.T) {
 	assert.True(t, has)
 	assert.EqualValues(t, "string1", c2.String)
 }
+
+func TestUpdateMapContent(t *testing.T) {
+	assert.NoError(t, prepareEngine())
+
+	type UpdateMapContent struct {
+		Id     int64
+		Name   string
+		IsMan  bool
+		Age    int
+		Gender int // 1 is man, 2 is woman
+	}
+
+	assertSync(t, new(UpdateMapContent))
+
+	var c = UpdateMapContent{
+		Name:   "lunny",
+		IsMan:  true,
+		Gender: 1,
+		Age:    18,
+	}
+	_, err := testEngine.Insert(&c)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 18, c.Age)
+
+	cnt, err := testEngine.Table(new(UpdateMapContent)).ID(c.Id).Update(map[string]interface{}{"age": 0})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var c1 UpdateMapContent
+	has, err := testEngine.ID(c.Id).Get(&c1)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, 0, c1.Age)
+
+	cnt, err = testEngine.Table(new(UpdateMapContent)).ID(c.Id).Update(map[string]interface{}{
+		"age": 16,
+		"is_man": false,
+		"gender": 2,
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var c2 UpdateMapContent
+	has, err = testEngine.ID(c.Id).Get(&c2)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, 16, c2.Age)
+	assert.EqualValues(t, false, c2.IsMan)
+	assert.EqualValues(t, 2, c2.Gender)
+}
