@@ -79,6 +79,7 @@ func (session *Session) queryRows(sqlStr string, args ...interface{}) (*core.Row
 	if err != nil {
 		return nil, err
 	}
+
 	return rows, nil
 }
 
