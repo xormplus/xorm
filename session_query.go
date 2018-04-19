@@ -230,6 +230,7 @@ func (session *Session) QueryRows(sqlorArgs ...interface{}) (*core.Rows, error) 
 	return rows, nil
 }
 
+// QueryString runs a raw sql and return records as []map[string]string
 func (session *Session) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
 	if session.isAutoClose {
 		defer session.Close()
