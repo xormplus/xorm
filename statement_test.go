@@ -180,3 +180,25 @@ func createTestStatement() *Statement {
 	}
 	return nil
 }
+
+func TestDistinctAndCols(t *testing.T) {
+	type DistinctAndCols struct {
+		Id   int64
+		Name string
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(DistinctAndCols))
+
+	cnt, err := testEngine.Insert(&DistinctAndCols{
+		Name: "test",
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var names []string
+	err = testEngine.Table("distinct_and_cols").Cols("name").Distinct("name").Find(&names)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(names))
+	assert.EqualValues(t, "test", names[0])
+}
