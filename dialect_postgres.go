@@ -895,6 +895,7 @@ func (db *postgres) TableCheckSql(tableName string) (string, []interface{}) {
 		args := []interface{}{tableName}
 		return `SELECT tablename FROM pg_tables WHERE tablename = ?`, args
 	}
+
 	args := []interface{}{db.Schema, tableName}
 	return `SELECT tablename FROM pg_tables WHERE schemaname = ? AND tablename = ?`, args
 }
@@ -1236,4 +1237,16 @@ func (p *pqDriver) Parse(driverName, dataSourceName string) (*core.Uri, error) {
 	}
 
 	return db, nil
+}
+
+type pqDriverPgx struct {
+	pqDriver
+}
+
+func (pgx *pqDriverPgx) Parse(driverName, dataSourceName string) (*core.Uri, error) {
+	// Remove the leading characters for driver to work
+	if len(dataSourceName) >= 9 && dataSourceName[0] == 0 {
+		dataSourceName = dataSourceName[9:]
+	}
+	return pgx.pqDriver.Parse(driverName, dataSourceName)
 }
