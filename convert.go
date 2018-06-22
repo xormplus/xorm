@@ -5,9 +5,12 @@
 package xorm
 
 import (
+	"bytes"
 	"database/sql/driver"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"time"
@@ -345,4 +348,443 @@ func asBool(bs []byte) (bool, error) {
 		return true, nil
 	}
 	return strconv.ParseBool(string(bs))
+}
+
+func EncodeString(s string) []byte {
+	return []byte(s)
+}
+
+func DecodeToString(b []byte) string {
+	return string(b)
+}
+
+func EncodeBool(b bool) []byte {
+	if b == true {
+		return []byte{1}
+	} else {
+		return []byte{0}
+	}
+}
+
+func EncodeInt(i int) []byte {
+	if i <= math.MaxInt8 {
+		return EncodeInt8(int8(i))
+	} else if i <= math.MaxInt16 {
+		return EncodeInt16(int16(i))
+	} else if i <= math.MaxInt32 {
+		return EncodeInt32(int32(i))
+	} else {
+		return EncodeInt64(int64(i))
+	}
+}
+
+func EncodeUint(i uint) []byte {
+	if i <= math.MaxUint8 {
+		return EncodeUint8(uint8(i))
+	} else if i <= math.MaxUint16 {
+		return EncodeUint16(uint16(i))
+	} else if i <= math.MaxUint32 {
+		return EncodeUint32(uint32(i))
+	} else {
+		return EncodeUint64(uint64(i))
+	}
+}
+
+func EncodeInt8(i int8) []byte {
+	return []byte{byte(i)}
+}
+
+func EncodeUint8(i uint8) []byte {
+	return []byte{byte(i)}
+}
+
+func EncodeInt16(i int16) []byte {
+	bytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(bytes, uint16(i))
+	return bytes
+}
+
+func EncodeUint16(i uint16) []byte {
+	bytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(bytes, i)
+	return bytes
+}
+
+func EncodeInt32(i int32) []byte {
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, uint32(i))
+	return bytes
+}
+
+func EncodeUint32(i uint32) []byte {
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, i)
+	return bytes
+}
+
+func EncodeInt64(i int64) []byte {
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, uint64(i))
+	return bytes
+}
+
+func EncodeUint64(i uint64) []byte {
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, i)
+	return bytes
+}
+
+func EncodeFloat32(f float32) []byte {
+	bits := math.Float32bits(f)
+	bytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bytes, bits)
+	return bytes
+}
+
+func EncodeFloat64(f float64) []byte {
+	bits := math.Float64bits(f)
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, bits)
+	return bytes
+}
+
+func Encode(vs ...interface{}) []byte {
+	buf := new(bytes.Buffer)
+	for i := 0; i < len(vs); i++ {
+		switch value := vs[i].(type) {
+		case int:
+			buf.Write(EncodeInt(value))
+		case int8:
+			buf.Write(EncodeInt8(value))
+		case int16:
+			buf.Write(EncodeInt16(value))
+		case int32:
+			buf.Write(EncodeInt32(value))
+		case int64:
+			buf.Write(EncodeInt64(value))
+		case uint:
+			buf.Write(EncodeUint(value))
+		case uint8:
+			buf.Write(EncodeUint8(value))
+		case uint16:
+			buf.Write(EncodeUint16(value))
+		case uint32:
+			buf.Write(EncodeUint32(value))
+		case uint64:
+			buf.Write(EncodeUint64(value))
+		case bool:
+			buf.Write(EncodeBool(value))
+		case string:
+			buf.Write(EncodeString(value))
+		case []byte:
+			buf.Write(value)
+		case float32:
+			buf.Write(EncodeFloat32(value))
+		case float64:
+			buf.Write(EncodeFloat64(value))
+		default:
+			if err := binary.Write(buf, binary.LittleEndian, value); err != nil {
+				buf.Write(EncodeString(fmt.Sprintf("%v", value)))
+			}
+		}
+	}
+	return buf.Bytes()
+}
+
+func IsNumeric(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < byte('0') || s[i] > byte('9') {
+			return false
+		}
+	}
+	return true
+}
+
+func Time(i interface{}, format string, TZLocation ...*time.Location) time.Time {
+	s := String(i)
+	t, _ := StrToTime(s, format, TZLocation...)
+	return t
+}
+
+func StrToTime(str string, format string, TZLocation ...*time.Location) (time.Time, error) {
+	if len(TZLocation) > 0 {
+		if t, err := time.ParseInLocation(format, str, TZLocation[0]); err == nil {
+			return t, nil
+		} else {
+			return time.Time{}, err
+		}
+	} else {
+		if t, err := time.ParseInLocation(format, str, time.Local); err == nil {
+			return t, nil
+		} else {
+			return time.Time{}, err
+		}
+	}
+}
+
+func TimeDuration(i interface{}) time.Duration {
+	return time.Duration(Int64(i))
+}
+
+func Bytes(i interface{}) []byte {
+	if i == nil {
+		return nil
+	}
+	if r, ok := i.([]byte); ok {
+		return r
+	} else {
+		return Encode(i)
+	}
+}
+
+func String(i interface{}) string {
+	if i == nil {
+		return ""
+	}
+	switch value := i.(type) {
+	case int:
+		return strconv.Itoa(value)
+	case int8:
+		return strconv.Itoa(int(value))
+	case int16:
+		return strconv.Itoa(int(value))
+	case int32:
+		return strconv.Itoa(int(value))
+	case int64:
+		return strconv.Itoa(int(value))
+	case uint:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint8:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint16:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint32:
+		return strconv.FormatUint(uint64(value), 10)
+	case uint64:
+		return strconv.FormatUint(uint64(value), 10)
+	case float32:
+		return strconv.FormatFloat(float64(value), 'f', -1, 64)
+	case float64:
+		return strconv.FormatFloat(value, 'f', -1, 64)
+	case bool:
+		return strconv.FormatBool(value)
+	case string:
+		return value
+	case []byte:
+		return string(value)
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
+func Strings(i interface{}) []string {
+	if i == nil {
+		return nil
+	}
+	if r, ok := i.([]string); ok {
+		return r
+	} else if r, ok := i.([]interface{}); ok {
+		strs := make([]string, len(r))
+		for k, v := range r {
+			strs[k] = String(v)
+		}
+		return strs
+	}
+	return []string{fmt.Sprintf("%v", i)}
+}
+
+//false: "", 0, false, off
+func Bool(i interface{}) bool {
+	if i == nil {
+		return false
+	}
+	if v, ok := i.(bool); ok {
+		return v
+	}
+	if s := String(i); s != "" && s != "0" && s != "false" && s != "off" {
+		return true
+	}
+	return false
+}
+
+func Int(i interface{}) int {
+	if i == nil {
+		return 0
+	}
+	switch value := i.(type) {
+	case int:
+		return value
+	case int8:
+		return int(value)
+	case int16:
+		return int(value)
+	case int32:
+		return int(value)
+	case int64:
+		return int(value)
+	case uint:
+		return int(value)
+	case uint8:
+		return int(value)
+	case uint16:
+		return int(value)
+	case uint32:
+		return int(value)
+	case uint64:
+		return int(value)
+	case float32:
+		return int(value)
+	case float64:
+		return int(value)
+	case bool:
+		if value {
+			return 1
+		}
+		return 0
+	default:
+		v, _ := strconv.Atoi(String(value))
+		return v
+	}
+}
+
+func Int8(i interface{}) int8 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(int8); ok {
+		return v
+	}
+	return int8(Int(i))
+}
+
+func Int16(i interface{}) int16 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(int16); ok {
+		return v
+	}
+	return int16(Int(i))
+}
+
+func Int32(i interface{}) int32 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(int32); ok {
+		return v
+	}
+	return int32(Int(i))
+}
+
+func Int64(i interface{}) int64 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(int64); ok {
+		return v
+	}
+	return int64(Int(i))
+}
+
+func Uint(i interface{}) uint {
+	if i == nil {
+		return 0
+	}
+	switch value := i.(type) {
+	case int:
+		return uint(value)
+	case int8:
+		return uint(value)
+	case int16:
+		return uint(value)
+	case int32:
+		return uint(value)
+	case int64:
+		return uint(value)
+	case uint:
+		return value
+	case uint8:
+		return uint(value)
+	case uint16:
+		return uint(value)
+	case uint32:
+		return uint(value)
+	case uint64:
+		return uint(value)
+	case float32:
+		return uint(value)
+	case float64:
+		return uint(value)
+	case bool:
+		if value {
+			return 1
+		}
+		return 0
+	default:
+		v, _ := strconv.ParseUint(String(value), 10, 64)
+		return uint(v)
+	}
+}
+
+func Uint8(i interface{}) uint8 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(uint8); ok {
+		return v
+	}
+	return uint8(Uint(i))
+}
+
+func Uint16(i interface{}) uint16 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(uint16); ok {
+		return v
+	}
+	return uint16(Uint(i))
+}
+
+func Uint32(i interface{}) uint32 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(uint32); ok {
+		return v
+	}
+	return uint32(Uint(i))
+}
+
+func Uint64(i interface{}) uint64 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(uint64); ok {
+		return v
+	}
+	return uint64(Uint(i))
+}
+
+func Float32(i interface{}) float32 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(float32); ok {
+		return v
+	}
+	v, _ := strconv.ParseFloat(String(i), 32)
+	return float32(v)
+}
+
+func Float64(i interface{}) float64 {
+	if i == nil {
+		return 0
+	}
+	if v, ok := i.(float64); ok {
+		return v
+	}
+	v, _ := strconv.ParseFloat(String(i), 64)
+	return v
 }

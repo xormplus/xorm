@@ -95,6 +95,14 @@ func value2Bytes(rawValue *reflect.Value) ([]byte, error) {
 	return []byte(str), nil
 }
 
+func value2Value(rawValue *reflect.Value) (Value, error) {
+	str, err := value2String(rawValue)
+	if err != nil {
+		return nil, err
+	}
+	return Value(str), nil
+}
+
 func row2map(rows *core.Rows, fields []string) (resultsMap map[string][]byte, err error) {
 	result := make(map[string][]byte)
 	scanResultContainers := make([]interface{}, len(fields))
@@ -123,6 +131,34 @@ func row2map(rows *core.Rows, fields []string) (resultsMap map[string][]byte, er
 	return result, nil
 }
 
+func row2mapValue(rows *core.Rows, fields []string) (resultsMap map[string]Value, err error) {
+	result := make(map[string]Value)
+	scanResultContainers := make([]interface{}, len(fields))
+	for i := 0; i < len(fields); i++ {
+		var scanResultContainer interface{}
+		scanResultContainers[i] = &scanResultContainer
+	}
+	if err := rows.Scan(scanResultContainers...); err != nil {
+		return nil, err
+	}
+
+	for ii, key := range fields {
+		rawValue := reflect.Indirect(reflect.ValueOf(scanResultContainers[ii]))
+		//if row is null then ignore
+		if rawValue.Interface() == nil {
+			result[key] = []byte{}
+			continue
+		}
+
+		if data, err := value2Value(&rawValue); err == nil {
+			result[key] = data
+		} else {
+			return nil, err // !nashtsai! REVIEW, should return err or just error log?
+		}
+	}
+	return result, nil
+}
+
 func rows2maps(rows *core.Rows) (resultsSlice []map[string][]byte, err error) {
 	fields, err := rows.Columns()
 	if err != nil {
@@ -130,6 +166,22 @@ func rows2maps(rows *core.Rows) (resultsSlice []map[string][]byte, err error) {
 	}
 	for rows.Next() {
 		result, err := row2map(rows, fields)
+		if err != nil {
+			return nil, err
+		}
+		resultsSlice = append(resultsSlice, result)
+	}
+
+	return resultsSlice, nil
+}
+
+func rows2mapsValue(rows *core.Rows) (resultsSlice []map[string]Value, err error) {
+	fields, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		result, err := row2mapValue(rows, fields)
 		if err != nil {
 			return nil, err
 		}
@@ -147,6 +199,16 @@ func (session *Session) queryBytes(sqlStr string, args ...interface{}) ([]map[st
 	defer rows.Close()
 
 	return rows2maps(rows)
+}
+
+func (session *Session) queryValue(sqlStr string, args ...interface{}) ([]map[string]Value, error) {
+	rows, err := session.queryRows(sqlStr, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return rows2mapsValue(rows)
 }
 
 func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, error) {

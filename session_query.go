@@ -107,6 +107,20 @@ func (session *Session) genQuerySQL(sqlorArgs ...interface{}) (string, []interfa
 	return sqlStr, args, nil
 }
 
+func (session *Session) QueryValue(sqlorArgs ...interface{}) ([]map[string]Value, error) {
+	if session.isAutoClose {
+		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return session.queryValue(sqlStr, args...)
+
+}
+
 // Query runs a raw sql and return records as []map[string][]byte
 func (session *Session) QueryBytes(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {

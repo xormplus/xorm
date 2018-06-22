@@ -1355,6 +1355,13 @@ func (engine *Engine) QueryBytes(sqlorArgs ...interface{}) (resultsSlice []map[s
 	return session.QueryBytes(sqlorArgs...)
 }
 
+// Query a raw sql and return records as []map[string]Value
+func (engine *Engine) QueryValue(sqlorArgs ...interface{}) (resultsSlice []map[string]Value, err error) {
+	session := engine.NewSession()
+	defer session.Close()
+	return session.QueryValue(sqlorArgs...)
+}
+
 // QueryString runs a raw sql and return records as []map[string]string
 func (engine *Engine) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
 	session := engine.NewSession()

@@ -12,10 +12,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
-	//	"gopkg.in/flosch/pongo2.v3"
 )
 
 type ResultBean struct {
@@ -100,6 +100,75 @@ func (resultBean *ResultBean) XmlIndent(prefix string, indent string, recordTag 
 	}
 
 	return resultBean.Has, string(resultByte), err
+}
+
+type Value []byte
+
+func (v Value) Bytes() []byte {
+	return []byte(v)
+}
+
+func (v Value) String() string {
+	return string(v)
+}
+
+func (v Value) Bool() bool {
+	return Bool(v)
+}
+
+func (v Value) Int() int {
+	return Int(v)
+}
+
+func (v Value) Int8() int8 {
+	return Int8(v)
+}
+
+func (v Value) Int16() int16 {
+	return Int16(v)
+}
+
+func (v Value) Int32() int32 {
+	return Int32(v)
+}
+
+func (v Value) Int64() int64 {
+	return Int64(v)
+}
+
+func (v Value) Uint() uint {
+	return Uint(v)
+}
+
+func (v Value) Uint8() uint8 {
+	return Uint8(v)
+}
+
+func (v Value) Uint16() uint16 {
+	return Uint16(v)
+}
+
+func (v Value) Uint32() uint32 {
+	return Uint32(v)
+}
+
+func (v Value) Uint64() uint64 {
+	return Uint64(v)
+}
+
+func (v Value) Float32() float32 {
+	return Float32(v)
+}
+
+func (v Value) Float64() float64 {
+	return Float64(v)
+}
+
+func (v Value) Time(format string, TZLocation ...*time.Location) time.Time {
+	return Time(v, format, TZLocation...)
+}
+func (v Value) TimeDuration() time.Duration {
+	return TimeDuration(v)
 }
 
 type ResultMap struct {
@@ -379,37 +448,6 @@ func (resultStructs *ResultStructs) XmlIndent(prefix string, indent string, reco
 func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
 	return session.Sql(session.engine.SqlMap.Sql[sqlTagName], args...)
 }
-
-//func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
-//	session.isSqlFunc = true
-//	if session.engine.sqlTemplate.Template[sqlTagName] == nil {
-//		if len(args) == 0 {
-//			return session.Sql("")
-//		} else {
-//			map1 := args[0].(*map[string]interface{})
-//			return session.Sql("", map1)
-//		}
-//	}
-
-//	if len(args) == 0 {
-//		parmap := &pongo2.Context{"1": 1}
-//		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*parmap)
-//		if err != nil {
-//			session.engine.logger.Error(err)
-
-//		}
-//		return session.Sql(sql)
-//	} else {
-//		map1 := args[0].(*map[string]interface{})
-//		sql, err := session.engine.sqlTemplate.Template[sqlTagName].Execute(*map1)
-//		if err != nil {
-//			session.engine.logger.Error(err)
-
-//		}
-//		return session.Sql(sql, map1)
-//	}
-
-//}
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
 	session.isSqlFunc = true

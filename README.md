@@ -126,7 +126,7 @@ if err != nil {
 sql_1_1 := "select * from user"
 results, err := engine.QueryBytes(sql_1_1)
 
-//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第4种方式和第5种方式
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第5种方式和第6种方式
 sql_1_2 := "select id,userid,title,createdatetime,content from Article where id=?"
 results, err := db.SQL(sql_1_2, 2).QueryBytes()
 
@@ -140,7 +140,7 @@ results, err := db.SQL(sql_1_3, &paramMap_1_3).QueryBytes()
 sql_2_1 := "select * from user"
 results, err := engine.QueryString(sql_2_1)
 
-//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第种方式和第种方式
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第5种方式和第6种方式
 sql_2_2 := "select id,userid,title,createdatetime,content from Article where id=?"
 results, err := db.SQL(sql_2_2, 2).QueryString()
 
@@ -149,12 +149,28 @@ paramMap_2_3 := map[string]interface{}{"id": 2}
 results, err := db.SQL(sql_2_3, &paramMap_2_3).QueryString()
 
 /*-------------------------------------------------------------------------------------
- * 第3种方式：返回的结果类型为 []map[string]interface{}
+ * 第3种方式：返回的结果类型为 []map[string]Value
+-------------------------------------------------------------------------------------*/
+//Value类型本质是[]byte，但具有一系列类型转换函数
+sql_2_1 := "select * from user"
+results, err := engine.QueryValue(sql_2_1)
+
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第5种方式和第6种方式
+sql_2_2 := "select id,userid,title,createdatetime,content from Article where id=?"
+results, err := db.SQL(sql_2_2, 2).QueryValue()
+title := results[0]["title"].String()
+
+sql_2_3 := "select id,userid,title,createdatetime,content from Article where id=?id"
+paramMap_2_3 := map[string]interface{}{"id": 2}
+results, err := db.SQL(sql_2_3, &paramMap_2_3).QueryValue()
+
+/*-------------------------------------------------------------------------------------
+ * 第4种方式：返回的结果类型为 []map[string]interface{}
 -------------------------------------------------------------------------------------*/
 sql_3_1 := "select * from user"
 results, err := engine.QueryInterface(sql_3_1)
 
-//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第种方式和第种方式
+//SqlMapClient和SqlTemplateClient传参方式类同如下2种，具体参见第5种方式和第6种方式
 sql_3_2 := "select id,userid,title,createdatetime,content from Article where id=?"
 results, err := db.SQL(sql_3_2, 2).QueryInterface()
 
@@ -192,7 +208,7 @@ results, err := engine.Sql(sql_3_5, 7, 17).Query().ListPage(13,28)
 count, err := engine.Sql(sql_3_5, 7, 17).Query().Count()
 
 /*-------------------------------------------------------------------------------------
-  第4种方式：执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+  第5种方式：执行SqlMap配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 -------------------------------------------------------------------------------------*/
 sql_id_4_1 := "sql_4_1" //配置文件中sql标签的id属性,SqlMap的key
 results, err := engine.SqlMapClient(sql_id_4_1).Query().List()
@@ -205,7 +221,7 @@ paramMap_4_3 := map[string]interface{}{"id": 7, "name": "xormplus"}
 results1, err := engine.SqlMapClient(sql_id_4_3, &paramMap_4_3).Query().List()
 
 /*-------------------------------------------------------------------------------------
- * 第5种方式：执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
+ * 第6种方式：执行SqlTemplate配置文件中的Sql语句，返回的结果类型为 []map[string]interface{}
 -------------------------------------------------------------------------------------*/
 sql_key_5_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
 
@@ -220,7 +236,7 @@ paramMap_5_2 := map[string]interface{}{"id": 0, "count": 2, "name": "xormplus"}
 results, err := engine.SqlTemplateClient(sql_key_5_1, &paramMap_5_2).Query().List()
 
 /*-------------------------------------------------------------------------------------
- * 第6种方式：返回的结果类型为对应的[]interface{}
+ * 第7种方式：返回的结果类型为对应的[]interface{}
 -------------------------------------------------------------------------------------*/
 var categories []Category
 err := engine.Sql("select * from category where id =?", 16).Find(&categories)
@@ -229,7 +245,7 @@ paramMap_6 := map[string]interface{}{"id": 2}
 err := engine.Sql("select * from category where id =?id", &paramMap_6).Find(&categories)
 
 /*-------------------------------------------------------------------------------------
- * 第7种方式：返回的结果类型为对应的[]interface{}
+ * 第8种方式：返回的结果类型为对应的[]interface{}
 -------------------------------------------------------------------------------------*/
 sql_id_7_1 := "sql_7_1"
 var categories []Category
@@ -241,7 +257,7 @@ paramMap_7_2 := map[string]interface{}{"id": 25}
 err := engine.SqlMapClient(sql_id_7_2, &paramMap_7_2).Find(&categories)
 
 /*-------------------------------------------------------------------------------------
- * 第8种方式：返回的结果类型为对应的[]interface{}
+ * 第9种方式：返回的结果类型为对应的[]interface{}
 -------------------------------------------------------------------------------------*/
 //执行的 sql：select * from user where name='xormplus'
 sql_key_8_1 := "select.example.stpl" //配置文件名,SqlTemplate的key
@@ -251,7 +267,7 @@ err := engine.SqlTemplateClient(sql_key_8_1, &paramMap_8_1).Find(&users)
 
 
 /*-------------------------------------------------------------------------------------
- * 第9种方式：查询单条数据
+ * 第10种方式：查询单条数据
  * 使用Sql,SqlMapClient,SqlTemplateClient函数与Get函数组合可以查询单条数据，以Sql与Get函数组合为例：
 -------------------------------------------------------------------------------------*/
 //获得单条数据的值，并存为结构体
