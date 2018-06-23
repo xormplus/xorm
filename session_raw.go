@@ -223,7 +223,7 @@ func rows2Result(rows *core.Rows) (result Result, err error) {
 		return nil, err
 	}
 	for rows.Next() {
-		r, err := row2mapValue(rows, fields)
+		r, err := row2Record(rows, fields)
 		if err != nil {
 			return nil, err
 		}
