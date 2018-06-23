@@ -149,9 +149,9 @@ paramMap_2_3 := map[string]interface{}{"id": 2}
 results, err := db.SQL(sql_2_3, &paramMap_2_3).QueryString()
 
 /*-------------------------------------------------------------------------------------
- * 第3种方式：返回的结果类型为 []map[string]Value
+ * 第3种方式：返回的结果类型为 []map[string]xorm.Value
 -------------------------------------------------------------------------------------*/
-//Value类型本质是[]byte，但具有一系列类型转换函数
+//xorm.Value类型本质是[]byte，具有一系列类型转换函数
 sql_2_1 := "select * from user"
 results, err := engine.QueryValue(sql_2_1)
 
