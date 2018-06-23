@@ -96,6 +96,23 @@ func (session *Session) nocacheGet(beanKind reflect.Kind, table *core.Table, bea
 		return true, rows.Scan(&bean)
 	case *sql.NullInt64, *sql.NullBool, *sql.NullFloat64, *sql.NullString:
 		return true, rows.Scan(bean)
+	case *map[string]Value:
+		vv := reflect.ValueOf(bean)
+		if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+			return true, errors.New("dest should be a map's pointer")
+		}
+		vvv := vv.Elem()
+		tbean := make(map[string][]byte)
+		err = rows.ScanMap(&tbean)
+		if err != nil {
+			return true, err
+		}
+
+		for k, v := range tbean {
+			vvv.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(Value(v)))
+		}
+
+		return true, nil
 	}
 
 	switch beanKind {

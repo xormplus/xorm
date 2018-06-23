@@ -144,9 +144,8 @@ func row2mapValue(rows *core.Rows, fields []string) (resultsMap map[string]Value
 
 	for ii, key := range fields {
 		rawValue := reflect.Indirect(reflect.ValueOf(scanResultContainers[ii]))
-		//if row is null then ignore
 		if rawValue.Interface() == nil {
-			result[key] = []byte{}
+			result[key] = nil
 			continue
 		}
 

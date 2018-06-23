@@ -281,6 +281,9 @@ has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap1)
 var valuesMap2 = make(map[string]interface{})
 has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap2)
 
+var valuesMap3 = make(map[string]xorm.Value)
+has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap3)
+
 //获得单条数据某个字段的值
 var title string
 has, err := db.Sql("select title from article where id=?", 2).Get(&title)
