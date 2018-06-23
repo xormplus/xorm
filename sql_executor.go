@@ -108,8 +108,8 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				return nil, nil, model_1_results.Error
 			}
 
-			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Results))
-			resultSlice[0] = model_1_results.Results
+			resultSlice[0] = make([]map[string]interface{}, len(model_1_results.Result))
+			resultSlice[0] = model_1_results.Result
 			if sqlsExecutor.session.isSqlFunc == true {
 				err1 := sqlsExecutor.session.Commit()
 				if err1 != nil {
@@ -185,7 +185,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = model_1_results.Results
+					resultSlice[i] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -282,7 +282,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = model_1_results.Results
+					resultSlice[i] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -368,7 +368,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = model_1_results.Results
+					resultsMap[k] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -471,7 +471,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = model_1_results.Results
+					resultsMap[k] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {

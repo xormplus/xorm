@@ -72,7 +72,7 @@ func (sqlMap *SqlMap) paresSql(filepath string) error {
 	sqlMap.checkNilAndInit()
 
 	if strings.HasSuffix(filepath, sqlMap.Extension["xml"]) {
-		var result Result
+		var result XmlSql
 		err = xml.Unmarshal(content, &result)
 		if err != nil {
 			return err

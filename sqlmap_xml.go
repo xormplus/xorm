@@ -5,7 +5,7 @@ type XmlSqlMap struct {
 	extension     string
 }
 
-type Result struct {
+type XmlSql struct {
 	Sql []Sql `xml:"sql"`
 }
 

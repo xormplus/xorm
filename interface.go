@@ -52,6 +52,8 @@ type Interface interface {
 	QueryBytes(sqlOrAgrs ...interface{}) (resultsSlice []map[string][]byte, err error)
 	QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error)
 	QueryString(sqlorArgs ...interface{}) ([]map[string]string, error)
+	QueryValue(sqlorArgs ...interface{}) ([]map[string]Value, error)
+	QueryResult(sqlorArgs ...interface{}) (result *ResultValue)
 	Rows(bean interface{}) (*Rows, error)
 	SetExpr(string, string) *Session
 	SQL(interface{}, ...interface{}) *Session

@@ -158,6 +158,33 @@ func row2mapValue(rows *core.Rows, fields []string) (resultsMap map[string]Value
 	return result, nil
 }
 
+func row2Record(rows *core.Rows, fields []string) (record Record, err error) {
+	record = make(Record)
+	scanResultContainers := make([]interface{}, len(fields))
+	for i := 0; i < len(fields); i++ {
+		var scanResultContainer interface{}
+		scanResultContainers[i] = &scanResultContainer
+	}
+	if err := rows.Scan(scanResultContainers...); err != nil {
+		return nil, err
+	}
+
+	for ii, key := range fields {
+		rawValue := reflect.Indirect(reflect.ValueOf(scanResultContainers[ii]))
+		if rawValue.Interface() == nil {
+			record[key] = nil
+			continue
+		}
+
+		if data, err := value2Value(&rawValue); err == nil {
+			record[key] = data
+		} else {
+			return nil, err // !nashtsai! REVIEW, should return err or just error log?
+		}
+	}
+	return record, nil
+}
+
 func rows2maps(rows *core.Rows) (resultsSlice []map[string][]byte, err error) {
 	fields, err := rows.Columns()
 	if err != nil {
@@ -190,6 +217,22 @@ func rows2mapsValue(rows *core.Rows) (resultsSlice []map[string]Value, err error
 	return resultsSlice, nil
 }
 
+func rows2Result(rows *core.Rows) (result Result, err error) {
+	fields, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		r, err := row2mapValue(rows, fields)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, r)
+	}
+
+	return result, nil
+}
+
 func (session *Session) queryBytes(sqlStr string, args ...interface{}) ([]map[string][]byte, error) {
 	rows, err := session.queryRows(sqlStr, args...)
 	if err != nil {
@@ -208,6 +251,16 @@ func (session *Session) queryValue(sqlStr string, args ...interface{}) ([]map[st
 	defer rows.Close()
 
 	return rows2mapsValue(rows)
+}
+
+func (session *Session) queryResult(sqlStr string, args ...interface{}) (Result, error) {
+	rows, err := session.queryRows(sqlStr, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return rows2Result(rows)
 }
 
 func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, error) {

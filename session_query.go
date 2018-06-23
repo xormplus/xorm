@@ -121,6 +121,21 @@ func (session *Session) QueryValue(sqlorArgs ...interface{}) ([]map[string]Value
 
 }
 
+// Query runs a raw sql and return records as ResultValue
+func (session *Session) QueryResult(sqlorArgs ...interface{}) *ResultValue {
+	if session.isAutoClose {
+		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	if err != nil {
+		return &ResultValue{Error: err}
+	}
+
+	result, err := session.queryResult(sqlStr, args...)
+	return &ResultValue{Result: result, Error: err}
+}
+
 // Query runs a raw sql and return records as []map[string][]byte
 func (session *Session) QueryBytes(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {

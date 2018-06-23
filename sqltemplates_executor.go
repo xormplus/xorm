@@ -128,7 +128,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 				return nil, nil, model_1_results.Error
 			}
 
-			resultSlice[0] = model_1_results.Results
+			resultSlice[0] = model_1_results.Result
 			if sqlTemplatesExecutor.session.isSqlFunc == true {
 				err1 := sqlTemplatesExecutor.session.Commit()
 				if err1 != nil {
@@ -209,7 +209,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = model_1_results.Results
+					resultSlice[i] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -315,7 +315,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultSlice[i] = model_1_results.Results
+					resultSlice[i] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -410,7 +410,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = model_1_results.Results
+					resultsMap[k] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {
@@ -516,7 +516,7 @@ func (sqlTemplatesExecutor *SqlTemplatesExecutor) Execute() ([][]map[string]inte
 						return nil, nil, model_1_results.Error
 					}
 
-					resultsMap[k] = model_1_results.Results
+					resultsMap[k] = model_1_results.Result
 
 				} else if sqlModel == 2 {
 					if err != nil {

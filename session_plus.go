@@ -17,6 +17,50 @@ import (
 	"github.com/xormplus/core"
 )
 
+type Record map[string]Value
+type Result []Record
+
+type ResultValue struct {
+	Result Result
+	Error  error
+}
+
+func (resultValue *ResultValue) List() (Result, error) {
+	return resultValue.Result, resultValue.Error
+}
+
+func (resultValue *ResultValue) Count() (int, error) {
+	if resultValue.Error != nil {
+		return 0, resultValue.Error
+	}
+	if resultValue.Result == nil {
+		return 0, nil
+	}
+	return len(resultValue.Result), nil
+}
+
+func (resultValue *ResultValue) ListPage(firstResult int, maxResults int) (Result, error) {
+	if resultValue.Error != nil {
+		return nil, resultValue.Error
+	}
+	if resultValue.Result == nil {
+		return nil, nil
+	}
+	if firstResult > maxResults {
+		return nil, ErrParamsFormat
+	}
+	if firstResult < 0 {
+		return nil, ErrParamsFormat
+	}
+	if maxResults < 0 {
+		return nil, ErrParamsFormat
+	}
+	if maxResults > len(resultValue.Result) {
+		return nil, ErrParamsFormat
+	}
+	return resultValue.Result[(firstResult - 1):maxResults], resultValue.Error
+}
+
 type ResultBean struct {
 	Has    bool
 	Result interface{}
@@ -102,29 +146,29 @@ func (resultBean *ResultBean) XmlIndent(prefix string, indent string, recordTag 
 }
 
 type ResultMap struct {
-	Results []map[string]interface{}
-	Error   error
+	Result []map[string]interface{}
+	Error  error
 }
 
 func (resultMap *ResultMap) List() ([]map[string]interface{}, error) {
-	return resultMap.Results, resultMap.Error
+	return resultMap.Result, resultMap.Error
 }
 
 func (resultMap *ResultMap) Count() (int, error) {
 	if resultMap.Error != nil {
 		return 0, resultMap.Error
 	}
-	if resultMap.Results == nil {
+	if resultMap.Result == nil {
 		return 0, nil
 	}
-	return len(resultMap.Results), nil
+	return len(resultMap.Result), nil
 }
 
 func (resultMap *ResultMap) ListPage(firstResult int, maxResults int) ([]map[string]interface{}, error) {
 	if resultMap.Error != nil {
 		return nil, resultMap.Error
 	}
-	if resultMap.Results == nil {
+	if resultMap.Result == nil {
 		return nil, nil
 	}
 	if firstResult > maxResults {
@@ -136,10 +180,10 @@ func (resultMap *ResultMap) ListPage(firstResult int, maxResults int) ([]map[str
 	if maxResults < 0 {
 		return nil, ErrParamsFormat
 	}
-	if maxResults > len(resultMap.Results) {
+	if maxResults > len(resultMap.Result) {
 		return nil, ErrParamsFormat
 	}
-	return resultMap.Results[(firstResult - 1):maxResults], resultMap.Error
+	return resultMap.Result[(firstResult - 1):maxResults], resultMap.Error
 }
 
 func (resultMap *ResultMap) Json() (string, error) {
@@ -147,14 +191,14 @@ func (resultMap *ResultMap) Json() (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
-	return JSONString(resultMap.Results, true)
+	return JSONString(resultMap.Result, true)
 }
 
 func (resultMap *ResultMap) Xml() (string, error) {
 	if resultMap.Error != nil {
 		return "", resultMap.Error
 	}
-	results, err := anyxml.Xml(resultMap.Results)
+	results, err := anyxml.Xml(resultMap.Result)
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +210,7 @@ func (resultMap *ResultMap) XmlIndent(prefix string, indent string, recordTag st
 		return "", resultMap.Error
 	}
 
-	results, err := anyxml.XmlIndent(resultMap.Results, prefix, indent, recordTag)
+	results, err := anyxml.XmlIndent(resultMap.Result, prefix, indent, recordTag)
 	if err != nil {
 		return "", err
 	}
@@ -178,7 +222,7 @@ func (resultMap *ResultMap) SaveAsCSV(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, true)
 	if err != nil {
 		return err
 	}
@@ -196,7 +240,7 @@ func (resultMap *ResultMap) SaveAsTSV(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, true)
 	if err != nil {
 		return err
 	}
@@ -214,7 +258,7 @@ func (resultMap *ResultMap) SaveAsHTML(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, true)
 	if err != nil {
 		return err
 	}
@@ -229,7 +273,7 @@ func (resultMap *ResultMap) SaveAsXML(filename string, headers []string, perm os
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, false)
 	if err != nil {
 		return err
 	}
@@ -247,7 +291,7 @@ func (resultMap *ResultMap) SaveAsXMLWithTagNamePrefixIndent(tagName string, pri
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, false)
 	if err != nil {
 		return err
 	}
@@ -265,7 +309,7 @@ func (resultMap *ResultMap) SaveAsYAML(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, false)
 	if err != nil {
 		return err
 	}
@@ -283,7 +327,7 @@ func (resultMap *ResultMap) SaveAsJSON(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, false)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, false)
 	if err != nil {
 		return err
 	}
@@ -301,7 +345,7 @@ func (resultMap *ResultMap) SaveAsXLSX(filename string, headers []string, perm o
 		return resultMap.Error
 	}
 
-	dataset, err := NewDatasetWithData(headers, resultMap.Results, true)
+	dataset, err := NewDatasetWithData(headers, resultMap.Result, true)
 	if err != nil {
 		return err
 	}
@@ -504,7 +548,7 @@ func (session *Session) Query() *ResultMap {
 			}
 		}
 	}
-	r := &ResultMap{Results: result, Error: err}
+	r := &ResultMap{Result: result, Error: err}
 	return r
 }
 
@@ -548,7 +592,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 			}
 		}
 	}
-	r := &ResultMap{Results: result, Error: err}
+	r := &ResultMap{Result: result, Error: err}
 	return r
 }
 
