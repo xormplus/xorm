@@ -165,7 +165,7 @@ paramMap_2_3 := map[string]interface{}{"id": 2}
 results, err := db.SQL(sql_2_3, &paramMap_2_3).QueryValue()
 
 /*-------------------------------------------------------------------------------------
- * 第3种方式：返回的结果类型为 xorm.Result
+ * 第4种方式：返回的结果类型为 xorm.Result
 -------------------------------------------------------------------------------------*/
 //xorm.Value类型本质是[]byte，具有一系列类型转换函数
 sql_2_1 := "select * from user"
@@ -300,6 +300,12 @@ has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap2)
 
 var valuesMap3 = make(map[string]xorm.Value)
 has, err := db.Sql("select * from article where id=?", 2).Get(&valuesMap3)
+
+//获得单条数据的值并存为xorm.Record
+record := make(xorm.Record)
+has, err = session.SQL("select * from article where id=?", 2).Get(&record)
+id := record["id"].Int64()
+content := record["content"].NullString()
 
 //获得单条数据某个字段的值
 var title string
