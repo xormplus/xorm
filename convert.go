@@ -563,7 +563,7 @@ func String(i interface{}) string {
 	case uint64:
 		return strconv.FormatUint(uint64(value), 10)
 	case float32:
-		return strconv.FormatFloat(float64(value), 'f', -1, 64)
+		return strconv.FormatFloat(float64(value), 'f', -1, 32)
 	case float64:
 		return strconv.FormatFloat(value, 'f', -1, 64)
 	case bool:
