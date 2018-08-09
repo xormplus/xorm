@@ -156,7 +156,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			if session.statement.JoinStr == "" {
 				if columnStr == "" {
 					if session.statement.GroupByStr != "" {
-						columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
+						columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
 					} else {
 						columnStr = session.statement.genColumnStr()
 					}
@@ -164,7 +164,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			} else {
 				if columnStr == "" {
 					if session.statement.GroupByStr != "" {
-						columnStr = session.statement.Engine.Quote(strings.Replace(session.statement.GroupByStr, ",", session.engine.Quote(","), -1))
+						columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
 					} else {
 						columnStr = "*"
 					}
