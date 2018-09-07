@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// +build go1.8
+
 package xorm
 
 import (
@@ -17,7 +19,7 @@ import (
 
 const (
 	// Version show the xorm's version
-	Version string = "0.7.0.0624"
+	Version string = "0.7.0.0908"
 )
 
 func regDrvsNDialects() bool {
