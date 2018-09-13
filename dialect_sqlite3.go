@@ -457,5 +457,9 @@ type sqlite3Driver struct {
 }
 
 func (p *sqlite3Driver) Parse(driverName, dataSourceName string) (*core.Uri, error) {
+	if strings.Contains(dataSourceName, "?") {
+		dataSourceName = dataSourceName[:strings.Index(dataSourceName, "?")]
+	}
+
 	return &core.Uri{DbType: core.SQLITE, DbName: dataSourceName}, nil
 }
