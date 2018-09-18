@@ -760,7 +760,7 @@ func (session *Session) queryPreprocessByMap(sqlStr *string, paramMap interface{
 	}
 
 	*sqlStr = query
-	session.engine.logSQL(*sqlStr, paramMap)
+	session.engine.logSQL(session, *sqlStr, paramMap)
 }
 
 func (session *Session) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {
