@@ -7,13 +7,21 @@
 package xorm
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPingContext(t *testing.T) {
 	assert.NoError(t, prepareEngine())
+
+	ctx, canceled := context.WithTimeout(context.Background(), 10*time.Second)
+	defer canceled()
+
+	err := testEngine.(*Engine).PingContext(ctx)
+	assert.NoError(t, err)
 
 	// TODO: Since EngineInterface should be compitable with old Go version, PingContext is not supported.
 	/*
