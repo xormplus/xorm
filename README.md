@@ -1,5 +1,5 @@
 # xorm
-xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作非常简便。请加入原版xorm QQ群：280360085 进行讨论。本定制版API设计相关建议可联系本人QQ：50892683
+xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作非常简便。
 
 ## 说明
 
@@ -27,6 +27,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 支持记录版本（即乐观锁）
 * 支持查询结果集导出csv、tsv、xml、json、xlsx、yaml、html功能
 * 支持SQL Builder [github.com/go-xorm/builder](https://github.com/go-xorm/builder)
+* 上下文缓存支持
 
 ## 驱动支持
 
@@ -475,6 +476,50 @@ id := engine.SqlTemplateClient(key, &paramMap).Query().Results[0]["id"] //返回
 
 * 本xorm版本同时支持简单事务模型和嵌套事务模型进行事务处理，当使用简单事务模型进行事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法。注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。示例代码如下：
 
+* 事物的简写方法
+ ```Go
+res, err := engine.Transaction(func(sess *xorm.Session) (interface{}, error) {
+    user1 := Userinfo{Username: "xiaoxiao", Departname: "dev", Alias: "lunny", Created: time.Now()}
+    if _, err := session.Insert(&user1); err != nil {
+        return nil, err
+    }
+     user2 := Userinfo{Username: "yyy"}
+    if _, err := session.Where("id = ?", 2).Update(&user2); err != nil {
+        return nil, err
+    }
+     if _, err := session.Exec("delete from userinfo where username = ?", user2.Username); err != nil {
+        return nil, err
+    }
+    return nil, nil
+})
+```
+
+* Context Cache, if enabled, current query result will be cached on session and be used by next same statement on the same session.
+```Go
+	sess := engine.NewSession()
+	defer sess.Close()
+ 	var context = xorm.NewMemoryContextCache()
+ 	var c2 ContextGetStruct
+	has, err := sess.ID(1).ContextCache(context).Get(&c2)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, 1, c2.Id)
+	assert.EqualValues(t, "1", c2.Name)
+	sql, args := sess.LastSQL()
+	assert.True(t, len(sql) > 0)
+	assert.True(t, len(args) > 0)
+ 	var c3 ContextGetStruct
+	has, err = sess.ID(1).ContextCache(context).Get(&c3)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, 1, c3.Id)
+	assert.EqualValues(t, "1", c3.Name)
+	sql, args = sess.LastSQL()
+	assert.True(t, len(sql) == 0)
+	assert.True(t, len(args) == 0)
+```
+
+* 简单事务模型的一般用法
 ```go
 session := engine.NewSession()
 defer session.Close()
@@ -505,6 +550,8 @@ if err != nil {
     return
 }
 ```
+
+* 嵌套事务模型
 
 在实际业务开发过程中我们会发现依然还有一些特殊场景，我们需要借助嵌套事务来进行事务处理。本xorm版本也提供了嵌套事务的支持。当使用嵌套事务模型进行事务处理时，同样也需要创建Session对象，与使用简单事务模型进行事务处理不同在于，使用session.Begin()创建简单事务时，直接在同一个session下操作，而使用嵌套事务模型进行事务处理时候，使用session.BeginTrans()创建嵌套事务时，将返回Transaction实例，后续操作则在同一个Transaction实例下操作。在进行具体数据库操作时候，则使用tx.Session() API可以获得当前事务所持有的session会话，从而进行Get()，Find()，Execute()等具体数据库操作。
 
@@ -1152,4 +1199,4 @@ engine.ImportFile(fpath string)
 
 
 ## 讨论
-请加入QQ群：280360085 进行讨论。API设计相关建议可联系本人QQ：50892683
+请加入原版xorm QQ群一：280360085（已满）QQ群二：795010183 进行讨论。本定制版API设计相关建议可联系本人QQ：50892683
