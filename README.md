@@ -474,6 +474,8 @@ id := engine.SqlMapClient(key, &paramMap).Query().Results[0]["id"] //返回查�
 id := engine.SqlTemplateClient(key, &paramMap).Query().Results[0]["id"] //返回查询结果的第一条数据的id列的值
 ```
 
+# 事务模型
+
 * 本xorm版本同时支持简单事务模型和嵌套事务模型进行事务处理，当使用简单事务模型进行事务处理时，需要创建Session对象，另外当使用Sql()、SqlMapClient()、SqlTemplateClient()方法进行操作时也推荐手工创建Session对象方式管理Session。在进行事物处理时，可以混用ORM方法和RAW方法。注意如果您使用的是mysql，数据库引擎为innodb事务才有效，myisam引擎是不支持事务的。示例代码如下：
 
 * 事物的简写方法
