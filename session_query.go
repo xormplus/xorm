@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-xorm/builder"
+	"github.com/xormplus/builder"
 	"github.com/xormplus/core"
 )
 
@@ -383,4 +383,25 @@ func (session *Session) QueryInterface(sqlorArgs ...interface{}) ([]map[string]i
 	defer rows.Close()
 
 	return rows2Interfaces(rows)
+}
+
+// QueryExpr returns the query as bound SQL
+func (session *Session) QueryExpr(sqlorArgs ...interface{}) sqlExpr {
+	if session.isAutoClose {
+		defer session.Close()
+	}
+
+	sqlStr, args, err := session.genQuerySQL()
+	if err != nil {
+		session.engine.logger.Error(err)
+		return sqlExpr{sqlExpr: ""}
+	}
+
+	sqlStr, err = ConvertToBoundSQL(sqlStr, args)
+	if err != nil {
+		session.engine.logger.Error(err)
+		return sqlExpr{sqlExpr: ""}
+	}
+
+	return sqlExpr{sqlExpr: sqlStr}
 }

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/go-xorm/builder"
 	"github.com/stretchr/testify/assert"
+	"github.com/xormplus/builder"
 )
 
 func isFloatEq(i, j float64, precision int) bool {

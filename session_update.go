@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-xorm/builder"
+	"github.com/xormplus/builder"
 	"github.com/xormplus/core"
 )
 

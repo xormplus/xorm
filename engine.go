@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/go-xorm/builder"
+	"github.com/xormplus/builder"
 	"github.com/xormplus/core"
 )
 

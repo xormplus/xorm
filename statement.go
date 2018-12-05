@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-xorm/builder"
+	"github.com/xormplus/builder"
 	"github.com/xormplus/core"
 )
 
@@ -146,8 +146,22 @@ func (statement *Statement) Where(query interface{}, args ...interface{}) *State
 func (statement *Statement) And(query interface{}, args ...interface{}) *Statement {
 	switch query.(type) {
 	case string:
-		cond := builder.Expr(query.(string), args...)
-		statement.cond = statement.cond.And(cond)
+		isExpr := false
+		var cargs []interface{}
+		for i, _ := range args {
+			if _, ok := args[i].(sqlExpr); ok {
+				isExpr = true
+			}
+			cargs = append(cargs, args[i])
+		}
+		if isExpr {
+			sqlStr, _ := ConvertToBoundSQL(query.(string), cargs)
+			cond := builder.Expr(sqlStr)
+			statement.cond = statement.cond.And(cond)
+		} else {
+			cond := builder.Expr(query.(string), args...)
+			statement.cond = statement.cond.And(cond)
+		}
 	case map[string]interface{}:
 		cond := builder.Eq(query.(map[string]interface{}))
 		statement.cond = statement.cond.And(cond)
@@ -170,8 +184,23 @@ func (statement *Statement) And(query interface{}, args ...interface{}) *Stateme
 func (statement *Statement) Or(query interface{}, args ...interface{}) *Statement {
 	switch query.(type) {
 	case string:
-		cond := builder.Expr(query.(string), args...)
-		statement.cond = statement.cond.Or(cond)
+		isExpr := false
+		var cargs []interface{}
+		for i, _ := range args {
+			if _, ok := args[i].(sqlExpr); ok {
+				isExpr = true
+			}
+			cargs = append(cargs, args[i])
+		}
+		if isExpr {
+			sqlStr, _ := ConvertToBoundSQL(query.(string), cargs)
+			cond := builder.Expr(sqlStr)
+			statement.cond = statement.cond.Or(cond)
+		} else {
+			cond := builder.Expr(query.(string), args...)
+			statement.cond = statement.cond.Or(cond)
+		}
+
 	case map[string]interface{}:
 		cond := builder.Eq(query.(map[string]interface{}))
 		statement.cond = statement.cond.Or(cond)

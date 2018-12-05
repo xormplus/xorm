@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-xorm/builder"
+	"github.com/xormplus/builder"
 	"github.com/xormplus/core"
 )
 

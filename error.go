@@ -30,6 +30,8 @@ var (
 	ErrNotImplemented = errors.New("Not implemented")
 	// ErrConditionType condition type unsupported
 	ErrConditionType = errors.New("Unsupported condition type")
+	// ErrNeedMoreArguments need more arguments
+	ErrNeedMoreArguments = errors.New("Need more sql arguments")
 )
 
 // ErrFieldIsNotExist columns does not exist

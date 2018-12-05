@@ -1110,6 +1110,14 @@ err := engine.Table("user").Select("user.*, detail.*")
 // SELECT user.*, detail.* FROM user INNER JOIN detail WHERE user.name = ? limit 0 offset 10
 ```
 
+* 子查询
+
+```Go
+var student []Student
+err = db.Table("student").Select("id ,name").Where("id in (?)", db.Table("studentinfo").Select("id").Where("status = ?", 2).QueryExpr()).Find(&student)
+//SELECT id ,name FROM `student` WHERE (id in (SELECT id FROM `studentinfo` WHERE (status = 2)))
+```
+
 * 根据条件遍历数据库，可以有两种方式: Iterate and Rows
 
 ```Go
