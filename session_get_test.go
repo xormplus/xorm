@@ -325,13 +325,18 @@ func TestContextGet(t *testing.T) {
 		Id   int64
 		Name string
 	}
+
 	assert.NoError(t, prepareEngine())
 	assertSync(t, new(ContextGetStruct))
+
 	_, err := testEngine.Insert(&ContextGetStruct{Name: "1"})
 	assert.NoError(t, err)
+
 	sess := testEngine.NewSession()
 	defer sess.Close()
+
 	context := NewMemoryContextCache()
+
 	var c2 ContextGetStruct
 	has, err := sess.ID(1).NoCache().ContextCache(context).Get(&c2)
 	assert.NoError(t, err)
@@ -341,6 +346,7 @@ func TestContextGet(t *testing.T) {
 	sql, args := sess.LastSQL()
 	assert.True(t, len(sql) > 0)
 	assert.True(t, len(args) > 0)
+
 	var c3 ContextGetStruct
 	has, err = sess.ID(1).NoCache().ContextCache(context).Get(&c3)
 	assert.NoError(t, err)
@@ -357,21 +363,60 @@ func TestContextGet2(t *testing.T) {
 		Id   int64
 		Name string
 	}
+
 	assert.NoError(t, prepareEngine())
 	assertSync(t, new(ContextGetStruct2))
+
 	_, err := testEngine.Insert(&ContextGetStruct2{Name: "1"})
 	assert.NoError(t, err)
+
 	context := NewMemoryContextCache()
+
 	var c2 ContextGetStruct2
 	has, err := testEngine.ID(1).NoCache().ContextCache(context).Get(&c2)
 	assert.NoError(t, err)
 	assert.True(t, has)
 	assert.EqualValues(t, 1, c2.Id)
 	assert.EqualValues(t, "1", c2.Name)
+
 	var c3 ContextGetStruct2
 	has, err = testEngine.ID(1).NoCache().ContextCache(context).Get(&c3)
 	assert.NoError(t, err)
 	assert.True(t, has)
 	assert.EqualValues(t, 1, c3.Id)
 	assert.EqualValues(t, "1", c3.Name)
+}
+
+type GetCustomTableInterface interface {
+	TableName() string
+}
+
+type MyGetCustomTableImpletation struct {
+	Id   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+const getCustomTableName = "GetCustomTableInterface"
+
+func (m *MyGetCustomTableImpletation) TableName() string {
+	return getCustomTableName
+}
+
+func TestGetCustomTableInterface(t *testing.T) {
+	assert.NoError(t, prepareEngine())
+	assert.NoError(t, testEngine.Table(getCustomTableName).Sync2(new(MyGetCustomTableImpletation)))
+
+	exist, err := testEngine.IsTableExist(getCustomTableName)
+	assert.NoError(t, err)
+	assert.True(t, exist)
+
+	_, err = testEngine.Insert(&MyGetCustomTableImpletation{
+		Name: "xlw",
+	})
+	assert.NoError(t, err)
+
+	var c GetCustomTableInterface = new(MyGetCustomTableImpletation)
+	has, err := testEngine.Get(c)
+	assert.NoError(t, err)
+	assert.True(t, has)
 }
