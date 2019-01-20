@@ -18,6 +18,13 @@ import (
 	"github.com/xormplus/core"
 )
 
+type sessionType int
+
+const (
+	engineSession sessionType = iota
+	groupSession
+)
+
 // Session keep a pointer to sql.DB and provides all execution of all
 // kind of database operations.
 type Session struct {
@@ -56,7 +63,8 @@ type Session struct {
 
 	rollbackSavePointID string
 
-	ctx context.Context
+	ctx         context.Context
+	sessionType sessionType
 
 	err error
 }
