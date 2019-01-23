@@ -148,22 +148,8 @@ func (statement *Statement) Where(query interface{}, args ...interface{}) *State
 func (statement *Statement) And(query interface{}, args ...interface{}) *Statement {
 	switch query.(type) {
 	case string:
-		isExpr := false
-		var cargs []interface{}
-		for i, _ := range args {
-			if _, ok := args[i].(sqlExpr); ok {
-				isExpr = true
-			}
-			cargs = append(cargs, args[i])
-		}
-		if isExpr {
-			sqlStr, _ := ConvertToBoundSQL(query.(string), cargs)
-			cond := builder.Expr(sqlStr)
-			statement.cond = statement.cond.And(cond)
-		} else {
-			cond := builder.Expr(query.(string), args...)
-			statement.cond = statement.cond.And(cond)
-		}
+		cond := builder.Expr(query.(string), args...)
+		statement.cond = statement.cond.And(cond)
 	case map[string]interface{}:
 		cond := builder.Eq(query.(map[string]interface{}))
 		statement.cond = statement.cond.And(cond)
@@ -176,7 +162,7 @@ func (statement *Statement) And(query interface{}, args ...interface{}) *Stateme
 			}
 		}
 	default:
-		// TODO: not support condition type
+		statement.lastError = ErrConditionType
 	}
 
 	return statement
@@ -186,23 +172,8 @@ func (statement *Statement) And(query interface{}, args ...interface{}) *Stateme
 func (statement *Statement) Or(query interface{}, args ...interface{}) *Statement {
 	switch query.(type) {
 	case string:
-		isExpr := false
-		var cargs []interface{}
-		for i, _ := range args {
-			if _, ok := args[i].(sqlExpr); ok {
-				isExpr = true
-			}
-			cargs = append(cargs, args[i])
-		}
-		if isExpr {
-			sqlStr, _ := ConvertToBoundSQL(query.(string), cargs)
-			cond := builder.Expr(sqlStr)
-			statement.cond = statement.cond.Or(cond)
-		} else {
-			cond := builder.Expr(query.(string), args...)
-			statement.cond = statement.cond.Or(cond)
-		}
-
+		cond := builder.Expr(query.(string), args...)
+		statement.cond = statement.cond.Or(cond)
 	case map[string]interface{}:
 		cond := builder.Eq(query.(map[string]interface{}))
 		statement.cond = statement.cond.Or(cond)
@@ -1116,7 +1087,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit, n
 
 	if dialect.DBType() == core.MSSQL {
 		if statement.LimitN > 0 {
-			top = fmt.Sprintf(" TOP %d ", statement.LimitN)
+			top = fmt.Sprintf("TOP %d ", statement.LimitN)
 		}
 		if statement.Start > 0 {
 			var column string
