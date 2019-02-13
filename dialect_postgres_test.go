@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/stdlib"
+	"github.com/stretchr/testify/assert"
 	"github.com/xormplus/core"
 )
 
@@ -31,6 +32,7 @@ func TestParsePostgres(t *testing.T) {
 
 	for _, test := range tests {
 		uri, err := driver.Parse("postgres", test.in)
+
 		if err != nil && test.valid {
 			t.Errorf("%q got unexpected error: %s", test.in, err)
 		} else if err == nil && !reflect.DeepEqual(test.expected, uri.DbName) {
@@ -82,4 +84,38 @@ func TestParsePgx(t *testing.T) {
 
 	}
 
+}
+
+func TestGetIndexColName(t *testing.T) {
+	t.Run("Index", func(t *testing.T) {
+		s := "CREATE INDEX test2_mm_idx ON test2 (major);"
+		colNames := getIndexColName(s)
+		assert.Equal(t, []string{"major"}, colNames)
+	})
+
+	t.Run("Multicolumn indexes", func(t *testing.T) {
+		s := "CREATE INDEX test2_mm_idx ON test2 (major, minor);"
+		colNames := getIndexColName(s)
+		assert.Equal(t, []string{"major", "minor"}, colNames)
+	})
+
+	t.Run("Indexes and ORDER BY", func(t *testing.T) {
+		s := "CREATE INDEX test2_mm_idx ON test2 (major  NULLS FIRST, minor DESC NULLS LAST);"
+		colNames := getIndexColName(s)
+		assert.Equal(t, []string{"major", "minor"}, colNames)
+	})
+
+	t.Run("Combining Multiple Indexes", func(t *testing.T) {
+		s := "CREATE INDEX test2_mm_cm_idx ON public.test2 USING btree (major, minor) WHERE ((major <> 5) AND (minor <> 6))"
+		colNames := getIndexColName(s)
+		assert.Equal(t, []string{"major", "minor"}, colNames)
+	})
+
+	t.Run("unique", func(t *testing.T) {
+		s := "CREATE UNIQUE INDEX test2_mm_uidx ON test2 (major);"
+		colNames := getIndexColName(s)
+		assert.Equal(t, []string{"major"}, colNames)
+	})
+
+	t.Run("Indexes on Expressions", func(t *testing.T) {})
 }
