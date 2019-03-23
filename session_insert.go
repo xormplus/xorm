@@ -263,6 +263,7 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 	}
 	res, err := session.exec(sql, args...)
 	if err != nil {
+		session.engine.logger.Error(err)
 		return 0, err
 	}
 
@@ -512,6 +513,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 	} else {
 		res, err := session.exec(sqlStr, args...)
 		if err != nil {
+			session.engine.logger.Error(err)
 			return 0, err
 		}
 
@@ -697,6 +699,7 @@ func (session *Session) insertMapInterface(m map[string]interface{}) (int64, err
 
 	res, err := session.exec(sql, args...)
 	if err != nil {
+		session.engine.logger.Error(err)
 		return 0, err
 	}
 	affected, err := res.RowsAffected()
@@ -737,6 +740,7 @@ func (session *Session) insertMapString(m map[string]string) (int64, error) {
 
 	res, err := session.exec(sql, args...)
 	if err != nil {
+		session.engine.logger.Error(err)
 		return 0, err
 	}
 	affected, err := res.RowsAffected()
