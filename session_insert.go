@@ -263,7 +263,7 @@ func (session *Session) innerInsertMulti(rowsSlicePtr interface{}) (int64, error
 	}
 	res, err := session.exec(sql, args...)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		return 0, err
 	}
 
@@ -441,7 +441,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		if table.Version != "" && session.statement.checkVersion {
 			verValue, err := table.VersionColumn().ValueOf(bean)
 			if err != nil {
-				session.engine.logger.Error(err)
+				session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 			} else if verValue.IsValid() && verValue.CanSet() {
 				session.incrVersionFieldValue(verValue)
 			}
@@ -459,7 +459,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 
 		aiValue, err := table.AutoIncrColumn().ValueOf(bean)
 		if err != nil {
-			session.engine.logger.Error(err)
+			session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		}
 
 		if aiValue == nil || !aiValue.IsValid() || !aiValue.CanSet() {
@@ -482,7 +482,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		if table.Version != "" && session.statement.checkVersion {
 			verValue, err := table.VersionColumn().ValueOf(bean)
 			if err != nil {
-				session.engine.logger.Error(err)
+				session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 			} else if verValue.IsValid() && verValue.CanSet() {
 				session.incrVersionFieldValue(verValue)
 			}
@@ -500,7 +500,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 
 		aiValue, err := table.AutoIncrColumn().ValueOf(bean)
 		if err != nil {
-			session.engine.logger.Error(err)
+			session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		}
 
 		if aiValue == nil || !aiValue.IsValid() || !aiValue.CanSet() {
@@ -513,7 +513,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 	} else {
 		res, err := session.exec(sqlStr, args...)
 		if err != nil {
-			session.engine.logger.Error(err)
+			session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 			return 0, err
 		}
 
@@ -524,7 +524,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 		if table.Version != "" && session.statement.checkVersion {
 			verValue, err := table.VersionColumn().ValueOf(bean)
 			if err != nil {
-				session.engine.logger.Error(err)
+				session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 			} else if verValue.IsValid() && verValue.CanSet() {
 				session.incrVersionFieldValue(verValue)
 			}
@@ -542,7 +542,7 @@ func (session *Session) innerInsert(bean interface{}) (int64, error) {
 
 		aiValue, err := table.AutoIncrColumn().ValueOf(bean)
 		if err != nil {
-			session.engine.logger.Error(err)
+			session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		}
 
 		if aiValue == nil || !aiValue.IsValid() || !aiValue.CanSet() {
@@ -699,7 +699,7 @@ func (session *Session) insertMapInterface(m map[string]interface{}) (int64, err
 
 	res, err := session.exec(sql, args...)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		return 0, err
 	}
 	affected, err := res.RowsAffected()
@@ -740,7 +740,7 @@ func (session *Session) insertMapString(m map[string]string) (int64, error) {
 
 	res, err := session.exec(sql, args...)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("[SQL][%p] %v", session, err)
 		return 0, err
 	}
 	affected, err := res.RowsAffected()
