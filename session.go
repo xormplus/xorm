@@ -7,7 +7,6 @@ package xorm
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -499,13 +498,13 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 					continue
 				}
 				if fieldValue.CanAddr() {
-					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
+					err := DefaultJSONHandler.Unmarshal(bs, fieldValue.Addr().Interface())
 					if err != nil {
 						return nil, err
 					}
 				} else {
 					x := reflect.New(fieldType)
-					err := json.Unmarshal(bs, x.Interface())
+					err := DefaultJSONHandler.Unmarshal(bs, x.Interface())
 					if err != nil {
 						return nil, err
 					}
@@ -529,13 +528,13 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 			hasAssigned = true
 			if len(bs) > 0 {
 				if fieldValue.CanAddr() {
-					err := json.Unmarshal(bs, fieldValue.Addr().Interface())
+					err := DefaultJSONHandler.Unmarshal(bs, fieldValue.Addr().Interface())
 					if err != nil {
 						return nil, err
 					}
 				} else {
 					x := reflect.New(fieldType)
-					err := json.Unmarshal(bs, x.Interface())
+					err := DefaultJSONHandler.Unmarshal(bs, x.Interface())
 					if err != nil {
 						return nil, err
 					}
@@ -551,7 +550,7 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 						hasAssigned = true
 						if col.SQLType.IsText() {
 							x := reflect.New(fieldType)
-							err := json.Unmarshal(vv.Bytes(), x.Interface())
+							err := DefaultJSONHandler.Unmarshal(vv.Bytes(), x.Interface())
 							if err != nil {
 								return nil, err
 							}
@@ -666,7 +665,7 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 					hasAssigned = true
 					x := reflect.New(fieldType)
 					if len([]byte(vv.String())) > 0 {
-						err := json.Unmarshal([]byte(vv.String()), x.Interface())
+						err := DefaultJSONHandler.Unmarshal([]byte(vv.String()), x.Interface())
 						if err != nil {
 							return nil, err
 						}
@@ -676,7 +675,7 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 					hasAssigned = true
 					x := reflect.New(fieldType)
 					if len(vv.Bytes()) > 0 {
-						err := json.Unmarshal(vv.Bytes(), x.Interface())
+						err := DefaultJSONHandler.Unmarshal(vv.Bytes(), x.Interface())
 						if err != nil {
 							return nil, err
 						}
@@ -812,7 +811,7 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 			case core.Complex64Type:
 				var x complex64
 				if len([]byte(vv.String())) > 0 {
-					err := json.Unmarshal([]byte(vv.String()), &x)
+					err := DefaultJSONHandler.Unmarshal([]byte(vv.String()), &x)
 					if err != nil {
 						return nil, err
 					}
@@ -822,7 +821,7 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 			case core.Complex128Type:
 				var x complex128
 				if len([]byte(vv.String())) > 0 {
-					err := json.Unmarshal([]byte(vv.String()), &x)
+					err := DefaultJSONHandler.Unmarshal([]byte(vv.String()), &x)
 					if err != nil {
 						return nil, err
 					}
