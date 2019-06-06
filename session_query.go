@@ -15,9 +15,9 @@ import (
 	"github.com/xormplus/core"
 )
 
-func (session *Session) genQuerySQL(sqlorArgs ...interface{}) (string, []interface{}, error) {
-	if len(sqlorArgs) > 0 {
-		return convertSQLOrArgs(sqlorArgs...)
+func (session *Session) genQuerySQL(sqlOrArgs ...interface{}) (string, []interface{}, error) {
+	if len(sqlOrArgs) > 0 {
+		return convertSQLOrArgs(sqlOrArgs...)
 	}
 
 	if session.statement.RawSQL != "" {
@@ -97,12 +97,12 @@ func (session *Session) genQuerySQL(sqlorArgs ...interface{}) (string, []interfa
 	return sqlStr, args, nil
 }
 
-func (session *Session) QueryValue(sqlorArgs ...interface{}) ([]map[string]Value, error) {
+func (session *Session) QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,12 +112,12 @@ func (session *Session) QueryValue(sqlorArgs ...interface{}) ([]map[string]Value
 }
 
 // Query runs a raw sql and return records as ResultValue
-func (session *Session) QueryResult(sqlorArgs ...interface{}) *ResultValue {
+func (session *Session) QueryResult(sqlOrArgs ...interface{}) *ResultValue {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return &ResultValue{Error: err}
 	}
@@ -127,12 +127,12 @@ func (session *Session) QueryResult(sqlorArgs ...interface{}) *ResultValue {
 }
 
 // Query runs a raw sql and return records as []map[string][]byte
-func (session *Session) QueryBytes(sqlorArgs ...interface{}) ([]map[string][]byte, error) {
+func (session *Session) QueryBytes(sqlOrArgs ...interface{}) ([]map[string][]byte, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,12 +274,12 @@ func rows2SliceString(rows *core.Rows) (resultsSlice [][]string, err error) {
 	return resultsSlice, nil
 }
 
-func (session *Session) QueryRows(sqlorArgs ...interface{}) (*core.Rows, error) {
+func (session *Session) QueryRows(sqlOrArgs ...interface{}) (*core.Rows, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -293,12 +293,12 @@ func (session *Session) QueryRows(sqlorArgs ...interface{}) (*core.Rows, error) 
 }
 
 // QueryString runs a raw sql and return records as []map[string]string
-func (session *Session) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
+func (session *Session) QueryString(sqlOrArgs ...interface{}) ([]map[string]string, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -313,12 +313,12 @@ func (session *Session) QueryString(sqlorArgs ...interface{}) ([]map[string]stri
 }
 
 // QuerySliceString runs a raw sql and return records as [][]string
-func (session *Session) QuerySliceString(sqlorArgs ...interface{}) ([][]string, error) {
+func (session *Session) QuerySliceString(sqlOrArgs ...interface{}) ([][]string, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -366,12 +366,12 @@ func rows2Interfaces(rows *core.Rows) (resultsSlice []map[string]interface{}, er
 }
 
 // QueryInterface runs a raw sql and return records as []map[string]interface{}
-func (session *Session) QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error) {
+func (session *Session) QueryInterface(sqlOrArgs ...interface{}) ([]map[string]interface{}, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlorArgs...)
+	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +386,7 @@ func (session *Session) QueryInterface(sqlorArgs ...interface{}) ([]map[string]i
 }
 
 // QueryExpr returns the query as bound SQL
-func (session *Session) QueryExpr(sqlorArgs ...interface{}) sqlExpr {
+func (session *Session) QueryExpr(sqlOrArgs ...interface{}) sqlExpr {
 	if session.isAutoClose {
 		defer session.Close()
 	}

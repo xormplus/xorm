@@ -1363,45 +1363,45 @@ func (engine *Engine) DropIndexes(bean interface{}) error {
 }
 
 // Exec raw sql
-func (engine *Engine) Exec(sqlorArgs ...interface{}) (sql.Result, error) {
+func (engine *Engine) Exec(sqlOrArgs ...interface{}) (sql.Result, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.Exec(sqlorArgs...)
+	return session.Exec(sqlOrArgs...)
 }
 
 // Query a raw sql and return records as []map[string][]byte
-func (engine *Engine) QueryBytes(sqlorArgs ...interface{}) (resultsSlice []map[string][]byte, err error) {
+func (engine *Engine) QueryBytes(sqlOrArgs ...interface{}) (resultsSlice []map[string][]byte, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryBytes(sqlorArgs...)
+	return session.QueryBytes(sqlOrArgs...)
 }
 
 // Query a raw sql and return records as []map[string]Value
-func (engine *Engine) QueryValue(sqlorArgs ...interface{}) (resultsSlice []map[string]Value, err error) {
+func (engine *Engine) QueryValue(sqlOrArgs ...interface{}) (resultsSlice []map[string]Value, err error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryValue(sqlorArgs...)
+	return session.QueryValue(sqlOrArgs...)
 }
 
 // Query a raw sql and return records as Result
-func (engine *Engine) QueryResult(sqlorArgs ...interface{}) (result *ResultValue) {
+func (engine *Engine) QueryResult(sqlOrArgs ...interface{}) (result *ResultValue) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryResult(sqlorArgs...)
+	return session.QueryResult(sqlOrArgs...)
 }
 
 // QueryString runs a raw sql and return records as []map[string]string
-func (engine *Engine) QueryString(sqlorArgs ...interface{}) ([]map[string]string, error) {
+func (engine *Engine) QueryString(sqlOrArgs ...interface{}) ([]map[string]string, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryString(sqlorArgs...)
+	return session.QueryString(sqlOrArgs...)
 }
 
 // QueryInterface runs a raw sql and return records as []map[string]interface{}
-func (engine *Engine) QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error) {
+func (engine *Engine) QueryInterface(sqlOrArgs ...interface{}) ([]map[string]interface{}, error) {
 	session := engine.NewSession()
 	defer session.Close()
-	return session.QueryInterface(sqlorArgs...)
+	return session.QueryInterface(sqlOrArgs...)
 }
 
 // Insert one or more records

@@ -51,10 +51,10 @@ type Interface interface {
 	OrderBy(order string) *Session
 	Ping() error
 	QueryBytes(sqlOrAgrs ...interface{}) (resultsSlice []map[string][]byte, err error)
-	QueryInterface(sqlorArgs ...interface{}) ([]map[string]interface{}, error)
-	QueryString(sqlorArgs ...interface{}) ([]map[string]string, error)
-	QueryValue(sqlorArgs ...interface{}) ([]map[string]Value, error)
-	QueryResult(sqlorArgs ...interface{}) (result *ResultValue)
+	QueryInterface(sqlOrArgs ...interface{}) ([]map[string]interface{}, error)
+	QueryString(sqlOrArgs ...interface{}) ([]map[string]string, error)
+	QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error)
+	QueryResult(sqlOrArgs ...interface{}) (result *ResultValue)
 	Rows(bean interface{}) (*Rows, error)
 	SetExpr(string, string) *Session
 	SQL(interface{}, ...interface{}) *Session
