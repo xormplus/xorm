@@ -1175,6 +1175,13 @@ counts, err := engine.Count(&user)
 // SELECT count(*) AS total FROM user
 ```
 
+* `FindAndCount` combines function `Find` with `Count` which is usually used in query by page
+
+```Go
+var users []User
+counts, err := engine.FindAndCount(&users)
+```
+
 * 条件编辑器
 
 ```Go
