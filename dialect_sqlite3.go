@@ -202,10 +202,6 @@ func (db *sqlite3) Quote(name string) string {
 	return "`" + name + "`"
 }
 
-func (db *sqlite3) QuoteStr() string {
-	return "`"
-}
-
 func (db *sqlite3) AutoIncrStr() string {
 	return "AUTOINCREMENT"
 }
@@ -330,6 +326,7 @@ func (db *sqlite3) GetColumns(tableName string) ([]string, map[string]*core.Colu
 		col.Indexes = make(map[string]int)
 		col.Nullable = true
 		col.DefaultIsEmpty = true
+
 		for idx, field := range fields {
 			if idx == 0 {
 				col.Name = strings.Trim(strings.Trim(field, "`[] "), `"`)
