@@ -509,19 +509,15 @@ func (db *mysql) GetIndexes(tableName string) (map[string]*core.Index, error) {
 
 func (db *mysql) CreateIndexSql(tableName string, index *core.Index) string {
 	quote := db.Quote
-	//return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
-	//	quote(tableName), quote(strings.Join(index.Cols, quote(","))))
-	switch index.Type {
-	case 1:
-		return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
-			quote(tableName), quote(strings.Join(index.Cols, quote(","))))
-	case 2:
-		return fmt.Sprintf("CREATE UNIQUE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
-			quote(tableName), quote(strings.Join(index.Cols, quote(","))))
-	default:
-		return fmt.Sprintf("CREATE INDEX %v ON %v (%v);", quote(indexName(tableName, index.Name)),
-			quote(tableName), quote(strings.Join(index.Cols, quote(","))))
+	var unique string
+	var idxName string
+	if index.Type == core.UniqueType {
+		unique = " UNIQUE"
 	}
+	idxName = index.XName(tableName)
+	return fmt.Sprintf("CREATE%s INDEX %v ON %v (%v)", unique,
+		quote(idxName), quote(tableName),
+		quote(strings.Join(index.Cols, quote(","))))
 }
 
 func (db *mysql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
