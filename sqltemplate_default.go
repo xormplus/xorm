@@ -16,10 +16,15 @@ type HTMLTemplate struct {
 	Capacity           uint
 	Cipher             Cipher
 	Type               int
+	Funcs              map[string]FuncMap
 }
 
 func (sqlTemplate *HTMLTemplate) RootDir() string {
 	return sqlTemplate.SqlTemplateRootDir
+}
+
+func (sqlTemplate *HTMLTemplate) SetFuncs(key string, funcMap FuncMap) {
+	sqlTemplate.Funcs[key] = funcMap
 }
 
 func (sqlTemplate *HTMLTemplate) Extension() string {
@@ -53,14 +58,41 @@ func (sqlTemplate *HTMLTemplate) paresSqlTemplate(filename string, filepath stri
 	var err error
 	var content []byte
 
-	if sqlTemplate.Cipher == nil {
-		sqlt = template.Must(template.ParseFiles(filepath))
+	fmap := sqlTemplate.Funcs[filename]
+	if fmap != nil {
+		funcMap := make(template.FuncMap, 20)
+		for k := range fmap {
+			funcMap[k] = fmap[k]
+		}
+		sqlt = template.New(filename)
+		sqlt = sqlt.Funcs(funcMap)
+	}
+
+	if fmap == nil {
+		if sqlTemplate.Cipher == nil {
+			sqlt = template.Must(template.ParseFiles(filepath))
+		} else {
+			content, err = sqlTemplate.ReadTemplate(filepath)
+			if err != nil {
+				return err
+			}
+			sqlt = template.Must(template.New(filename).Parse(string(content)))
+		}
 	} else {
-		content, err = sqlTemplate.ReadTemplate(filepath)
+
+		if sqlTemplate.Cipher == nil {
+			sqlt, err = sqlt.ParseFiles(filepath)
+		} else {
+			content, err = sqlTemplate.ReadTemplate(filepath)
+			if err != nil {
+				return err
+			}
+			sqlt, err = sqlt.Parse(string(content))
+		}
 		if err != nil {
 			return err
 		}
-		sqlt = template.Must(template.New(filename).Parse(string(content)))
+
 	}
 
 	sqlTemplate.checkNilAndInit()

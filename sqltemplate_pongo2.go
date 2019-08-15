@@ -15,10 +15,15 @@ type Pongo2Template struct {
 	Capacity           uint
 	Cipher             Cipher
 	Type               int
+	Funcs              map[string]FuncMap
 }
 
 func (sqlTemplate *Pongo2Template) RootDir() string {
 	return sqlTemplate.SqlTemplateRootDir
+}
+
+func (sqlTemplate *Pongo2Template) SetFuncs(key string, funcMap FuncMap) {
+	sqlTemplate.Funcs[key] = funcMap
 }
 
 func (sqlTemplate *Pongo2Template) Extension() string {

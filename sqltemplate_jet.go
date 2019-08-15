@@ -15,10 +15,15 @@ type JetTemplate struct {
 	extension          string
 	Capacity           uint
 	Cipher             Cipher
+	Funcs              map[string]FuncMap
 }
 
 func (sqlTemplate *JetTemplate) RootDir() string {
 	return sqlTemplate.SqlTemplateRootDir
+}
+
+func (sqlTemplate *JetTemplate) SetFuncs(key string, funcMap FuncMap) {
+	sqlTemplate.Funcs[key] = funcMap
 }
 
 func (sqlTemplate *JetTemplate) Extension() string {
