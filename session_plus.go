@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Chronokeeper/anyxml"
 	"github.com/xormplus/core"
@@ -626,6 +627,26 @@ func (session *Session) Execute() (sql.Result, error) {
 func (session *Session) queryAll(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
+	if session.engine.showSQL {
+		if session.engine.showExecTime {
+			b4ExecTime := time.Now()
+			defer func() {
+				execDuration := time.Since(b4ExecTime)
+				if len(paramStr) > 0 {
+					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, paramStr, execDuration)
+				} else {
+					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
+				}
+			}()
+		} else {
+			if len(paramStr) > 0 {
+				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
+			} else {
+				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
+			}
+		}
+	}
+
 	if session.isAutoCommit {
 		return query3(session.DB(), sqlStr, paramStr...)
 	}
@@ -637,6 +658,26 @@ func (session *Session) queryAllByMap(sqlStr string, paramMap interface{}) (resu
 
 	session.queryPreprocess(&sqlStr1, param...)
 
+	if session.engine.showSQL {
+		if session.engine.showExecTime {
+			b4ExecTime := time.Now()
+			defer func() {
+				execDuration := time.Since(b4ExecTime)
+				if len(param) > 0 {
+					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr1, param, execDuration)
+				} else {
+					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr1, execDuration)
+				}
+			}()
+		} else {
+			if len(param) > 0 {
+				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
+			} else {
+				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
+			}
+		}
+	}
+
 	if session.isAutoCommit {
 		return query3(session.DB(), sqlStr1, param...)
 	}
@@ -647,6 +688,26 @@ func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr st
 	sqlStr1, param, _ := core.MapToSlice(sqlStr, paramMap)
 	session.queryPreprocess(&sqlStr1, param...)
 
+	if session.engine.showSQL {
+		if session.engine.showExecTime {
+			b4ExecTime := time.Now()
+			defer func() {
+				execDuration := time.Since(b4ExecTime)
+				if len(param) > 0 {
+					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr1, param, execDuration)
+				} else {
+					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr1, execDuration)
+				}
+			}()
+		} else {
+			if len(param) > 0 {
+				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
+			} else {
+				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
+			}
+		}
+	}
+
 	if session.isAutoCommit {
 		return query3WithDateFormat(session.DB(), dateFormat, sqlStr1, param...)
 	}
@@ -655,6 +716,26 @@ func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr st
 
 func (session *Session) queryAllWithDateFormat(dateFormat string, sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
+
+	if session.engine.showSQL {
+		if session.engine.showExecTime {
+			b4ExecTime := time.Now()
+			defer func() {
+				execDuration := time.Since(b4ExecTime)
+				if len(paramStr) > 0 {
+					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, paramStr, execDuration)
+				} else {
+					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
+				}
+			}()
+		} else {
+			if len(paramStr) > 0 {
+				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
+			} else {
+				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
+			}
+		}
+	}
 
 	if session.isAutoCommit {
 		return query3WithDateFormat(session.DB(), dateFormat, sqlStr, paramStr...)
