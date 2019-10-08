@@ -119,11 +119,12 @@ func (sqlTemplate *Pongo2Template) paresSqlTemplate(filename string, filepath st
 		if err != nil {
 			return err
 		}
+		
+		sqlTemplate.checkNilAndInit()
+
+		sqlTemplate.Template[filename] = sqlt
 	}
 
-	sqlTemplate.checkNilAndInit()
-
-	sqlTemplate.Template[filename] = sqlt
 	return nil
 
 }
