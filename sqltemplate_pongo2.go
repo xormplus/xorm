@@ -58,9 +58,57 @@ func (sqlTemplate *Pongo2Template) paresSqlTemplate(filename string, filepath st
 	var content []byte
 
 	if sqlTemplate.Cipher == nil {
-		sqlt, err = pongo2.FromFile(filepath)
-		if err != nil {
-			return err
+		buf, err2 := ioutil.ReadFile(filepath)
+		if err2 != nil {
+			return err2
+		}
+		var sqlId []byte
+		var sqlValue []byte
+		var loaded string
+		addSqlValue := false
+		addSqlId := false
+		for _, b := range buf {
+			if len(loaded) >3 && "#id:" == loaded[len(loaded)-4:]{
+				addSqlId = true
+				addSqlValue = false
+				if len(sqlId)>0 && len(sqlValue)>0 {
+					sqlt, err = pongo2.FromString(string(sqlValue)[0:len(sqlValue)-4])
+					if err != nil {
+						return err
+					}
+					sqlTemplate.checkNilAndInit()
+					sqlTemplate.Template[filename+"."+string(sqlId)] = sqlt
+					sqlId = nil
+					sqlValue = nil
+				}
+
+			}
+			if addSqlId && string(b) == "\n"{
+				addSqlId = false
+				addSqlValue = true
+			}
+			if addSqlId {
+				sqlId = append(sqlId, b)
+			}
+			if addSqlValue {
+				sqlValue = append(sqlValue, b)
+			}
+			loaded = loaded+string(b)
+		}
+		if len(sqlId)>0 && len(sqlValue)>0 {
+			sqlt, err = pongo2.FromString(string(sqlValue))
+			if err != nil {
+				return err
+			}
+			sqlTemplate.checkNilAndInit()
+			sqlTemplate.Template[filename+"."+string(sqlId)] = sqlt
+		} else {
+			sqlt, err = pongo2.FromFile(filepath)
+			if err != nil {
+				return err
+			}
+			sqlTemplate.checkNilAndInit()
+			sqlTemplate.Template[filename] = sqlt
 		}
 	} else {
 		content, err = sqlTemplate.ReadTemplate(filepath)
