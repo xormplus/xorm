@@ -45,8 +45,24 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 		var sql = session.statement.RawSQL
 		session.autoResetStatement = true
 		sql = "select count(1) from (" + sql + ") t"
+		params := session.statement.RawParams
+		i := len(params)
+		var sqlStr string
+		var args []interface{}
+		if i == 1 {
+			vv := reflect.ValueOf(params[0])
+			if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
+				sqlStr = sql
+				args = params
+			} else {
+				sqlStr, args, _ = core.MapToSlice(sql, params[0])
+			}
+		} else {
+			sqlStr = sql
+			args = params
+		}
 		var count int64
-		_, err = session.SQL(sql).Get(&count)
+		_, err = session.SQL(sqlStr,args...).Get(&count)
 		if err != nil {
 			return 0, err
 		}
