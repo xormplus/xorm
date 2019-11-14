@@ -34,7 +34,7 @@ func (session *Session) Count(bean ...interface{}) (int64, error) {
 	var count int64
 	_, err = session.SQL(sqlStr,args...).Get(&count)
 	if err == sql.ErrNoRows || err == nil {
-		return total, nil
+		return count, nil
 	}
 
 	return 0, err
