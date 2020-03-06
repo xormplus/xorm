@@ -723,7 +723,7 @@ func (statement *Statement) OrderBy(order string) *Statement {
 
 // Desc generate `ORDER BY xx DESC`
 func (statement *Statement) Desc(colNames ...string) *Statement {
-	var buf builder.StringBuilder
+	var buf strings.Builder
 	if len(statement.OrderStr) > 0 {
 		fmt.Fprint(&buf, statement.OrderStr, ", ")
 	}
@@ -735,7 +735,7 @@ func (statement *Statement) Desc(colNames ...string) *Statement {
 
 // Asc provide asc order by query condition, the input parameters are columns.
 func (statement *Statement) Asc(colNames ...string) *Statement {
-	var buf builder.StringBuilder
+	var buf strings.Builder
 	if len(statement.OrderStr) > 0 {
 		fmt.Fprint(&buf, statement.OrderStr, ", ")
 	}
@@ -764,7 +764,7 @@ func (statement *Statement) Table(tableNameOrBean interface{}) *Statement {
 
 // Join The joinOP should be one of INNER, LEFT OUTER, CROSS etc - this will be prepended to JOIN
 func (statement *Statement) Join(joinOP string, tablename interface{}, condition string, args ...interface{}) *Statement {
-	var buf builder.StringBuilder
+	var buf strings.Builder
 	if len(statement.JoinStr) > 0 {
 		fmt.Fprintf(&buf, "%v %v JOIN ", statement.JoinStr, joinOP)
 	} else {
@@ -829,7 +829,7 @@ func (statement *Statement) genColumnStr() string {
 		return ""
 	}
 
-	var buf builder.StringBuilder
+	var buf strings.Builder
 	columns := statement.RefTable.Columns()
 
 	for _, col := range columns {
@@ -1144,7 +1144,7 @@ func (statement *Statement) genSelectSQL(columnStr, condSQL string, needLimit, n
 		}
 	}
 
-	var buf builder.StringBuilder
+	var buf strings.Builder
 	fmt.Fprintf(&buf, "SELECT %v%v%v%v%v", distinct, top, columnStr, fromStr, whereStr)
 	if len(mssqlCondi) > 0 {
 		if len(whereStr) > 0 {
