@@ -738,7 +738,7 @@ func (engine *Engine) Decr(column string, args ...interface{}) *Session {
 }
 
 // SetExpr provides a update string like "column = {expression}"
-func (engine *Engine) SetExpr(column string, expression string) *Session {
+func (engine *Engine) SetExpr(column string, expression interface{}) *Session {
 	session := engine.NewSession()
 	session.isAutoClose = true
 	return session.SetExpr(column, expression)

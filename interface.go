@@ -56,7 +56,7 @@ type Interface interface {
 	QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error)
 	QueryResult(sqlOrArgs ...interface{}) (result *ResultValue)
 	Rows(bean interface{}) (*Rows, error)
-	SetExpr(string, string) *Session
+	SetExpr(string, interface{}) *Session
 	SQL(interface{}, ...interface{}) *Session
 	Sum(bean interface{}, colName string) (float64, error)
 	SumInt(bean interface{}, colName string) (int64, error)
