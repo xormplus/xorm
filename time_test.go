@@ -255,10 +255,12 @@ func TestTimeUserDeleted(t *testing.T) {
 	assert.NoError(t, prepareEngine())
 
 	type UserDeleted struct {
-		Id        string
-		CreatedAt time.Time `xorm:"created"`
-		UpdatedAt time.Time `xorm:"updated"`
-		DeletedAt time.Time `xorm:"deleted"`
+		Id           string
+		CreatedAt    time.Time `xorm:"created"`
+		UpdatedAt    time.Time `xorm:"updated"`
+		DeletedAt    time.Time `xorm:"deleted"`
+		CreatedAtStr string    `xorm:"datetime created"`
+		UpdatedAtStr string    `xorm:"datetime updated"`
 	}
 
 	assertSync(t, new(UserDeleted))
