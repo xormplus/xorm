@@ -371,9 +371,17 @@ func TestJoinWithSubQuery(t *testing.T) {
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, cnt)
 
+	tbName := testEngine.Quote(testEngine.TableName("join_with_sub_query_depart", true))
 	var querys []JoinWithSubQuery1
-	err = testEngine.Join("INNER", builder.Select("id").From(testEngine.Quote(testEngine.TableName("join_with_sub_query_depart", true))),
+	err = testEngine.Join("INNER", builder.Select("id").From(tbName),
 		"join_with_sub_query_depart.id = join_with_sub_query1.depart_id").Find(&querys)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(querys))
+	assert.EqualValues(t, q, querys[0])
+
+	querys = make([]JoinWithSubQuery1, 0, 1)
+	err = testEngine.Join("INNER", "(SELECT id FROM "+tbName+") join_with_sub_query_depart", "join_with_sub_query_depart.id = join_with_sub_query1.depart_id").
+		Find(&querys)
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, len(querys))
 	assert.EqualValues(t, q, querys[0])
