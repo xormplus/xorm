@@ -275,7 +275,7 @@ func (statement *Statement) buildUpdates(bean interface{},
 		if !includeVersion && col.IsVersion {
 			continue
 		}
-		if col.IsCreated {
+		if col.IsCreated && !columnMap.contain(col.Name) {
 			continue
 		}
 		if !includeUpdated && col.IsUpdated {
