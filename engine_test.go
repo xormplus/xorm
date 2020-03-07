@@ -5,6 +5,7 @@
 package xorm
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,4 +57,33 @@ func TestAutoIncrTag(t *testing.T) {
 	assert.False(t, cols[0].IsAutoIncrement)
 	assert.True(t, cols[0].IsPrimaryKey)
 	assert.Equal(t, "id", cols[0].Name)
+}
+
+func TestQuoteTo(t *testing.T) {
+
+	test := func(t *testing.T, expected string, value string) {
+		buf := &strings.Builder{}
+		quoteTo(buf, "[]", value)
+		assert.EqualValues(t, expected, buf.String())
+	}
+
+	test(t, "[mytable]", "mytable")
+	test(t, "[mytable]", "`mytable`")
+	test(t, "[mytable]", `[mytable]`)
+
+	test(t, `["mytable"]`, `"mytable"`)
+
+	test(t, "[myschema].[mytable]", "myschema.mytable")
+	test(t, "[myschema].[mytable]", "`myschema`.mytable")
+	test(t, "[myschema].[mytable]", "myschema.`mytable`")
+	test(t, "[myschema].[mytable]", "`myschema`.`mytable`")
+	test(t, "[myschema].[mytable]", `[myschema].mytable`)
+	test(t, "[myschema].[mytable]", `myschema.[mytable]`)
+	test(t, "[myschema].[mytable]", `[myschema].[mytable]`)
+
+	test(t, `["myschema].[mytable"]`, `"myschema.mytable"`)
+
+	buf := &strings.Builder{}
+	quoteTo(buf, "", "noquote")
+	assert.EqualValues(t, "noquote", buf.String())
 }
