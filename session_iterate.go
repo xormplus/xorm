@@ -4,7 +4,9 @@
 
 package xorm
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // IterFunc only use by Iterate
 type IterFunc func(idx int, bean interface{}) error
@@ -60,10 +62,6 @@ func (session *Session) BufferSize(size int) *Session {
 }
 
 func (session *Session) bufferIterate(bean interface{}, fun IterFunc) error {
-	if session.isAutoClose {
-		defer session.Close()
-	}
-
 	var bufferSize = session.statement.bufferSize
 	var limit = session.statement.LimitN
 	if limit > 0 && bufferSize > limit {
@@ -73,9 +71,14 @@ func (session *Session) bufferIterate(bean interface{}, fun IterFunc) error {
 	v := rValue(bean)
 	sliceType := reflect.SliceOf(v.Type())
 	var idx = 0
-	for {
+	session.autoResetStatement = false
+	defer func() {
+		session.autoResetStatement = true
+	}()
+
+	for bufferSize > 0 {
 		slice := reflect.New(sliceType)
-		if err := session.Limit(bufferSize, start).find(slice.Interface(), bean); err != nil {
+		if err := session.NoCache().Limit(bufferSize, start).find(slice.Interface(), bean); err != nil {
 			return err
 		}
 
@@ -86,13 +89,13 @@ func (session *Session) bufferIterate(bean interface{}, fun IterFunc) error {
 			idx++
 		}
 
-		start = start + slice.Elem().Len()
-		if limit > 0 && idx+bufferSize > limit {
-			bufferSize = limit - idx
+		if bufferSize > slice.Elem().Len() {
+			break
 		}
 
-		if bufferSize <= 0 || slice.Elem().Len() < bufferSize || idx == limit {
-			break
+		start = start + slice.Elem().Len()
+		if limit > 0 && start+bufferSize > limit {
+			bufferSize = limit - start
 		}
 	}
 
