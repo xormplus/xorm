@@ -930,7 +930,7 @@ func (engine *Engine) mapType(v reflect.Value) (*core.Table, error) {
 	t := v.Type()
 	table := core.NewEmptyTable()
 	table.Type = t
-	table.Name = engine.tbNameForMap(v)
+	table.Name = getTableName(engine.TableMapper, v)
 
 	var idFieldColName string
 	var hasCacheTag, hasNoCacheTag bool

@@ -480,7 +480,7 @@ type MyGetCustomTableImpletation struct {
 
 const getCustomTableName = "GetCustomTableInterface"
 
-func (m *MyGetCustomTableImpletation) TableName() string {
+func (MyGetCustomTableImpletation) TableName() string {
 	return getCustomTableName
 }
 

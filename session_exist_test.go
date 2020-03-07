@@ -162,6 +162,10 @@ func TestExistStructForJoin(t *testing.T) {
 	err = session.DropTable("order_list")
 	assert.NoError(t, err)
 
+	exist, err := session.IsTableExist("order_list")
+	assert.NoError(t, err)
+	assert.False(t, exist)
+
 	session.Table("number").
 		Select("player.id").
 		Join("INNER", "order_list", "order_list.id = number.lid").

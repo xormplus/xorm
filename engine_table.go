@@ -44,20 +44,6 @@ func (session *Session) tbNameNoSchema(table *core.Table) string {
 	return table.Name
 }
 
-func (engine *Engine) tbNameForMap(v reflect.Value) string {
-	if v.Type().Implements(tpTableName) {
-		return v.Interface().(TableName).TableName()
-	}
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-		if v.Type().Implements(tpTableName) {
-			return v.Interface().(TableName).TableName()
-		}
-	}
-
-	return engine.TableMapper.Obj2Table(v.Type().Name())
-}
-
 func (engine *Engine) tbNameNoSchema(tablename interface{}) string {
 	switch tablename.(type) {
 	case []string:
@@ -82,7 +68,7 @@ func (engine *Engine) tbNameNoSchema(tablename interface{}) string {
 				v := rValue(f)
 				t := v.Type()
 				if t.Kind() == reflect.Struct {
-					table = engine.tbNameForMap(v)
+					table = getTableName(engine.TableMapper, v)
 				} else {
 					table = engine.Quote(fmt.Sprintf("%v", f))
 				}
@@ -100,12 +86,12 @@ func (engine *Engine) tbNameNoSchema(tablename interface{}) string {
 		return tablename.(string)
 	case reflect.Value:
 		v := tablename.(reflect.Value)
-		return engine.tbNameForMap(v)
+		return getTableName(engine.TableMapper, v)
 	default:
 		v := rValue(tablename)
 		t := v.Type()
 		if t.Kind() == reflect.Struct {
-			return engine.tbNameForMap(v)
+			return getTableName(engine.TableMapper, v)
 		}
 		return engine.Quote(fmt.Sprintf("%v", tablename))
 	}
