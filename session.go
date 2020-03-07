@@ -59,6 +59,7 @@ type Session struct {
 	//beforeSQLExec func(string, ...interface{})
 	lastSQL     string
 	lastSQLArgs []interface{}
+	showSQL     bool
 
 	rollbackSavePointID string
 
@@ -78,6 +79,7 @@ func (session *Session) Clone() *Session {
 func (session *Session) Init() {
 	session.statement.Init()
 	session.statement.Engine = session.engine
+	session.showSQL = session.engine.showSQL
 	session.isAutoCommit = true
 	session.isCommitedOrRollbacked = false
 	session.isAutoClose = false
@@ -230,6 +232,16 @@ func (session *Session) Charset(charset string) *Session {
 func (session *Session) Cascade(trueOrFalse ...bool) *Session {
 	if len(trueOrFalse) >= 1 {
 		session.statement.UseCascade = trueOrFalse[0]
+	}
+	return session
+}
+
+// MustLogSQL means record SQL or not and don't follow engine's setting
+func (session *Session) MustLogSQL(log ...bool) *Session {
+	if len(log) > 0 {
+		session.showSQL = log[0]
+	} else {
+		session.showSQL = true
 	}
 	return session
 }
@@ -850,7 +862,17 @@ func (session *Session) slice2Bean(scanResults []interface{}, fields []string, b
 func (session *Session) saveLastSQL(sql string, args ...interface{}) {
 	session.lastSQL = sql
 	session.lastSQLArgs = args
-	session.engine.logSQL(session, sql, args...)
+	session.logSQL(sql, args...)
+}
+
+func (session *Session) logSQL(sqlStr string, sqlArgs ...interface{}) {
+	if session.showSQL && !session.engine.showExecTime {
+		if len(sqlArgs) > 0 {
+			session.engine.logger.Infof("[SQL] %v %#v", sqlStr, sqlArgs)
+		} else {
+			session.engine.logger.Infof("[SQL] %v", sqlStr)
+		}
+	}
 }
 
 // LastSQL returns last query information
