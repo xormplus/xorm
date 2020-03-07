@@ -26,14 +26,17 @@ var (
 	dbType     string
 	connString string
 
-	db         = flag.String("db", "sqlite3", "the tested database")
-	showSQL    = flag.Bool("show_sql", true, "show generated SQLs")
-	ptrConnStr = flag.String("conn_str", "./test.db?cache=shared&mode=rwc", "test database connection string")
-	mapType    = flag.String("map_type", "snake", "indicate the name mapping")
-	cache      = flag.Bool("cache", false, "if enable cache")
-	cluster    = flag.Bool("cluster", false, "if this is a cluster")
-	splitter   = flag.String("splitter", ";", "the splitter on connstr for cluster")
-	schema     = flag.String("schema", "", "specify the schema")
+	db                 = flag.String("db", "sqlite3", "the tested database")
+	showSQL            = flag.Bool("show_sql", true, "show generated SQLs")
+	ptrConnStr         = flag.String("conn_str", "./test.db?cache=shared&mode=rwc", "test database connection string")
+	mapType            = flag.String("map_type", "snake", "indicate the name mapping")
+	cache              = flag.Bool("cache", false, "if enable cache")
+	cluster            = flag.Bool("cluster", false, "if this is a cluster")
+	splitter           = flag.String("splitter", ";", "the splitter on connstr for cluster")
+	schema             = flag.String("schema", "", "specify the schema")
+	ignoreSelectUpdate = flag.Bool("ignore_select_update", false, "ignore select update if implementation difference, only for tidb")
+	tableMapper        core.IMapper
+	colMapper          core.IMapper
 )
 
 func createEngine(dbType, connStr string) error {
@@ -112,6 +115,9 @@ func createEngine(dbType, connStr string) error {
 			}
 		}
 	}
+
+	tableMapper = testEngine.GetTableMapper()
+	colMapper = testEngine.GetColumnMapper()
 
 	tables, err := testEngine.DBMetas()
 	if err != nil {
