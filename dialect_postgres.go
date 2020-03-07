@@ -901,7 +901,7 @@ func (db *postgres) TableCheckSql(tableName string) (string, []interface{}) {
 }
 
 func (db *postgres) ModifyColumnSql(tableName string, col *core.Column) string {
-	if len(db.Schema) == 0 {
+	if len(db.Schema) == 0 || strings.Contains(tableName, ".") {
 		return fmt.Sprintf("alter table %s ALTER COLUMN %s TYPE %s",
 			tableName, col.Name, db.SqlType(col))
 	}
@@ -928,17 +928,23 @@ func (db *postgres) CreateIndexSql(tableName string, index *core.Index) string {
 
 func (db *postgres) DropIndexSql(tableName string, index *core.Index) string {
 	quote := db.Quote
-	var idxName string
-	if index.IsRegular {
-		idxName = index.XName(tableName)
-	} else {
-		idxName = index.Name
-	}
+	idxName := index.Name
 
+	tableParts := strings.Split(strings.Replace(tableName, `"`, "", -1), ".")
+	tableName = tableParts[len(tableParts)-1]
+
+	if !strings.HasPrefix(idxName, "UQE_") &&
+		!strings.HasPrefix(idxName, "IDX_") {
+		if index.Type == core.UniqueType {
+			idxName = fmt.Sprintf("UQE_%v_%v", tableName, index.Name)
+		} else {
+			idxName = fmt.Sprintf("IDX_%v_%v", tableName, index.Name)
+		}
+	}
 	if db.Uri.Schema != "" {
 		idxName = db.Uri.Schema + "." + idxName
 	}
-	return fmt.Sprintf("DROP INDEX %v ON %s", quote(idxName), quote(tableName))
+	return fmt.Sprintf("DROP INDEX %v", quote(idxName))
 }
 
 func (db *postgres) IsColumnExist(tableName, colName string) (bool, error) {
