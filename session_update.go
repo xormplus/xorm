@@ -510,7 +510,7 @@ func (session *Session) genUpdateColumns(bean interface{}) ([]string, []interfac
 
 		// !evalphobia! set fieldValue as nil when column is nullable and zero-value
 		if _, ok := getFlagForColumn(session.statement.nullableMap, col); ok {
-			if col.Nullable && isZero(fieldValue.Interface()) {
+			if col.Nullable && isZeroValue(fieldValue) {
 				var nilValue *int
 				fieldValue = reflect.ValueOf(nilValue)
 			}
