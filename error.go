@@ -33,7 +33,7 @@ var (
 	// ErrNeedMoreArguments need more arguments
 	ErrNeedMoreArguments = errors.New("Need more sql arguments")
 	// ErrUnSupportedSQLType parameter of SQL is not supported
-	ErrUnSupportedSQLType = errors.New("unsupported sql type")
+	ErrUnSupportedSQLType = errors.New("Unsupported sql type")
 )
 
 // ErrFieldIsNotExist columns does not exist

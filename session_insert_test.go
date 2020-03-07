@@ -1040,3 +1040,38 @@ func TestInsertMultiWithOmit(t *testing.T) {
 	assert.EqualValues(t, 3, num)
 	check()
 }
+
+func TestInsertTwice(t *testing.T) {
+	assert.NoError(t, prepareEngine())
+
+	type InsertStructA struct {
+		FieldA int
+	}
+
+	type InsertStructB struct {
+		FieldB int
+	}
+
+	assert.NoError(t, testEngine.Sync2(new(InsertStructA), new(InsertStructB)))
+
+	var sliceA []InsertStructA // sliceA is empty
+	sliceB := []InsertStructB{
+		InsertStructB{
+			FieldB: 1,
+		},
+	}
+
+	ssn := testEngine.NewSession()
+	defer ssn.Close()
+
+	err := ssn.Begin()
+	assert.NoError(t, err)
+
+	_, err = ssn.Insert(sliceA)
+	assert.EqualValues(t, ErrNoElementsOnSlice, err)
+
+	_, err = ssn.Insert(sliceB)
+	assert.NoError(t, err)
+
+	assert.NoError(t, ssn.Commit())
+}
