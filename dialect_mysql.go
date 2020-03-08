@@ -519,11 +519,12 @@ func (db *mysql) CreateIndexSql(tableName string, index *core.Index) string {
 }
 
 func (db *mysql) CreateTableSql(table *core.Table, tableName, storeEngine, charset string) string {
-	var sql string
-	sql = "CREATE TABLE IF NOT EXISTS "
+	var sql = "CREATE TABLE IF NOT EXISTS "
 	if tableName == "" {
 		tableName = table.Name
 	}
+
+	quotes := db.Quote("")
 
 	sql += db.Quote(tableName)
 	sql += " ("
@@ -547,7 +548,7 @@ func (db *mysql) CreateTableSql(table *core.Table, tableName, storeEngine, chars
 
 		if len(pkList) > 1 {
 			sql += "PRIMARY KEY ( "
-			sql += db.Quote(strings.Join(pkList, db.Quote(",")))
+			sql += db.Quote(strings.Join(pkList, fmt.Sprintf("%c,%c", quotes[1], quotes[0])))
 			sql += " ), "
 		}
 

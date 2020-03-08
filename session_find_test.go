@@ -64,8 +64,10 @@ func TestJoinLimit(t *testing.T) {
 
 func assertSync(t *testing.T, beans ...interface{}) {
 	for _, bean := range beans {
-		assert.NoError(t, testEngine.DropTables(bean))
-		assert.NoError(t, testEngine.Sync2(bean))
+		t.Run(testEngine.TableName(bean, true), func(t *testing.T) {
+			assert.NoError(t, testEngine.DropTables(bean))
+			assert.NoError(t, testEngine.Sync2(bean))
+		})
 	}
 }
 
