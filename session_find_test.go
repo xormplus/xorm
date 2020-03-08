@@ -801,3 +801,24 @@ func TestFindJoin(t *testing.T) {
 		Where("scene_item.type=?", 3).Or("device_user_privrels.user_id=?", 339).Find(&scenes)
 	assert.NoError(t, err)
 }
+
+func TestJoinFindLimit(t *testing.T) {
+	type JoinFindLimit1 struct {
+		Id   int64
+		Name string
+	}
+
+	type JoinFindLimit2 struct {
+		Id   int64
+		Eid  int64 `xorm:"index"`
+		Name string
+	}
+
+	assert.NoError(t, prepareEngine())
+	assertSync(t, new(JoinFindLimit1), new(JoinFindLimit2))
+
+	var finds []JoinFindLimit1
+	err := testEngine.Join("INNER", new(JoinFindLimit2), "join_find_limit2.eid=join_find_limit1.id").
+		Limit(10, 10).Find(&finds)
+	assert.NoError(t, err)
+}
