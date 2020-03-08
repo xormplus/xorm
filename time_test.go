@@ -476,3 +476,40 @@ func TestCustomTimeUserDeletedDiffLoc(t *testing.T) {
 	assert.EqualValues(t, formatTime(time.Time(user3.DeletedAt)), formatTime(time.Time(user4.DeletedAt)))
 	fmt.Println("user3", user3.DeletedAt, user4.DeletedAt)
 }
+
+func TestDeletedInt64(t *testing.T) {
+	assert.NoError(t, prepareEngine())
+
+	type DeletedInt64Struct struct {
+		Id      int64
+		Deleted int64 `xorm:"deleted default(0) notnull"` // timestamp
+	}
+
+	assertSync(t, new(DeletedInt64Struct))
+
+	var d1 DeletedInt64Struct
+	cnt, err := testEngine.Insert(&d1)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var d2 DeletedInt64Struct
+	has, err := testEngine.ID(d1.Id).Get(&d2)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, d1, d2)
+
+	cnt, err = testEngine.ID(d1.Id).NoAutoCondition().Delete(&d1)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, cnt)
+
+	var d3 DeletedInt64Struct
+	has, err = testEngine.ID(d1.Id).Get(&d3)
+	assert.NoError(t, err)
+	assert.False(t, has)
+
+	var d4 DeletedInt64Struct
+	has, err = testEngine.ID(d1.Id).Unscoped().Get(&d4)
+	assert.NoError(t, err)
+	assert.True(t, has)
+	assert.EqualValues(t, d1, d4)
+}

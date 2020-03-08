@@ -6,6 +6,7 @@ package xorm
 
 import (
 	"errors"
+	"sort"
 	"testing"
 	"time"
 
@@ -1141,8 +1142,9 @@ func TestCompositePK(t *testing.T) {
 
 	pkCols := table.PKColumns()
 	assert.EqualValues(t, 2, len(pkCols))
-	assert.EqualValues(t, "uid", pkCols[0].Name)
-	assert.EqualValues(t, "tid", pkCols[1].Name)
+	names := []string{pkCols[0].Name, pkCols[1].Name}
+	sort.Strings(names)
+	assert.EqualValues(t, []string{"tid", "uid"}, names)
 }
 
 func TestNoPKIdQueryUpdate(t *testing.T) {

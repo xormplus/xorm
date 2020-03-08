@@ -142,7 +142,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 					colName = session.engine.Quote(nm) + "." + colName
 				}
 
-				autoCond = session.engine.CondDeleted(colName)
+				autoCond = session.engine.CondDeleted(col)
 			}
 		}
 	}

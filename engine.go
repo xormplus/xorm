@@ -94,11 +94,22 @@ func (engine *Engine) BufferSize(size int) *Session {
 }
 
 // CondDeleted returns the conditions whether a record is soft deleted.
-func (engine *Engine) CondDeleted(colName string) builder.Cond {
-	if engine.dialect.DBType() == core.MSSQL {
-		return builder.IsNull{colName}
+func (engine *Engine) CondDeleted(col *core.Column) builder.Cond {
+	var cond = builder.NewCond()
+	if col.SQLType.IsNumeric() {
+		cond = builder.Eq{col.Name: 0}
+	} else {
+		// FIXME: mssql: The conversion of a nvarchar data type to a datetime data type resulted in an out-of-range value.
+		if engine.dialect.DBType() != core.MSSQL {
+			cond = builder.Eq{col.Name: zeroTime1}
+		}
 	}
-	return builder.IsNull{colName}.Or(builder.Eq{colName: zeroTime1})
+
+	if col.Nullable {
+		cond = cond.Or(builder.IsNull{col.Name})
+	}
+
+	return cond
 }
 
 // ShowSQL show SQL statement or not on logger if log level is great than INFO

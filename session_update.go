@@ -281,7 +281,7 @@ func (session *Session) Update(bean interface{}, condiBean ...interface{}) (int6
 
 		if !condBeanIsStruct && table != nil {
 			if col := table.DeletedColumn(); col != nil && !session.statement.unscoped { // tag "deleted" is enabled
-				autoCond1 := session.engine.CondDeleted(session.engine.Quote(col.Name))
+				autoCond1 := session.engine.CondDeleted(col)
 
 				if autoCond == nil {
 					autoCond = autoCond1
