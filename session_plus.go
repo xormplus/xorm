@@ -450,25 +450,31 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 
 	var sql = session.statement.RawSQL
 	var orderBys = session.statement.OrderStr
+	pLimitN := session.statement.LimitN
 
 	if dialect.DBType() != core.MSSQL && dialect.DBType() != core.ORACLE {
 		if session.statement.Start > 0 {
 			sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, session.statement.LimitN, session.statement.Start)
-		} else if session.statement.LimitN > 0 {
+			if pLimitN != nil {
+				sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, *pLimitN, session.statement.Start)
+			} else {
+				sql = fmt.Sprintf("%v LIMIT 0 OFFSET %v", sql, *pLimitN)
+			}
+		} else if pLimitN != nil {
 			sql = fmt.Sprintf("%v LIMIT %v", sql, session.statement.LimitN)
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.statement.Start != 0 || session.statement.LimitN != 0 {
+		if session.statement.Start != 0 || pLimitN != nil {
 			sql = fmt.Sprintf("SELECT aat.* FROM (SELECT at.*,ROWNUM %v FROM (%v) at WHERE ROWNUM <= %d) aat WHERE %v > %d",
-				rownumber, sql, session.statement.Start+session.statement.LimitN, rownumber, session.statement.Start)
+				rownumber, sql, session.statement.Start+*pLimitN, rownumber, session.statement.Start)
 		}
 	} else {
 		keepSelect := false
 		var fullQuery string
 		if session.statement.Start > 0 {
 			fullQuery = fmt.Sprintf("SELECT sq.* FROM (SELECT ROW_NUMBER() OVER (ORDER BY %v) AS %v,", orderBys, rownumber)
-		} else if session.statement.LimitN > 0 {
-			fullQuery = fmt.Sprintf("SELECT TOP %d", session.statement.LimitN)
+		} else if pLimitN != nil {
+			fullQuery = fmt.Sprintf("SELECT TOP %d", *pLimitN)
 		} else {
 			keepSelect = true
 		}
@@ -488,8 +494,8 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 
 		if session.statement.Start > 0 {
 			// T-SQL offset starts with 1, not like MySQL with 0;
-			if session.statement.LimitN > 0 {
-				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v BETWEEN %d AND %d", fullQuery, rownumber, session.statement.Start+1, session.statement.Start+session.statement.LimitN)
+			if pLimitN != nil {
+				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v BETWEEN %d AND %d", fullQuery, rownumber, session.statement.Start+1, session.statement.Start+*pLimitN)
 			} else {
 				fullQuery = fmt.Sprintf("%v) AS sq WHERE %v >= %d", fullQuery, rownumber, session.statement.Start+1)
 			}
@@ -535,7 +541,7 @@ func (session *Session) Query() *ResultMap {
 	} else {
 		result, err = session.queryAll(sql, params...)
 	}
-
+	pLimitN := session.statement.LimitN
 	if dialect.DBType() == core.MSSQL {
 		if session.statement.Start > 0 {
 			for i, _ := range result {
@@ -543,7 +549,7 @@ func (session *Session) Query() *ResultMap {
 			}
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.statement.Start != 0 || session.statement.LimitN != 0 {
+		if session.statement.Start != 0 || pLimitN != nil {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
@@ -580,6 +586,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 		result, err = session.queryAllWithDateFormat(dateFormat, sql, params...)
 	}
 
+	pLimitN := session.statement.LimitN
 	if dialect.DBType() == core.MSSQL {
 		if session.statement.Start > 0 {
 			for i, _ := range result {
@@ -587,7 +594,7 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 			}
 		}
 	} else if dialect.DBType() == core.ORACLE {
-		if session.statement.Start != 0 || session.statement.LimitN != 0 {
+		if session.statement.Start != 0 || pLimitN != nil {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}

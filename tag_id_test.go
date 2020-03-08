@@ -76,7 +76,7 @@ func TestSameMapperID(t *testing.T) {
 	for _, tb := range tables {
 		if tb.Name == "IDSameMapper" {
 			if len(tb.PKColumns()) != 1 || tb.PKColumns()[0].Name != "ID" {
-				t.Fatal(tb)
+				t.Fatalf("tb %s tb.PKColumns() is %d not 1, tb.PKColumns()[0].Name is %s not ID", tb.Name, len(tb.PKColumns()), tb.PKColumns()[0].Name)
 			}
 			return
 		}

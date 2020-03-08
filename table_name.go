@@ -7,7 +7,7 @@ package xorm
 import (
 	"reflect"
 
-	"xorm.io/core"
+	"github.com/xormplus/core"
 )
 
 func getTableName(mapper core.IMapper, v reflect.Value) string {
