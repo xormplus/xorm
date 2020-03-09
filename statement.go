@@ -699,7 +699,9 @@ func (statement *Statement) Top(limit int) *Statement {
 
 // Limit generate LIMIT start, limit statement
 func (statement *Statement) Limit(limit int, start ...int) *Statement {
-	statement.LimitN = &limit
+	if limit > 0 {
+		statement.LimitN = &limit
+	}
 	if len(start) > 0 {
 		statement.Start = start[0]
 	}
