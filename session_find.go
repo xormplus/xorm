@@ -26,6 +26,7 @@ func (session *Session) Find(rowsSlicePtr interface{}, condiBean ...interface{})
 	if session.isAutoClose {
 		defer session.Close()
 	}
+	session.autoResetStatement = false
 	return session.find(rowsSlicePtr, condiBean...)
 }
 
@@ -62,7 +63,7 @@ func (session *Session) FindAndCount(rowsSlicePtr interface{}, condiBean ...inte
 			args = params
 		}
 		var count int64
-		_, err = session.SQL(sqlStr,args...).Get(&count)
+		_, err = session.SQL(sqlStr, args...).Get(&count)
 		if err != nil {
 			return 0, err
 		}
