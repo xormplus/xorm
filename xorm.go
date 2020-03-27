@@ -20,7 +20,7 @@ import (
 
 const (
 	// Version show the xorm's version
-	Version string = "0.7.5.0803"
+	Version string = "0.7.6.0327"
 )
 
 func regDrvsNDialects() bool {
