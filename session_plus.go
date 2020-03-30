@@ -12,10 +12,12 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/Chronokeeper/anyxml"
-	"github.com/xormplus/core"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/dialects"
+	"github.com/xormplus/xorm/internal/utils"
+	"github.com/xormplus/xorm/schemas"
 )
 
 type Record map[string]Value
@@ -421,21 +423,21 @@ func (resultStructs *ResultStructs) XmlIndent(prefix string, indent string, reco
 }
 
 func (session *Session) SqlMapClient(sqlTagName string, args ...interface{}) *Session {
-	return session.Sql(session.engine.SqlMap.Sql[sqlTagName], args...)
+	return session.SQL(session.engine.SqlMap.Sql[sqlTagName], args...)
 }
 
 func (session *Session) SqlTemplateClient(sqlTagName string, args ...interface{}) *Session {
 	session.isSqlFunc = true
 	sql, err := session.engine.SqlTemplate.Execute(sqlTagName, args...)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("%v", err)
 	}
 
 	if len(args) == 0 {
-		return session.Sql(sql)
+		return session.SQL(sql)
 	} else {
 		map1 := args[0].(*map[string]interface{})
-		return session.Sql(sql, map1)
+		return session.SQL(sql, map1)
 	}
 
 }
@@ -446,13 +448,13 @@ func (session *Session) Search(rowsSlicePtr interface{}, condiBean ...interface{
 	return r
 }
 
-func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) string {
+func (session *Session) genSelectSql(dialect dialects.Dialect, rownumber string) string {
 
 	var sql = session.statement.RawSQL
 	var orderBys = session.statement.OrderStr
 	pLimitN := session.statement.LimitN
 
-	if dialect.DBType() != core.MSSQL && dialect.DBType() != core.ORACLE {
+	if dialect.URI().DBType != schemas.MSSQL && dialect.URI().DBType != schemas.ORACLE {
 		if session.statement.Start > 0 {
 			sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, session.statement.LimitN, session.statement.Start)
 			if pLimitN != nil {
@@ -463,7 +465,7 @@ func (session *Session) genSelectSql(dialect core.Dialect, rownumber string) str
 		} else if pLimitN != nil {
 			sql = fmt.Sprintf("%v LIMIT %v", sql, session.statement.LimitN)
 		}
-	} else if dialect.DBType() == core.ORACLE {
+	} else if dialect.URI().DBType == schemas.ORACLE {
 		if session.statement.Start != 0 || pLimitN != nil {
 			sql = fmt.Sprintf("SELECT aat.* FROM (SELECT at.*,ROWNUM %v FROM (%v) at WHERE ROWNUM <= %d) aat WHERE %v > %d",
 				rownumber, sql, session.statement.Start+*pLimitN, rownumber, session.statement.Start)
@@ -522,8 +524,8 @@ func (session *Session) Query() *ResultMap {
 		defer session.Close()
 	}
 
-	var dialect = session.statement.Engine.Dialect()
-	rownumber := "xorm" + NewShortUUID().String()
+	var dialect = session.engine.Dialect()
+	rownumber := "xorm" + utils.NewShortUUID().String()
 	sql := session.genSelectSql(dialect, rownumber)
 
 	params := session.statement.RawParams
@@ -542,13 +544,13 @@ func (session *Session) Query() *ResultMap {
 		result, err = session.queryAll(sql, params...)
 	}
 	pLimitN := session.statement.LimitN
-	if dialect.DBType() == core.MSSQL {
+	if dialect.URI().DBType == schemas.MSSQL {
 		if session.statement.Start > 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
 		}
-	} else if dialect.DBType() == core.ORACLE {
+	} else if dialect.URI().DBType == schemas.ORACLE {
 		if session.statement.Start != 0 || pLimitN != nil {
 			for i, _ := range result {
 				delete(result[i], rownumber)
@@ -566,8 +568,8 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 		defer session.Close()
 	}
 
-	var dialect = session.statement.Engine.Dialect()
-	rownumber := "xorm" + NewShortUUID().String()
+	var dialect = session.engine.Dialect()
+	rownumber := "xorm" + utils.NewShortUUID().String()
 	sql := session.genSelectSql(dialect, rownumber)
 
 	params := session.statement.RawParams
@@ -587,13 +589,13 @@ func (session *Session) QueryWithDateFormat(dateFormat string) *ResultMap {
 	}
 
 	pLimitN := session.statement.LimitN
-	if dialect.DBType() == core.MSSQL {
+	if dialect.URI().DBType == schemas.MSSQL {
 		if session.statement.Start > 0 {
 			for i, _ := range result {
 				delete(result[i], rownumber)
 			}
 		}
-	} else if dialect.DBType() == core.ORACLE {
+	} else if dialect.URI().DBType == schemas.ORACLE {
 		if session.statement.Start != 0 || pLimitN != nil {
 			for i, _ := range result {
 				delete(result[i], rownumber)
@@ -633,24 +635,11 @@ func (session *Session) Execute() (sql.Result, error) {
 // =============================
 func (session *Session) queryAll(sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
-
-	if session.engine.showSQL {
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(paramStr) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, paramStr, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
-				}
-			}()
+	if session.showSQL {
+		if len(paramStr) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
 		} else {
-			if len(paramStr) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
 		}
 	}
 
@@ -665,23 +654,11 @@ func (session *Session) queryAllByMap(sqlStr string, paramMap interface{}) (resu
 
 	session.queryPreprocess(&sqlStr1, param...)
 
-	if session.engine.showSQL {
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(param) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr1, param, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr1, execDuration)
-				}
-			}()
+	if session.showSQL {
+		if len(param) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
 		} else {
-			if len(param) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
 		}
 	}
 
@@ -695,23 +672,11 @@ func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr st
 	sqlStr1, param, _ := core.MapToSlice(sqlStr, paramMap)
 	session.queryPreprocess(&sqlStr1, param...)
 
-	if session.engine.showSQL {
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(param) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr1, param, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr1, execDuration)
-				}
-			}()
+	if session.showSQL {
+		if len(param) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
 		} else {
-			if len(param) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr1, param)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr1)
 		}
 	}
 
@@ -724,23 +689,11 @@ func (session *Session) queryAllByMapWithDateFormat(dateFormat string, sqlStr st
 func (session *Session) queryAllWithDateFormat(dateFormat string, sqlStr string, paramStr ...interface{}) (resultsSlice []map[string]interface{}, err error) {
 	session.queryPreprocess(&sqlStr, paramStr...)
 
-	if session.engine.showSQL {
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(paramStr) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, paramStr, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
-				}
-			}()
+	if session.showSQL {
+		if len(paramStr) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
 		} else {
-			if len(paramStr) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, paramStr)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
 		}
 	}
 
@@ -844,11 +797,12 @@ func (session *Session) queryPreprocessByMap(sqlStr *string, paramMap interface{
 	})
 
 	for _, filter := range session.engine.dialect.Filters() {
-		query = filter.Do(query, session.engine.dialect, session.statement.RefTable)
+		query = filter.Do(query)
 	}
 
 	*sqlStr = query
-	session.engine.logSQL(session, *sqlStr, paramMap)
+	// session.engine.logSQL(session, *sqlStr, paramMap)
+	session.logSQL(*sqlStr, paramMap)
 }
 
 func (session *Session) Sqls(sqls interface{}, parmas ...interface{}) *SqlsExecutor {

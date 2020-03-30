@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"strings"
 	"time"
+
+	"github.com/xormplus/xorm/internal/utils"
 )
 
 type SqlsExecutor struct {
@@ -41,10 +43,10 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 		if sqlsExecutor.parmas == nil {
 			switch sqlCmd {
 			case "select":
-				model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+				model_1_results = sqlsExecutor.session.SQL(sqlStr).Query()
 				sqlModel = 1
 			case "insert", "delete", "update", "create", "drop":
-				model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+				model_2_results, err = sqlsExecutor.session.SQL(sqlStr).Execute()
 				sqlModel = 2
 			default:
 				sqlModel = 3
@@ -54,7 +56,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			case []map[string]interface{}:
 				parmaMap, _ := sqlsExecutor.parmas.([]map[string]interface{})
 
-				key := NewV4().String() + time.Now().String()
+				key := utils.NewV4().String() + time.Now().String()
 				sqlsExecutor.session.engine.AddSql(key, sqlStr)
 				switch sqlCmd {
 				case "select":
@@ -71,7 +73,7 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 			case map[string]interface{}:
 				parmaMap, _ := sqlsExecutor.parmas.(map[string]interface{})
 
-				key := NewV4().String() + time.Now().String()
+				key := utils.NewV4().String() + time.Now().String()
 				sqlsExecutor.session.engine.AddSql(key, sqlStr)
 				switch sqlCmd {
 				case "select":
@@ -165,10 +167,10 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				sqlCmd := strings.ToLower(strings.Split(sqlStr, " ")[0])
 				switch sqlCmd {
 				case "select":
-					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+					model_1_results = sqlsExecutor.session.SQL(sqlStr).Query()
 					sqlModel = 1
 				case "insert", "delete", "update", "create", "drop":
-					model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+					model_2_results, err = sqlsExecutor.session.SQL(sqlStr).Execute()
 					sqlModel = 2
 				default:
 					sqlModel = 3
@@ -247,16 +249,16 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				if parmaSlice[i] == nil {
 					switch sqlCmd {
 					case "select":
-						model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+						model_1_results = sqlsExecutor.session.SQL(sqlStr).Query()
 						sqlModel = 1
 					case "insert", "delete", "update", "create", "drop":
-						model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+						model_2_results, err = sqlsExecutor.session.SQL(sqlStr).Execute()
 						sqlModel = 2
 					default:
 						sqlModel = 3
 					}
 				} else {
-					key := NewV4().String() + time.Now().String()
+					key := utils.NewV4().String() + time.Now().String()
 					sqlsExecutor.session.engine.AddSql(key, sqlStr)
 					switch sqlCmd {
 					case "select":
@@ -347,11 +349,11 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 				switch sqlCmd {
 				case "select":
 					sqlModel = 1
-					model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+					model_1_results = sqlsExecutor.session.SQL(sqlStr).Query()
 
 				case "insert", "delete", "update", "create", "drop":
 					sqlModel = 2
-					model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+					model_2_results, err = sqlsExecutor.session.SQL(sqlStr).Execute()
 
 				default:
 					sqlModel = 3
@@ -432,17 +434,17 @@ func (sqlsExecutor *SqlsExecutor) Execute() ([][]map[string]interface{}, map[str
 					switch sqlCmd {
 					case "select":
 						sqlModel = 1
-						model_1_results = sqlsExecutor.session.Sql(sqlStr).Query()
+						model_1_results = sqlsExecutor.session.SQL(sqlStr).Query()
 
 					case "insert", "delete", "update", "create", "drop":
 						sqlModel = 2
-						model_2_results, err = sqlsExecutor.session.Sql(sqlStr).Execute()
+						model_2_results, err = sqlsExecutor.session.SQL(sqlStr).Execute()
 
 					default:
 						sqlModel = 3
 					}
 				} else {
-					key := NewV4().String() + time.Now().String()
+					key := utils.NewV4().String() + time.Now().String()
 					sqlsExecutor.session.engine.AddSql(key, sqlStr)
 					parmaMap := parmasMap[k]
 					switch sqlCmd {

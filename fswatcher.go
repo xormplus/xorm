@@ -24,21 +24,21 @@ func (engine *Engine) StartFSWatcher() error {
 					if strings.HasSuffix(event.Name, engine.SqlTemplate.Extension()) {
 						err = engine.ReloadSqlTemplate(event.Name)
 						if err != nil {
-							engine.logger.Error(err)
+							engine.logger.Errorf("%v", err)
 						}
 					}
 
 					if strings.HasSuffix(event.Name, engine.SqlMap.Extension["xml"]) || strings.HasSuffix(event.Name, engine.SqlMap.Extension["json"]) || strings.HasSuffix(event.Name, engine.SqlMap.Extension["xsql"]) {
 						err = engine.reloadSqlMap(event.Name)
 						if err != nil {
-							engine.logger.Error(err)
+							engine.logger.Errorf("%v", err)
 						}
 					}
 				}
 
 			case err := <-engine.watcher.Errors:
 				if err != nil {
-					engine.logger.Error(err)
+					engine.logger.Errorf("%v", err)
 				}
 			}
 		}

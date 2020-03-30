@@ -8,101 +8,22 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
+
+	// "strings"
 	"time"
 
-	"github.com/xormplus/builder"
-	"github.com/xormplus/core"
+	// "github.com/xormplus/builder"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/schemas"
+	// "github.com/xormplus/xorm/internal/statements"
 )
-
-func (session *Session) genQuerySQL(sqlOrArgs ...interface{}) (string, []interface{}, error) {
-	if len(sqlOrArgs) > 0 {
-		return convertSQLOrArgs(sqlOrArgs...)
-	}
-
-	if session.statement.RawSQL != "" {
-		var dialect = session.statement.Engine.Dialect()
-		rownumber := "xorm" + NewShortUUID().String()
-		sql := session.genSelectSql(dialect, rownumber)
-
-		params := session.statement.RawParams
-		i := len(params)
-
-		//		var result []map[string]interface{}
-		//		var err error
-		if i == 1 {
-			vv := reflect.ValueOf(params[0])
-			if vv.Kind() != reflect.Ptr || vv.Elem().Kind() != reflect.Map {
-				return sql, params, nil
-			} else {
-				sqlStr1, param, _ := core.MapToSlice(sql, params[0])
-				return sqlStr1, param, nil
-			}
-		} else {
-			return sql, params, nil
-		}
-		//		return session.statement.RawSQL, session.statement.RawParams, nil
-	}
-
-	if len(session.statement.TableName()) <= 0 {
-		return "", nil, ErrTableNotFound
-	}
-
-	var columnStr = session.statement.ColumnStr
-	if len(session.statement.selectStr) > 0 {
-		columnStr = session.statement.selectStr
-	} else {
-		if session.statement.JoinStr == "" {
-			if columnStr == "" {
-				if session.statement.GroupByStr != "" {
-					columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
-				} else {
-					columnStr = session.statement.genColumnStr()
-				}
-			}
-		} else {
-			if columnStr == "" {
-				if session.statement.GroupByStr != "" {
-					columnStr = session.engine.quoteColumns(session.statement.GroupByStr)
-				} else {
-					columnStr = "*"
-				}
-			}
-		}
-		if columnStr == "" {
-			columnStr = "*"
-		}
-	}
-
-	if err := session.statement.processIDParam(); err != nil {
-		return "", nil, err
-	}
-
-	condSQL, condArgs, err := builder.ToSQL(session.statement.cond)
-	if err != nil {
-		return "", nil, err
-	}
-
-	args := append(session.statement.joinArgs, condArgs...)
-	sqlStr, err := session.statement.genSelectSQL(columnStr, condSQL, true, true)
-	if err != nil {
-		return "", nil, err
-	}
-	// for mssql and use limit
-	qs := strings.Count(sqlStr, "?")
-	if len(args)*2 == qs {
-		args = append(args, args...)
-	}
-
-	return sqlStr, args, nil
-}
 
 func (session *Session) QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error) {
 	if session.isAutoClose {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +38,7 @@ func (session *Session) QueryResult(sqlOrArgs ...interface{}) *ResultValue {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return &ResultValue{Error: err}
 	}
@@ -132,7 +53,7 @@ func (session *Session) QueryBytes(sqlOrArgs ...interface{}) ([]map[string][]byt
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,8 +86,8 @@ func value2String(rawValue *reflect.Value) (str string, err error) {
 		}
 	// time type
 	case reflect.Struct:
-		if aa.ConvertibleTo(core.TimeType) {
-			str = vv.Convert(core.TimeType).Interface().(time.Time).Format(time.RFC3339Nano)
+		if aa.ConvertibleTo(schemas.TimeType) {
+			str = vv.Convert(schemas.TimeType).Interface().(time.Time).Format(time.RFC3339Nano)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
@@ -271,6 +192,7 @@ func rows2SliceString(rows *core.Rows) (resultsSlice [][]string, err error) {
 		}
 		resultsSlice = append(resultsSlice, record)
 	}
+
 	return resultsSlice, nil
 }
 
@@ -279,7 +201,7 @@ func (session *Session) QueryRows(sqlOrArgs ...interface{}) (*core.Rows, error) 
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +220,7 @@ func (session *Session) QueryString(sqlOrArgs ...interface{}) ([]map[string]stri
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +240,7 @@ func (session *Session) QuerySliceString(sqlOrArgs ...interface{}) ([][]string, 
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +293,7 @@ func (session *Session) QueryInterface(sqlOrArgs ...interface{}) ([]map[string]i
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL(sqlOrArgs...)
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -391,15 +313,15 @@ func (session *Session) QueryExpr(sqlOrArgs ...interface{}) sqlExpr {
 		defer session.Close()
 	}
 
-	sqlStr, args, err := session.genQuerySQL()
+	sqlStr, args, err := session.statement.GenQuerySQL(sqlOrArgs...)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("%v", err)
 		return sqlExpr{sqlExpr: ""}
 	}
 
 	sqlStr, err = ConvertToBoundSQL(sqlStr, args)
 	if err != nil {
-		session.engine.logger.Error(err)
+		session.engine.logger.Errorf("%v", err)
 		return sqlExpr{sqlExpr: ""}
 	}
 

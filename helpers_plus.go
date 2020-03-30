@@ -5,7 +5,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/xormplus/core"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/schemas"
 )
 
 func reflect2objectWithDateFormat(rawValue *reflect.Value, dateFormat string) (value interface{}, err error) {
@@ -30,8 +31,8 @@ func reflect2objectWithDateFormat(rawValue *reflect.Value, dateFormat string) (v
 		}
 	// time type
 	case reflect.Struct:
-		if aa.ConvertibleTo(core.TimeType) {
-			value = vv.Convert(core.TimeType).Interface().(time.Time).Format(dateFormat)
+		if aa.ConvertibleTo(schemas.TimeType) {
+			value = vv.Convert(schemas.TimeType).Interface().(time.Time).Format(dateFormat)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}
@@ -177,8 +178,8 @@ func reflect2object(rawValue *reflect.Value) (value interface{}, err error) {
 		}
 	// time type
 	case reflect.Struct:
-		if aa.ConvertibleTo(core.TimeType) {
-			value = vv.Convert(core.TimeType).Interface().(time.Time)
+		if aa.ConvertibleTo(schemas.TimeType) {
+			value = vv.Convert(schemas.TimeType).Interface().(time.Time)
 		} else {
 			err = fmt.Errorf("Unsupported struct type %v", vv.Type().Name())
 		}

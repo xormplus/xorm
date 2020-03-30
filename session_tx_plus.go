@@ -3,7 +3,8 @@ package xorm
 import (
 	"sync"
 
-	"github.com/xormplus/core"
+	"github.com/xormplus/xorm/internal/utils"
+	"github.com/xormplus/xorm/schemas"
 )
 
 const (
@@ -150,11 +151,11 @@ func (transaction *Transaction) BeginTrans() error {
 			}
 		} else {
 			transaction.isNested = true
-			dbtype := transaction.txSession.engine.Dialect().DBType()
-			if dbtype == core.MSSQL {
-				transaction.savePointID = "xorm" + NewShortUUID().String()
+			dbtype := transaction.txSession.engine.Dialect().URI().DBType
+			if dbtype == schemas.MSSQL {
+				transaction.savePointID = "xorm" + utils.NewShortUUID().String()
 			} else {
-				transaction.savePointID = "xorm" + NewV1().WithoutDashString()
+				transaction.savePointID = "xorm" + utils.NewV1().WithoutDashString()
 			}
 
 			if err := transaction.SavePoint(transaction.savePointID); err != nil {
@@ -377,8 +378,8 @@ func (transaction *Transaction) SavePoint(savePointID string) error {
 	}
 
 	var lastSQL string
-	dbtype := transaction.txSession.engine.Dialect().DBType()
-	if dbtype == core.MSSQL {
+	dbtype := transaction.txSession.engine.Dialect().URI().DBType
+	if dbtype == schemas.MSSQL {
 		lastSQL = "save tran " + savePointID
 	} else {
 		lastSQL = "SAVEPOINT " + savePointID + ";"
@@ -398,8 +399,8 @@ func (transaction *Transaction) RollbackToSavePoint(savePointID string) error {
 	}
 
 	var lastSQL string
-	dbtype := transaction.txSession.engine.Dialect().DBType()
-	if dbtype == core.MSSQL {
+	dbtype := transaction.txSession.engine.Dialect().URI().DBType
+	if dbtype == schemas.MSSQL {
 		lastSQL = "rollback tran " + savePointID
 	} else {
 		lastSQL = "ROLLBACK TO SAVEPOINT " + transaction.savePointID + ";"

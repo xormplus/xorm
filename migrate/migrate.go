@@ -13,7 +13,7 @@ type MigrateFunc func(*xorm.Engine) error
 // RollbackFunc is the func signature for rollbacking.
 type RollbackFunc func(*xorm.Engine) error
 
-// InitSchemaFunc is the func signature for initializing the schema.
+// InitSchemaFunc is the func signature for initializing the schemas.
 type InitSchemaFunc func(*xorm.Engine) error
 
 // Options define options for all migrations.
@@ -34,7 +34,7 @@ type Migration struct {
 	Rollback RollbackFunc
 }
 
-// Migrate represents a collection of all migrations of a database schema.
+// Migrate represents a collection of all migrations of a database schemas.
 type Migrate struct {
 	db         *xorm.Engine
 	options    *Options

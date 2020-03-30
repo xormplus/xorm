@@ -10,6 +10,8 @@ import (
 )
 
 var (
+	// ErrPtrSliceType represents a type error
+	ErrPtrSliceType = errors.New("A point to a slice is needed")
 	// ErrParamsType params error
 	ErrParamsType   = errors.New("Params type error")
 	ErrParamsFormat = errors.New("Params format error")
@@ -24,10 +26,12 @@ var (
 	ErrTransactionDefinition = errors.New("Transaction definition error.")
 	// ErrCacheFailed cache failed error
 	ErrCacheFailed = errors.New("Cache failed")
+
 	// ErrNeedDeletedCond delete needs less one condition error
 	ErrNeedDeletedCond = errors.New("Delete action needs at least one condition")
 	// ErrNotImplemented not implemented
 	ErrNotImplemented = errors.New("Not implemented")
+
 	// ErrConditionType condition type unsupported
 	ErrConditionType = errors.New("Unsupported condition type")
 	// ErrNeedMoreArguments need more arguments

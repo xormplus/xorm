@@ -7,15 +7,15 @@ package xorm
 import (
 	"database/sql"
 	"reflect"
-	"time"
 
 	"github.com/xormplus/builder"
-	"github.com/xormplus/core"
+	"github.com/xormplus/xorm/core"
+	// "github.com/xormplus/xorm/internal/statements"
 )
 
 func (session *Session) queryPreprocess(sqlStr *string, paramStr ...interface{}) {
 	for _, filter := range session.engine.dialect.Filters() {
-		*sqlStr = filter.Do(*sqlStr, session.engine.dialect, session.statement.RefTable)
+		*sqlStr = filter.Do(*sqlStr)
 	}
 
 	session.lastSQL = *sqlStr
@@ -24,28 +24,19 @@ func (session *Session) queryPreprocess(sqlStr *string, paramStr ...interface{})
 
 func (session *Session) queryRows(sqlStr string, args ...interface{}) (*core.Rows, error) {
 	defer session.resetStatement()
+	if session.statement.LastError != nil {
+		return nil, session.statement.LastError
+	}
 
 	session.queryPreprocess(&sqlStr, args...)
 
+	session.lastSQL = sqlStr
+	session.lastSQLArgs = args
 	if session.showSQL {
-		session.lastSQL = sqlStr
-		session.lastSQLArgs = args
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(args) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, args, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
-				}
-			}()
+		if len(args) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, args)
 		} else {
-			if len(args) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, args)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
 		}
 	}
 
@@ -270,23 +261,14 @@ func (session *Session) exec(sqlStr string, args ...interface{}) (sql.Result, er
 
 	session.queryPreprocess(&sqlStr, args...)
 
-	if session.engine.showSQL {
-		if session.engine.showExecTime {
-			b4ExecTime := time.Now()
-			defer func() {
-				execDuration := time.Since(b4ExecTime)
-				if len(args) > 0 {
-					session.engine.logger.Infof("[SQL][%p] %s %#v - took: %v", session, sqlStr, args, execDuration)
-				} else {
-					session.engine.logger.Infof("[SQL][%p] %s - took: %v", session, sqlStr, execDuration)
-				}
-			}()
+	session.lastSQL = sqlStr
+	session.lastSQLArgs = args
+
+	if session.showSQL {
+		if len(args) > 0 {
+			session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, args)
 		} else {
-			if len(args) > 0 {
-				session.engine.logger.Infof("[SQL][%p] %v %#v", session, sqlStr, args)
-			} else {
-				session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
-			}
+			session.engine.logger.Infof("[SQL][%p] %v", session, sqlStr)
 		}
 	}
 

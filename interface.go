@@ -10,7 +10,11 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/xormplus/core"
+	"github.com/xormplus/xorm/caches"
+	"github.com/xormplus/xorm/dialects"
+	"github.com/xormplus/xorm/log"
+	"github.com/xormplus/xorm/names"
+	"github.com/xormplus/xorm/schemas"
 )
 
 // Interface defines the interface which Engine, EngineGroup and Session will implementate.
@@ -28,7 +32,7 @@ type Interface interface {
 	Delete(interface{}) (int64, error)
 	Distinct(columns ...string) *Session
 	DropIndexes(bean interface{}) error
-	Exec(sqlOrAgrs ...interface{}) (sql.Result, error)
+	Exec(sqlOrArgs ...interface{}) (sql.Result, error)
 	Exist(bean ...interface{}) (bool, error)
 	Find(interface{}, ...interface{}) error
 	FindAndCount(interface{}, ...interface{}) (int64, error)
@@ -50,13 +54,14 @@ type Interface interface {
 	Omit(columns ...string) *Session
 	OrderBy(order string) *Session
 	Ping() error
-	QueryBytes(sqlOrAgrs ...interface{}) (resultsSlice []map[string][]byte, err error)
+	QueryBytes(sqlOrArgs ...interface{}) (resultsSlice []map[string][]byte, err error)
 	QueryInterface(sqlOrArgs ...interface{}) ([]map[string]interface{}, error)
 	QueryString(sqlOrArgs ...interface{}) ([]map[string]string, error)
 	QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error)
 	QueryResult(sqlOrArgs ...interface{}) (result *ResultValue)
 	Rows(bean interface{}) (*Rows, error)
 	SetExpr(string, interface{}) *Session
+	Select(string) *Session
 	SQL(interface{}, ...interface{}) *Session
 	Sum(bean interface{}, colName string) (float64, error)
 	SumInt(bean interface{}, colName string) (int64, error)
@@ -78,39 +83,41 @@ type EngineInterface interface {
 	ClearCache(...interface{}) error
 	Context(context.Context) *Session
 	CreateTables(...interface{}) error
-	DBMetas() ([]*core.Table, error)
-	Dialect() core.Dialect
+	DBMetas() ([]*schemas.Table, error)
+	Dialect() dialects.Dialect
+	DriverName() string
 	DropTables(...interface{}) error
-	DumpAllToFile(fp string, tp ...core.DbType) error
-	GetCacher(string) core.Cacher
-	GetColumnMapper() core.IMapper
-	GetDefaultCacher() core.Cacher
-	GetTableMapper() core.IMapper
+	DumpAllToFile(fp string, tp ...schemas.DBType) error
+	GetCacher(string) caches.Cacher
+	GetColumnMapper() names.Mapper
+	GetDefaultCacher() caches.Cacher
+	GetTableMapper() names.Mapper
 	GetTZDatabase() *time.Location
 	GetTZLocation() *time.Location
-	MapCacher(interface{}, core.Cacher) error
+	ImportFile(fp string) ([]sql.Result, error)
+	MapCacher(interface{}, caches.Cacher) error
 	NewSession() *Session
 	NoAutoTime() *Session
 	Quote(string) string
-	SetCacher(string, core.Cacher)
+	SetCacher(string, caches.Cacher)
 	SetConnMaxLifetime(time.Duration)
-	SetColumnMapper(core.IMapper)
-	SetDefaultCacher(core.Cacher)
-	SetLogger(logger core.ILogger)
-	SetLogLevel(core.LogLevel)
-	SetMapper(core.IMapper)
+	SetColumnMapper(names.Mapper)
+	SetDefaultCacher(caches.Cacher)
+	SetLogger(logger interface{})
+	SetLogLevel(log.LogLevel)
+	SetMapper(names.Mapper)
 	SetMaxOpenConns(int)
 	SetMaxIdleConns(int)
+	SetQuotePolicy(dialects.QuotePolicy)
 	SetSchema(string)
-	SetTableMapper(core.IMapper)
+	SetTableMapper(names.Mapper)
 	SetTZDatabase(tz *time.Location)
 	SetTZLocation(tz *time.Location)
-	ShowExecTime(...bool)
 	ShowSQL(show ...bool)
 	Sync(...interface{}) error
 	Sync2(...interface{}) error
 	StoreEngine(storeEngine string) *Session
-	TableInfo(bean interface{}) *Table
+	TableInfo(bean interface{}) (*schemas.Table, error)
 	TableName(interface{}, ...bool) string
 	UnMapType(reflect.Type)
 }
