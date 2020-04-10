@@ -5,19 +5,13 @@
 package log
 
 import (
-	"context"
 	"fmt"
-	"time"
+
+	"github.com/xormplus/xorm/contexts"
 )
 
 // LogContext represents a log context
-type LogContext struct {
-	Ctx         context.Context
-	SQL         string        // log content or SQL
-	Args        []interface{} // if it's a SQL, it's the arguments
-	ExecuteTime time.Duration
-	Err         error // SQL executed error
-}
+type LogContext contexts.ContextHook
 
 // SQLLogger represents an interface to log SQL
 type SQLLogger interface {

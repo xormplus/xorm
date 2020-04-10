@@ -887,7 +887,7 @@ func (session *Session) incrVersionFieldValue(fieldValue *reflect.Value) {
 	}
 }
 
-// Context sets the context on this session
+// ContextHook sets the context on this session
 func (session *Session) Context(ctx context.Context) *Session {
 	session.ctx = ctx
 	return session

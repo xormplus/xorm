@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/xormplus/xorm/caches"
+	"github.com/xormplus/xorm/contexts"
 	"github.com/xormplus/xorm/dialects"
 	"github.com/xormplus/xorm/log"
 	"github.com/xormplus/xorm/names"
@@ -113,6 +114,7 @@ type EngineInterface interface {
 	SetTableMapper(names.Mapper)
 	SetTZDatabase(tz *time.Location)
 	SetTZLocation(tz *time.Location)
+	AddHook(hook contexts.Hook)
 	ShowSQL(show ...bool)
 	Sync(...interface{}) error
 	Sync2(...interface{}) error
