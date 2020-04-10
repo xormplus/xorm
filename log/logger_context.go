@@ -51,7 +51,7 @@ var (
 	SessionShowSQLKey = "__xorm_show_sql"
 )
 
-// LoggerAdapter wraps a Logger interafce as LoggerContext interface
+// LoggerAdapter wraps a Logger interface as LoggerContext interface
 type LoggerAdapter struct {
 	logger Logger
 }
