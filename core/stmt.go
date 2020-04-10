@@ -175,7 +175,7 @@ func (s *Stmt) QueryStructContext(ctx context.Context, st interface{}) (*Rows, e
 		args[i] = vv.Elem().FieldByName(k).Interface()
 	}
 
-	return s.Query(args...)
+	return s.QueryContext(ctx, args...)
 }
 
 func (s *Stmt) QueryStruct(st interface{}) (*Rows, error) {
