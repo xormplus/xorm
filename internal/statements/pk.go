@@ -64,7 +64,6 @@ func (statement *Statement) ProcessIDParam() error {
 	}
 
 	if len(statement.RefTable.PrimaryKeys) != len(statement.idParam) {
-		fmt.Println("=====", statement.RefTable.PrimaryKeys, statement.idParam)
 		return fmt.Errorf("ID condition is error, expect %d primarykeys, there are %d",
 			len(statement.RefTable.PrimaryKeys),
 			len(statement.idParam),

@@ -708,6 +708,13 @@ func TestFindExtends(t *testing.T) {
 	err = testEngine.Find(&results)
 	assert.NoError(t, err)
 	assert.EqualValues(t, 2, len(results))
+
+	results = make([]FindExtendsA, 0, 2)
+	err = testEngine.Find(&results, &FindExtendsB{
+		ID: 1,
+	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(results))
 }
 
 func TestFindExtends3(t *testing.T) {
