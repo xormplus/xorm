@@ -23,7 +23,7 @@ import (
 
 const (
 	// Version show the xorm's version
-	Version string = "1.0.1.0430"
+	Version string = "1.0.1.0515"
 )
 
 func close(engine *Engine) {
