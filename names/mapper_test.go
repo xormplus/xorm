@@ -5,6 +5,7 @@
 package names
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -45,5 +46,25 @@ func TestGonicMapperToObj(t *testing.T) {
 		if out != expected {
 			t.Errorf("Given %s, expected %s but got %s", in, expected, out)
 		}
+	}
+}
+
+func BenchmarkSnakeCasedName(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	s := strings.Repeat("FooBar", 32)
+	for i := 0; i < b.N; i++ {
+		_ = snakeCasedName(s)
+	}
+}
+
+func BenchmarkTitleCasedName(b *testing.B) {
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	s := strings.Repeat("foo_bar", 32)
+	for i := 0; i < b.N; i++ {
+		_ = titleCasedName(s)
 	}
 }
