@@ -18,7 +18,7 @@ import (
 // EngineGroup defines an engine group
 type EngineGroup struct {
 	*Engine
-	slaves []*Engine
+	subordinates []*Engine
 	policy GroupPolicy
 }
 
@@ -45,19 +45,19 @@ func NewEngineGroup(args1 interface{}, args2 interface{}, policies ...GroupPolic
 		}
 
 		eg.Engine = engines[0]
-		eg.slaves = engines[1:]
+		eg.subordinates = engines[1:]
 		return &eg, nil
 	}
 
-	master, ok3 := args1.(*Engine)
-	slaves, ok4 := args2.([]*Engine)
+	main, ok3 := args1.(*Engine)
+	subordinates, ok4 := args2.([]*Engine)
 	if ok3 && ok4 {
-		master.engineGroup = &eg
-		for i := 0; i < len(slaves); i++ {
-			slaves[i].engineGroup = &eg
+		main.engineGroup = &eg
+		for i := 0; i < len(subordinates); i++ {
+			subordinates[i].engineGroup = &eg
 		}
-		eg.Engine = master
-		eg.slaves = slaves
+		eg.Engine = main
+		eg.subordinates = subordinates
 		return &eg, nil
 	}
 	return nil, ErrParamsType
@@ -70,8 +70,8 @@ func (eg *EngineGroup) Close() error {
 		return err
 	}
 
-	for i := 0; i < len(eg.slaves); i++ {
-		err := eg.slaves[i].Close()
+	for i := 0; i < len(eg.subordinates); i++ {
+		err := eg.subordinates[i].Close()
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func (eg *EngineGroup) NewSession() *Session {
 	return sess
 }
 
-// Master returns the master engine
-func (eg *EngineGroup) Master() *Engine {
+// Main returns the main engine
+func (eg *EngineGroup) Main() *Engine {
 	return eg.Engine
 }
 
@@ -104,8 +104,8 @@ func (eg *EngineGroup) Ping() error {
 		return err
 	}
 
-	for _, slave := range eg.slaves {
-		if err := slave.Ping(); err != nil {
+	for _, subordinate := range eg.subordinates {
+		if err := subordinate.Ping(); err != nil {
 			return err
 		}
 	}
@@ -115,71 +115,71 @@ func (eg *EngineGroup) Ping() error {
 // SetColumnMapper set the column name mapping rule
 func (eg *EngineGroup) SetColumnMapper(mapper names.Mapper) {
 	eg.Engine.SetColumnMapper(mapper)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetColumnMapper(mapper)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetColumnMapper(mapper)
 	}
 }
 
 // SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
 func (eg *EngineGroup) SetConnMaxLifetime(d time.Duration) {
 	eg.Engine.SetConnMaxLifetime(d)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetConnMaxLifetime(d)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetConnMaxLifetime(d)
 	}
 }
 
 // SetDefaultCacher set the default cacher
 func (eg *EngineGroup) SetDefaultCacher(cacher caches.Cacher) {
 	eg.Engine.SetDefaultCacher(cacher)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetDefaultCacher(cacher)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetDefaultCacher(cacher)
 	}
 }
 
 // SetLogger set the new logger
 func (eg *EngineGroup) SetLogger(logger interface{}) {
 	eg.Engine.SetLogger(logger)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetLogger(logger)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetLogger(logger)
 	}
 }
 
 func (eg *EngineGroup) AddHook(hook contexts.Hook) {
 	eg.Engine.AddHook(hook)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].AddHook(hook)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].AddHook(hook)
 	}
 }
 
 // SetLogLevel sets the logger level
 func (eg *EngineGroup) SetLogLevel(level log.LogLevel) {
 	eg.Engine.SetLogLevel(level)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetLogLevel(level)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetLogLevel(level)
 	}
 }
 
 // SetMapper set the name mapping rules
 func (eg *EngineGroup) SetMapper(mapper names.Mapper) {
 	eg.Engine.SetMapper(mapper)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetMapper(mapper)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetMapper(mapper)
 	}
 }
 
 // SetMaxIdleConns set the max idle connections on pool, default is 2
 func (eg *EngineGroup) SetMaxIdleConns(conns int) {
 	eg.Engine.DB().SetMaxIdleConns(conns)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].DB().SetMaxIdleConns(conns)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].DB().SetMaxIdleConns(conns)
 	}
 }
 
 // SetMaxOpenConns is only available for go 1.2+
 func (eg *EngineGroup) SetMaxOpenConns(conns int) {
 	eg.Engine.DB().SetMaxOpenConns(conns)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].DB().SetMaxOpenConns(conns)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].DB().SetMaxOpenConns(conns)
 	}
 }
 
@@ -192,41 +192,41 @@ func (eg *EngineGroup) SetPolicy(policy GroupPolicy) *EngineGroup {
 // SetQuotePolicy sets the special quote policy
 func (eg *EngineGroup) SetQuotePolicy(quotePolicy dialects.QuotePolicy) {
 	eg.Engine.SetQuotePolicy(quotePolicy)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetQuotePolicy(quotePolicy)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetQuotePolicy(quotePolicy)
 	}
 }
 
 // SetTableMapper set the table name mapping rule
 func (eg *EngineGroup) SetTableMapper(mapper names.Mapper) {
 	eg.Engine.SetTableMapper(mapper)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].SetTableMapper(mapper)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].SetTableMapper(mapper)
 	}
 }
 
 // ShowSQL show SQL statement or not on logger if log level is great than INFO
 func (eg *EngineGroup) ShowSQL(show ...bool) {
 	eg.Engine.ShowSQL(show...)
-	for i := 0; i < len(eg.slaves); i++ {
-		eg.slaves[i].ShowSQL(show...)
+	for i := 0; i < len(eg.subordinates); i++ {
+		eg.subordinates[i].ShowSQL(show...)
 	}
 }
 
-// Slave returns one of the physical databases which is a slave according the policy
-func (eg *EngineGroup) Slave() *Engine {
-	switch len(eg.slaves) {
+// Subordinate returns one of the physical databases which is a subordinate according the policy
+func (eg *EngineGroup) Subordinate() *Engine {
+	switch len(eg.subordinates) {
 	case 0:
 		return eg.Engine
 	case 1:
-		return eg.slaves[0]
+		return eg.subordinates[0]
 	}
-	return eg.policy.Slave(eg)
+	return eg.policy.Subordinate(eg)
 }
 
-// Slaves returns all the slaves
-func (eg *EngineGroup) Slaves() []*Engine {
-	return eg.slaves
+// Subordinates returns all the subordinates
+func (eg *EngineGroup) Subordinates() []*Engine {
+	return eg.subordinates
 }
 
 func (eg *EngineGroup) RegisterSqlTemplate(sqlt SqlTemplate, Cipher ...Cipher) error {
@@ -234,8 +234,8 @@ func (eg *EngineGroup) RegisterSqlTemplate(sqlt SqlTemplate, Cipher ...Cipher) e
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(eg.slaves); i++ {
-		err = eg.slaves[i].RegisterSqlTemplate(sqlt, Cipher...)
+	for i := 0; i < len(eg.subordinates); i++ {
+		err = eg.subordinates[i].RegisterSqlTemplate(sqlt, Cipher...)
 		if err != nil {
 			return err
 		}
@@ -248,8 +248,8 @@ func (eg *EngineGroup) RegisterSqlMap(sqlm SqlM, Cipher ...Cipher) error {
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(eg.slaves); i++ {
-		err = eg.slaves[i].RegisterSqlMap(sqlm, Cipher...)
+	for i := 0; i < len(eg.subordinates); i++ {
+		err = eg.subordinates[i].RegisterSqlMap(sqlm, Cipher...)
 		if err != nil {
 			return err
 		}

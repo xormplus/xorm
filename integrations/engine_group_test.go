@@ -17,19 +17,19 @@ import (
 func TestEngineGroup(t *testing.T) {
 	assert.NoError(t, PrepareEngine())
 
-	master := testEngine.(*xorm.Engine)
-	if master.Dialect().URI().DBType == schemas.SQLITE {
+	main := testEngine.(*xorm.Engine)
+	if main.Dialect().URI().DBType == schemas.SQLITE {
 		t.Skip()
 		return
 	}
 
-	eg, err := xorm.NewEngineGroup(master, []*xorm.Engine{master})
+	eg, err := xorm.NewEngineGroup(main, []*xorm.Engine{main})
 	assert.NoError(t, err)
 
 	eg.SetMaxIdleConns(10)
 	eg.SetMaxOpenConns(100)
-	eg.SetTableMapper(master.GetTableMapper())
-	eg.SetColumnMapper(master.GetColumnMapper())
+	eg.SetTableMapper(main.GetTableMapper())
+	eg.SetColumnMapper(main.GetColumnMapper())
 	eg.SetLogLevel(log.LOG_INFO)
 	eg.ShowSQL(true)
 }
