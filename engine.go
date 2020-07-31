@@ -1236,11 +1236,11 @@ func (engine *Engine) Transaction(f func(*Session) (interface{}, error)) (interf
 
 	result, err := f(session)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 
 	if err := session.Commit(); err != nil {
-		return nil, err
+		return result, err
 	}
 
 	return result, nil
