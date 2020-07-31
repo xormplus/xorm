@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/xormplus/xorm"
+	"github.com/xormplus/xorm/internal/statements"
 	"github.com/xormplus/xorm/internal/utils"
 	"github.com/xormplus/xorm/names"
 )
@@ -39,6 +40,14 @@ func TestUpdateMap(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, cnt)
+
+	cnt, err = testEngine.Table("update_table").ID(tb.Id).Update(map[string]interface{}{
+		"name": "test2",
+		"age":  36,
+	})
+	assert.Error(t, err)
+	assert.True(t, statements.IsIDConditionWithNoTableErr(err))
+	assert.EqualValues(t, 0, cnt)
 }
 
 func TestUpdateLimit(t *testing.T) {
@@ -988,7 +997,7 @@ func TestUpdateMapContent(t *testing.T) {
 	assert.EqualValues(t, false, c2.IsMan)
 	assert.EqualValues(t, 2, c2.Gender)
 
-	cnt, err = testEngine.Table(testEngine.TableName(new(UpdateMapContent))).ID(c.Id).Update(map[string]interface{}{
+	cnt, err = testEngine.Table(new(UpdateMapContent)).ID(c.Id).Update(map[string]interface{}{
 		"age":    15,
 		"is_man": true,
 		"gender": 1,
