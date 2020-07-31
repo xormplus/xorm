@@ -9,7 +9,7 @@ const (
 	MYMYSQL_DRIVER    string = "mymysql"
 	POSTGRESQL_DRIVER string = "postgres"
 	OCI8_DRIVER       string = "oci8"
-	GORACLE_DRIVER    string = "goracle"
+	GORACLE_DRIVER    string = "godror"
 	SQLITE3_DRIVER    string = "sqlite3"
 )
 
