@@ -10,28 +10,28 @@ import (
 	"time"
 )
 
-// GroupPolicy is be used by chosing the current slave from slaves
+// GroupPolicy is be used by chosing the current subordinate from subordinates
 type GroupPolicy interface {
-	Slave(*EngineGroup) *Engine
+	Subordinate(*EngineGroup) *Engine
 }
 
 // GroupPolicyHandler should be used when a function is a GroupPolicy
 type GroupPolicyHandler func(*EngineGroup) *Engine
 
-// Slave implements the chosen of slaves
-func (h GroupPolicyHandler) Slave(eg *EngineGroup) *Engine {
+// Subordinate implements the chosen of subordinates
+func (h GroupPolicyHandler) Subordinate(eg *EngineGroup) *Engine {
 	return h(eg)
 }
 
-// RandomPolicy implmentes randomly chose the slave of slaves
+// RandomPolicy implmentes randomly chose the subordinate of subordinates
 func RandomPolicy() GroupPolicyHandler {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	return func(g *EngineGroup) *Engine {
-		return g.Slaves()[r.Intn(len(g.Slaves()))]
+		return g.Subordinates()[r.Intn(len(g.Subordinates()))]
 	}
 }
 
-// WeightRandomPolicy implmentes randomly chose the slave of slaves
+// WeightRandomPolicy implmentes randomly chose the subordinate of subordinates
 func WeightRandomPolicy(weights []int) GroupPolicyHandler {
 	var rands = make([]int, 0, len(weights))
 	for i := 0; i < len(weights); i++ {
@@ -42,12 +42,12 @@ func WeightRandomPolicy(weights []int) GroupPolicyHandler {
 	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	return func(g *EngineGroup) *Engine {
-		var slaves = g.Slaves()
+		var subordinates = g.Subordinates()
 		idx := rands[r.Intn(len(rands))]
-		if idx >= len(slaves) {
-			idx = len(slaves) - 1
+		if idx >= len(subordinates) {
+			idx = len(subordinates) - 1
 		}
-		return slaves[idx]
+		return subordinates[idx]
 	}
 }
 
@@ -56,16 +56,16 @@ func RoundRobinPolicy() GroupPolicyHandler {
 	var pos = -1
 	var lock sync.Mutex
 	return func(g *EngineGroup) *Engine {
-		var slaves = g.Slaves()
+		var subordinates = g.Subordinates()
 
 		lock.Lock()
 		defer lock.Unlock()
 		pos++
-		if pos >= len(slaves) {
+		if pos >= len(subordinates) {
 			pos = 0
 		}
 
-		return slaves[pos]
+		return subordinates[pos]
 	}
 }
 
@@ -81,7 +81,7 @@ func WeightRoundRobinPolicy(weights []int) GroupPolicyHandler {
 	var lock sync.Mutex
 
 	return func(g *EngineGroup) *Engine {
-		var slaves = g.Slaves()
+		var subordinates = g.Subordinates()
 		lock.Lock()
 		defer lock.Unlock()
 		pos++
@@ -90,21 +90,21 @@ func WeightRoundRobinPolicy(weights []int) GroupPolicyHandler {
 		}
 
 		idx := rands[pos]
-		if idx >= len(slaves) {
-			idx = len(slaves) - 1
+		if idx >= len(subordinates) {
+			idx = len(subordinates) - 1
 		}
-		return slaves[idx]
+		return subordinates[idx]
 	}
 }
 
-// LeastConnPolicy implements GroupPolicy, every time will get the least connections slave
+// LeastConnPolicy implements GroupPolicy, every time will get the least connections subordinate
 func LeastConnPolicy() GroupPolicyHandler {
 	return func(g *EngineGroup) *Engine {
-		var slaves = g.Slaves()
+		var subordinates = g.Subordinates()
 		connections := 0
 		idx := 0
-		for i := 0; i < len(slaves); i++ {
-			openConnections := slaves[i].DB().Stats().OpenConnections
+		for i := 0; i < len(subordinates); i++ {
+			openConnections := subordinates[i].DB().Stats().OpenConnections
 			if i == 0 {
 				connections = openConnections
 				idx = i
@@ -113,6 +113,6 @@ func LeastConnPolicy() GroupPolicyHandler {
 				idx = i
 			}
 		}
-		return slaves[idx]
+		return subordinates[idx]
 	}
 }

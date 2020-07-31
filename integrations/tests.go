@@ -49,7 +49,7 @@ func createEngine(dbType, connStr string) error {
 		if !*cluster {
 			switch schemas.DBType(strings.ToLower(dbType)) {
 			case schemas.MSSQL:
-				db, err := sql.Open(dbType, strings.Replace(connStr, "xorm_test", "master", -1))
+				db, err := sql.Open(dbType, strings.Replace(connStr, "xorm_test", "main", -1))
 				if err != nil {
 					return err
 				}
