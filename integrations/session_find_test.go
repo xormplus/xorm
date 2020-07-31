@@ -502,10 +502,48 @@ func TestFindAndCountOneFunc(t *testing.T) {
 	assert.EqualValues(t, 1, cnt)
 
 	results = make([]FindAndCountStruct, 0, 1)
-	cnt, err = testEngine.Where("msg = ?", true).Limit(1).FindAndCount(&results)
+	cnt, err = testEngine.Where("1=1").Limit(1).FindAndCount(&results)
 	assert.NoError(t, err)
 	assert.EqualValues(t, 1, len(results))
-	assert.EqualValues(t, 1, cnt)
+	assert.EqualValues(t, 2, cnt)
+	assert.EqualValues(t, FindAndCountStruct{
+		Id:      1,
+		Content: "111",
+		Msg:     false,
+	}, results[0])
+
+	results = make([]FindAndCountStruct, 0, 1)
+	cnt, err = testEngine.Where("1=1").Limit(1).FindAndCount(&results)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(results))
+	assert.EqualValues(t, 2, cnt)
+	assert.EqualValues(t, FindAndCountStruct{
+		Id:      1,
+		Content: "111",
+		Msg:     false,
+	}, results[0])
+
+	results = make([]FindAndCountStruct, 0, 1)
+	cnt, err = testEngine.Where("1=1").Limit(1, 1).FindAndCount(&results)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(results))
+	assert.EqualValues(t, 2, cnt)
+	assert.EqualValues(t, FindAndCountStruct{
+		Id:      2,
+		Content: "222",
+		Msg:     true,
+	}, results[0])
+
+	results = make([]FindAndCountStruct, 0, 1)
+	cnt, err = testEngine.Where("1=1").Limit(1, 1).FindAndCount(&results)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 1, len(results))
+	assert.EqualValues(t, 2, cnt)
+	assert.EqualValues(t, FindAndCountStruct{
+		Id:      2,
+		Content: "222",
+		Msg:     true,
+	}, results[0])
 
 	results = make([]FindAndCountStruct, 0, 1)
 	cnt, err = testEngine.Where("msg = ?", true).Select("id, content, msg").

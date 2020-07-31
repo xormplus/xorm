@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	//"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -774,79 +775,9 @@ func (engine *Engine) IsTableExist(beanOrTableName interface{}) (bool, error) {
 	return session.IsTableExist(beanOrTableName)
 }
 
-// IDOf get id from one struct
-func (engine *Engine) IDOf(bean interface{}) (schemas.PK, error) {
-	return engine.IDOfV(reflect.ValueOf(bean))
-}
-
 // TableName returns table name with schema prefix if has
 func (engine *Engine) TableName(bean interface{}, includeSchema ...bool) string {
 	return dialects.FullTableName(engine.dialect, engine.GetTableMapper(), bean, includeSchema...)
-}
-
-// IDOfV get id from one value of struct
-func (engine *Engine) IDOfV(rv reflect.Value) (schemas.PK, error) {
-	return engine.idOfV(rv)
-}
-
-func (engine *Engine) idOfV(rv reflect.Value) (schemas.PK, error) {
-	v := reflect.Indirect(rv)
-	table, err := engine.tagParser.ParseWithCache(v)
-	if err != nil {
-		return nil, err
-	}
-
-	pk := make([]interface{}, len(table.PrimaryKeys))
-	for i, col := range table.PKColumns() {
-		var err error
-
-		fieldName := col.FieldName
-		for {
-			parts := strings.SplitN(fieldName, ".", 2)
-			if len(parts) == 1 {
-				break
-			}
-
-			v = v.FieldByName(parts[0])
-			if v.Kind() == reflect.Ptr {
-				v = v.Elem()
-			}
-			if v.Kind() != reflect.Struct {
-				return nil, ErrUnSupportedType
-			}
-			fieldName = parts[1]
-		}
-
-		pkField := v.FieldByName(fieldName)
-		switch pkField.Kind() {
-		case reflect.String:
-			pk[i], err = engine.idTypeAssertion(col, pkField.String())
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			pk[i], err = engine.idTypeAssertion(col, strconv.FormatInt(pkField.Int(), 10))
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			// id of uint will be converted to int64
-			pk[i], err = engine.idTypeAssertion(col, strconv.FormatUint(pkField.Uint(), 10))
-		}
-
-		if err != nil {
-			return nil, err
-		}
-	}
-	return schemas.PK(pk), nil
-}
-
-func (engine *Engine) idTypeAssertion(col *schemas.Column, sid string) (interface{}, error) {
-	if col.SQLType.IsNumeric() {
-		n, err := strconv.ParseInt(sid, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		return n, nil
-	} else if col.SQLType.IsText() {
-		return sid, nil
-	} else {
-		return nil, errors.New("not supported")
-	}
 }
 
 // CreateIndexes create indexes
