@@ -96,10 +96,10 @@ func (engine *Engine) Logger() log.ContextLogger {
 func (engine *Engine) SetLogger(logger interface{}) {
 	var realLogger log.ContextLogger
 	switch t := logger.(type) {
-	case log.Logger:
-		realLogger = log.NewLoggerAdapter(t)
 	case log.ContextLogger:
 		realLogger = t
+	case log.Logger:
+		realLogger = log.NewLoggerAdapter(t)
 	}
 	engine.logger = realLogger
 	engine.DB().Logger = realLogger
