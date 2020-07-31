@@ -22,7 +22,7 @@ xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作
 * 支持数据库查询结果直接返回Json字符串和xml字符串
 * 支持SqlMap配置文件和SqlTemplate模板密文存储和解析
 * 支持缓存
-* 支持主从数据库(Master/Slave)数据库读写分离
+* 支持主从数据库(Main/Subordinate)数据库读写分离
 * 支持根据数据库自动生成xorm的结构体
 * 支持记录版本（即乐观锁）
 * 支持查询结果集导出csv、tsv、xml、json、xlsx、yaml、html功能
