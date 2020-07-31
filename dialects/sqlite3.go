@@ -226,11 +226,11 @@ func (db *sqlite3) AutoIncrStr() string {
 
 func (db *sqlite3) IndexCheckSQL(tableName, idxName string) (string, []interface{}) {
 	args := []interface{}{idxName}
-	return "SELECT name FROM sqlite_main WHERE type='index' and name = ?", args
+	return "SELECT name FROM sqlite_master WHERE type='index' and name = ?", args
 }
 
 func (db *sqlite3) IsTableExist(queryer core.Queryer, ctx context.Context, tableName string) (bool, error) {
-	return db.HasRecords(queryer, ctx, "SELECT name FROM sqlite_main WHERE type='table' and name = ?", tableName)
+	return db.HasRecords(queryer, ctx, "SELECT name FROM sqlite_master WHERE type='table' and name = ?", tableName)
 }
 
 func (db *sqlite3) DropIndexSQL(tableName string, index *schemas.Index) string {
@@ -373,7 +373,7 @@ func parseString(colStr string) (*schemas.Column, error) {
 
 func (db *sqlite3) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
 	args := []interface{}{tableName}
-	s := "SELECT sql FROM sqlite_main WHERE type='table' and name = ?"
+	s := "SELECT sql FROM sqlite_master WHERE type='table' and name = ?"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -430,7 +430,7 @@ func (db *sqlite3) GetColumns(queryer core.Queryer, ctx context.Context, tableNa
 
 func (db *sqlite3) GetTables(queryer core.Queryer, ctx context.Context) ([]*schemas.Table, error) {
 	args := []interface{}{}
-	s := "SELECT name FROM sqlite_main WHERE type='table'"
+	s := "SELECT name FROM sqlite_master WHERE type='table'"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -455,7 +455,7 @@ func (db *sqlite3) GetTables(queryer core.Queryer, ctx context.Context) ([]*sche
 
 func (db *sqlite3) GetIndexes(queryer core.Queryer, ctx context.Context, tableName string) (map[string]*schemas.Index, error) {
 	args := []interface{}{tableName}
-	s := "SELECT sql FROM sqlite_main WHERE type='index' and tbl_name = ?"
+	s := "SELECT sql FROM sqlite_master WHERE type='index' and tbl_name = ?"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {

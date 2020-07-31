@@ -43,7 +43,7 @@ func (session *Session) queryRows(sqlStr string, args ...interface{}) (*core.Row
 	if session.isAutoCommit {
 		var db *core.DB
 		if session.sessionType == groupSession {
-			db = session.engine.engineGroup.Slave().DB()
+			db = session.engine.engineGroup.Subordinate().DB()
 		} else {
 			db = session.DB()
 		}
