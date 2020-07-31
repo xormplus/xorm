@@ -93,19 +93,23 @@ func TestDump(t *testing.T) {
 	assert.NoError(t, PrepareEngine())
 
 	type TestDumpStruct struct {
-		Id   int64
-		Name string
+		Id      int64
+		Name    string
+		IsMan   bool
+		Created time.Time `xorm:"created"`
 	}
 
 	assertSync(t, new(TestDumpStruct))
 
-	testEngine.Insert([]TestDumpStruct{
-		{Name: "1"},
+	cnt, err := testEngine.Insert([]TestDumpStruct{
+		{Name: "1", IsMan: true},
 		{Name: "2\n"},
 		{Name: "3;"},
 		{Name: "4\n;\n''"},
 		{Name: "5'\n"},
 	})
+	assert.NoError(t, err)
+	assert.EqualValues(t, 5, cnt)
 
 	fp := fmt.Sprintf("%v.sql", testEngine.Dialect().URI().DBType)
 	os.Remove(fp)
@@ -116,7 +120,7 @@ func TestDump(t *testing.T) {
 	sess := testEngine.NewSession()
 	defer sess.Close()
 	assert.NoError(t, sess.Begin())
-	_, err := sess.ImportFile(fp)
+	_, err = sess.ImportFile(fp)
 	assert.NoError(t, err)
 	assert.NoError(t, sess.Commit())
 
@@ -124,6 +128,49 @@ func TestDump(t *testing.T) {
 		name := fmt.Sprintf("dump_%v.sql", tp)
 		t.Run(name, func(t *testing.T) {
 			assert.NoError(t, testEngine.DumpAllToFile(name, tp))
+		})
+	}
+}
+
+func TestDumpTables(t *testing.T) {
+	assert.NoError(t, PrepareEngine())
+
+	type TestDumpTableStruct struct {
+		Id      int64
+		Name    string
+		IsMan   bool
+		Created time.Time `xorm:"created"`
+	}
+
+	assertSync(t, new(TestDumpTableStruct))
+
+	testEngine.Insert([]TestDumpTableStruct{
+		{Name: "1", IsMan: true},
+		{Name: "2\n"},
+		{Name: "3;"},
+		{Name: "4\n;\n''"},
+		{Name: "5'\n"},
+	})
+
+	fp := fmt.Sprintf("%v-table.sql", testEngine.Dialect().URI().DBType)
+	os.Remove(fp)
+	tb, err := testEngine.TableInfo(new(TestDumpTableStruct))
+	assert.NoError(t, err)
+	assert.NoError(t, testEngine.(*xorm.Engine).DumpTablesToFile([]*schemas.Table{tb}, fp))
+
+	assert.NoError(t, PrepareEngine())
+
+	sess := testEngine.NewSession()
+	defer sess.Close()
+	assert.NoError(t, sess.Begin())
+	_, err = sess.ImportFile(fp)
+	assert.NoError(t, err)
+	assert.NoError(t, sess.Commit())
+
+	for _, tp := range []schemas.DBType{schemas.SQLITE, schemas.MYSQL, schemas.POSTGRES, schemas.MSSQL} {
+		name := fmt.Sprintf("dump_%v-table.sql", tp)
+		t.Run(name, func(t *testing.T) {
+			assert.NoError(t, testEngine.(*xorm.Engine).DumpTablesToFile([]*schemas.Table{tb}, name, tp))
 		})
 	}
 }
