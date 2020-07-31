@@ -36,6 +36,8 @@ var (
 	ignoreSelectUpdate = flag.Bool("ignore_select_update", false, "ignore select update if implementation difference, only for tidb")
 	ingoreUpdateLimit  = flag.Bool("ignore_update_limit", false, "ignore update limit if implementation difference, only for cockroach")
 	quotePolicyStr     = flag.String("quote", "always", "quote could be always, none, reversed")
+	defaultVarchar     = flag.String("default_varchar", "varchar", "default varchar type, mssql only, could be varchar or nvarchar, default is varchar")
+	defaultChar        = flag.String("default_char", "char", "default char type, mssql only, could be char or nchar, default is char")
 	tableMapper        names.Mapper
 	colMapper          names.Mapper
 )
@@ -137,6 +139,11 @@ func createEngine(dbType, connStr string) error {
 		} else {
 			testEngine.SetQuotePolicy(dialects.QuotePolicyAlways)
 		}
+
+		testEngine.Dialect().SetParams(map[string]string{
+			"DEFAULT_VARCHAR": *defaultVarchar,
+			"DEFAULT_CHAR":    *defaultChar,
+		})
 	}
 
 	tableMapper = testEngine.GetTableMapper()
