@@ -54,3 +54,11 @@ func TestMustLogSQL(t *testing.T) {
 	_, err := testEngine.Table("userinfo").MustLogSQL(true).Get(new(Userinfo))
 	assert.NoError(t, err)
 }
+
+func TestEnableSessionId(t *testing.T) {
+	assert.NoError(t, PrepareEngine())
+	testEngine.EnableSessionID(true)
+	assertSync(t, new(Userinfo))
+	_, err := testEngine.Table("userinfo").MustLogSQL(true).Get(new(Userinfo))
+	assert.NoError(t, err)
+}
