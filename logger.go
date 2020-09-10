@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/xormplus/core"
 )
@@ -140,7 +141,10 @@ func (s *SimpleLogger) Info(v ...interface{}) {
 // Infof implement core.ILogger
 func (s *SimpleLogger) Infof(format string, v ...interface{}) {
 	if s.level <= core.LOG_INFO {
-		s.INFO.Output(2, fmt.Sprintf(format, v...))
+		msg := fmt.Sprintf(format, v...)
+		msg = strings.Replace(msg, "\n", " ", -1)
+		msg = strings.Replace(msg, "\t", " ", -1)
+		s.INFO.Output(2, msg)
 	}
 	return
 }
