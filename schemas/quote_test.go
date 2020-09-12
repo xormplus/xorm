@@ -22,6 +22,7 @@ func TestAlwaysQuoteTo(t *testing.T) {
 			{"[mytable]", "`mytable`"},
 			{"[mytable]", `[mytable]`},
 			{`["mytable"]`, `"mytable"`},
+			{`[mytable].*`, `[mytable].*`},
 			{"[myschema].[mytable]", "myschema.mytable"},
 			{"[myschema].[mytable]", "`myschema`.mytable"},
 			{"[myschema].[mytable]", "myschema.`mytable`"},
@@ -65,6 +66,7 @@ func TestReversedQuoteTo(t *testing.T) {
 			{"[mytable]", "mytable"},
 			{"[mytable]", "`mytable`"},
 			{"[mytable]", `[mytable]`},
+			{"[mytable].*", `[mytable].*`},
 			{`"mytable"`, `"mytable"`},
 			{"myschema.[mytable]", "myschema.mytable"},
 			{"myschema.[mytable]", "`myschema`.mytable"},
@@ -98,6 +100,7 @@ func TestNoQuoteTo(t *testing.T) {
 			{"mytable", "mytable"},
 			{"mytable", "`mytable`"},
 			{"mytable", `[mytable]`},
+			{"mytable.*", `[mytable].*`},
 			{`"mytable"`, `"mytable"`},
 			{"myschema.mytable", "myschema.mytable"},
 			{"myschema.mytable", "`myschema`.mytable"},
@@ -127,6 +130,8 @@ func TestJoin(t *testing.T) {
 
 	assert.EqualValues(t, "[a],[b]", quoter.Join([]string{"a", " b"}, ","))
 
+	assert.EqualValues(t, "[a].*,[b].[c]", quoter.Join([]string{"a.*", " b.c"}, ","))
+
 	assert.EqualValues(t, "[f1], [f2], [f3]", quoter.Join(cols, ", "))
 
 	quoter.IsReserved = AlwaysNoReserve
@@ -134,11 +139,11 @@ func TestJoin(t *testing.T) {
 }
 
 func TestStrings(t *testing.T) {
-	cols := []string{"f1", "f2", "t3.f3"}
+	cols := []string{"f1", "f2", "t3.f3", "t4.*"}
 	quoter := Quoter{'[', ']', AlwaysReserve}
 
 	quotedCols := quoter.Strings(cols)
-	assert.EqualValues(t, []string{"[f1]", "[f2]", "[t3].[f3]"}, quotedCols)
+	assert.EqualValues(t, []string{"[f1]", "[f2]", "[t3].[f3]", "[t4].*"}, quotedCols)
 }
 
 func TestTrim(t *testing.T) {
