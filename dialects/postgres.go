@@ -1015,7 +1015,7 @@ WHERE n.nspname= s.table_schema AND c.relkind = 'r'::char AND c.relname = $1%s A
 
 	schema := db.getSchema()
 	if schema != "" {
-		s = fmt.Sprintf(s, "AND s.table_schema = $2")
+		s = fmt.Sprintf(s, " AND s.table_schema = $2")
 		args = append(args, schema)
 	} else {
 		s = fmt.Sprintf(s, "")
