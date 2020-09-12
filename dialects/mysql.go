@@ -308,8 +308,10 @@ func (db *mysql) AddColumnSQL(tableName string, col *schemas.Column) string {
 func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
 	args := []interface{}{db.uri.DBName, tableName}
 	s := "SELECT `COLUMN_NAME`, `IS_NULLABLE`, `COLUMN_DEFAULT`, `COLUMN_TYPE`," +
-		" `COLUMN_KEY`, `EXTRA`,`COLUMN_COMMENT` FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?" +
-		" ORDER BY `INFORMATION_SCHEMA`.`COLUMNS`.ORDINAL_POSITION"
+		" `COLUMN_KEY`, `EXTRA`, `COLUMN_COMMENT`, " +
+		alreadyQuoted + " AS NEEDS_QUOTE " +
+		"FROM `INFORMATION_SCHEMA`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? AND `TABLE_NAME` = ?" +
+		" ORDER BY `COLUMNS`.ORDINAL_POSITION"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
