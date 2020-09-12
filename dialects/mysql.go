@@ -307,6 +307,12 @@ func (db *mysql) AddColumnSQL(tableName string, col *schemas.Column) string {
 
 func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
 	args := []interface{}{db.uri.DBName, tableName}
+	alreadyQuoted := "(INSTR(VERSION(), 'maria') > 0 && " +
+		"(SUBSTRING_INDEX(VERSION(), '.', 1) > 10 || " +
+		"(SUBSTRING_INDEX(VERSION(), '.', 1) = 10 && " +
+		"(SUBSTRING_INDEX(SUBSTRING(VERSION(), 4), '.', 1) > 2 || " +
+		"(SUBSTRING_INDEX(SUBSTRING(VERSION(), 4), '.', 1) = 2 && " +
+		"SUBSTRING_INDEX(SUBSTRING(VERSION(), 6), '-', 1) >= 7)))))"
 	s := "SELECT `COLUMN_NAME`, `IS_NULLABLE`, `COLUMN_DEFAULT`, `COLUMN_TYPE`," +
 		" `COLUMN_KEY`, `EXTRA`, `COLUMN_COMMENT`, " +
 		alreadyQuoted + " AS NEEDS_QUOTE " +
@@ -326,8 +332,9 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		col.Indexes = make(map[string]int)
 
 		var columnName, isNullable, colType, colKey, extra, comment string
+		var alreadyQuoted bool
 		var colDefault *string
-		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra, &comment)
+		err = rows.Scan(&columnName, &isNullable, &colDefault, &colType, &colKey, &extra, &comment, &alreadyQuoted)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -337,7 +344,7 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 			col.Nullable = true
 		}
 
-		if colDefault != nil {
+		if colDefault != nil && (!alreadyQuoted || *colDefault != "NULL") {
 			col.Default = *colDefault
 			col.DefaultIsEmpty = false
 		} else {
@@ -406,9 +413,9 @@ func (db *mysql) GetColumns(queryer core.Queryer, ctx context.Context, tableName
 		}
 
 		if !col.DefaultIsEmpty {
-			if col.SQLType.IsText() {
+			if !alreadyQuoted && col.SQLType.IsText() {
 				col.Default = "'" + col.Default + "'"
-			} else if col.SQLType.IsTime() && col.Default != "CURRENT_TIMESTAMP" {
+			} else if col.SQLType.IsTime() && !alreadyQuoted && col.Default != "CURRENT_TIMESTAMP" {
 				col.Default = "'" + col.Default + "'"
 			}
 		}
