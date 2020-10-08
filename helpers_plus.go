@@ -239,6 +239,7 @@ func rows2mapObject(rows *core.Rows, fields []string) (resultsMap map[string]int
 		rawValue := reflect.Indirect(reflect.ValueOf(scanResultContainers[ii]))
 		//if row is null then ignore
 		if rawValue.Interface() == nil {
+			result[key] = nil
 			continue
 		}
 
