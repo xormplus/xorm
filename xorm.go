@@ -43,6 +43,10 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 		return nil, err
 	}
 
+	return newEngine(driverName, dataSourceName, dialect, db)
+}
+
+func newEngine(driverName, dataSourceName string, dialect dialects.Dialect, db *core.DB) (*Engine, error) {
 	cacherMgr := caches.NewManager()
 	mapper := names.NewCacheMapper(new(names.SnakeMapper))
 	tagParser := tags.NewParser("xorm", dialect, mapper, mapper, cacherMgr)
@@ -70,7 +74,7 @@ func NewEngine(driverName string, dataSourceName string) (*Engine, error) {
 	engine.SetLogger(log.NewLoggerAdapter(logger))
 
 	runtime.SetFinalizer(engine, func(engine *Engine) {
-		engine.Close()
+		_ = engine.Close()
 	})
 
 	return engine, nil
@@ -81,6 +85,14 @@ func NewEngineWithParams(driverName string, dataSourceName string, params map[st
 	engine, err := NewEngine(driverName, dataSourceName)
 	engine.dialect.SetParams(params)
 	return engine, err
+}
+
+// NewEngineWithDialectAndDB new a db manager according to the parameter.
+// If you do not want to use your own dialect or db, please use NewEngine.
+// For creating dialect, you can call dialects.OpenDialect. And, for creating db,
+// you can call core.Open or core.FromDB.
+func NewEngineWithDialectAndDB(driverName, dataSourceName string, dialect dialects.Dialect, db *core.DB) (*Engine, error) {
+	return newEngine(driverName, dataSourceName, dialect, db)
 }
 
 // Clone clone an engine
