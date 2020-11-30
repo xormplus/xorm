@@ -630,7 +630,8 @@ func (db *oracle) IsColumnExist(queryer core.Queryer, ctx context.Context, table
 func (db *oracle) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
 	args := []interface{}{tableName}
 	s := "SELECT t.column_name,data_default,data_type,data_length,data_precision,data_scale," +
-		"nullable, NVL(u.COMMENTS, ' ') COMMENTS FROM USER_TAB_COLUMNS t, user_col_comments u WHERE t.table_name = u.table_name and t.column_name = u.column_name and t.table_name = :1"
+		"nullable, NVL(u.COMMENTS, ' ') COMMENTS FROM USER_TAB_COLUMNS t, user_col_comments u " +
+		"WHERE t.table_name = u.table_name and t.column_name = u.column_name and t.table_name = :1 order by t.column_id"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
