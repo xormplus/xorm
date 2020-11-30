@@ -629,8 +629,8 @@ func (db *oracle) IsColumnExist(queryer core.Queryer, ctx context.Context, table
 
 func (db *oracle) GetColumns(queryer core.Queryer, ctx context.Context, tableName string) ([]string, map[string]*schemas.Column, error) {
 	args := []interface{}{tableName}
-	s := "SELECT column_name,data_default,data_type,data_length,data_precision,data_scale," +
-		"nullable FROM USER_TAB_COLUMNS WHERE table_name = :1"
+	s := "SELECT t.column_name,data_default,data_type,data_length,data_precision,data_scale," +
+		"nullable, NVL(u.COMMENTS, ' ') COMMENTS FROM USER_TAB_COLUMNS t, user_col_comments u WHERE t.table_name = u.table_name and t.column_name = u.column_name and t.table_name = :1"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -644,11 +644,11 @@ func (db *oracle) GetColumns(queryer core.Queryer, ctx context.Context, tableNam
 		col := new(schemas.Column)
 		col.Indexes = make(map[string]int)
 
-		var colName, colDefault, nullable, dataType, dataPrecision, dataScale *string
+		var colName, colDefault, nullable, dataType, dataPrecision, dataScale, comments *string
 		var dataLen int
 
 		err = rows.Scan(&colName, &colDefault, &dataType, &dataLen, &dataPrecision,
-			&dataScale, &nullable)
+			&dataScale, &nullable, &comments)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -657,6 +657,10 @@ func (db *oracle) GetColumns(queryer core.Queryer, ctx context.Context, tableNam
 		if colDefault != nil {
 			col.Default = *colDefault
 			col.DefaultIsEmpty = false
+		}
+
+		if comments != nil {
+			col.Comment = *comments
 		}
 
 		if *nullable == "Y" {
@@ -726,7 +730,7 @@ func (db *oracle) GetColumns(queryer core.Queryer, ctx context.Context, tableNam
 
 func (db *oracle) GetTables(queryer core.Queryer, ctx context.Context) ([]*schemas.Table, error) {
 	args := []interface{}{}
-	s := "SELECT table_name FROM user_tables"
+	s := "SELECT table_name, NVL(COMMENTS, ' ') FROM user_tab_comments where TABLE_TYPE ='TABLE'"
 
 	rows, err := queryer.QueryContext(ctx, s, args...)
 	if err != nil {
@@ -737,7 +741,7 @@ func (db *oracle) GetTables(queryer core.Queryer, ctx context.Context) ([]*schem
 	tables := make([]*schemas.Table, 0)
 	for rows.Next() {
 		table := schemas.NewEmptyTable()
-		err = rows.Scan(&table.Name)
+		err = rows.Scan(&table.Name, &table.Comment)
 		if err != nil {
 			return nil, err
 		}
@@ -771,7 +775,7 @@ func (db *oracle) GetIndexes(queryer core.Queryer, ctx context.Context, tableNam
 		indexName = strings.Trim(indexName, `" `)
 
 		var isRegular bool
-		if strings.HasPrefix(indexName, "IDX_"+tableName) || strings.HasPrefix(indexName, "UQE_"+tableName) {
+		if len(indexName) > 5+len(tableName) && (strings.HasPrefix(indexName, "IDX_"+tableName) || strings.HasPrefix(indexName, "UQE_"+tableName)) {
 			indexName = indexName[5+len(tableName):]
 			isRegular = true
 		}
