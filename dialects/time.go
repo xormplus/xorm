@@ -12,6 +12,13 @@ import (
 
 // FormatTime format time as column type
 func FormatTime(dialect Dialect, sqlTypeName string, t time.Time) (v interface{}) {
+	// go-oci8 can handler time.Time. you can view the code in go-oci8/statement.go:bindValues()
+	if dialect.URI().DBType == schemas.ORACLE {
+		v = t
+
+		return
+	}
+
 	switch sqlTypeName {
 	case schemas.Time:
 		s := t.Format("2006-01-02 15:04:05") // time.RFC3339
