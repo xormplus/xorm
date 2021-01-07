@@ -136,7 +136,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 		autoCond       builder.Cond
 	)
 	if tp == tpStruct {
-		if !session.statement.NoAutoCondition && len(condiBean) > 0 {
+		if session.statement.NoAutoCondition && len(condiBean) > 0 {
 			condTable, err := session.engine.tagParser.Parse(reflect.ValueOf(condiBean[0]))
 			if err != nil {
 				return err
