@@ -136,7 +136,7 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 		autoCond       builder.Cond
 	)
 	if tp == tpStruct {
-		if session.statement.NoAutoCondition && len(condiBean) > 0 {
+		if !session.statement.NoAutoCondition && len(condiBean) > 0 {
 			condTable, err := session.engine.tagParser.Parse(reflect.ValueOf(condiBean[0]))
 			if err != nil {
 				return err
@@ -144,10 +144,6 @@ func (session *Session) find(rowsSlicePtr interface{}, condiBean ...interface{})
 			autoCond, err = session.statement.BuildConds(condTable, condiBean[0], true, true, false, true, addedTableName)
 			if err != nil {
 				return err
-			}
-		} else {
-			if col := table.DeletedColumn(); col != nil && !session.statement.GetUnscoped() { // tag "deleted" is enabled
-				autoCond = session.statement.CondDeleted(col)
 			}
 		}
 	}
