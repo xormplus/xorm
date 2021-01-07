@@ -456,7 +456,6 @@ func (session *Session) genSelectSql(dialect dialects.Dialect, rownumber string)
 
 	if dialect.URI().DBType != schemas.MSSQL && dialect.URI().DBType != schemas.ORACLE {
 		if session.statement.Start > 0 {
-			sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, session.statement.LimitN, session.statement.Start)
 			if pLimitN != nil {
 				sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, *pLimitN, session.statement.Start)
 			} else {
