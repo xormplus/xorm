@@ -50,6 +50,12 @@ func (session *Session) NotIn(column string, args ...interface{}) *Session {
 	return session
 }
 
+// OmitConditions omit condition when generate SQL condition from beans
+func (session *Session) OmitConditions(columns ...string) *Session {
+	session.statement.OmitConditions(columns...)
+	return session
+}
+
 // Conds returns session query conditions except auto bean conditions
 func (session *Session) Conds() builder.Cond {
 	return session.statement.Conds()

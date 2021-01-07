@@ -35,48 +35,49 @@ var (
 
 // Statement save all the sql info for executing SQL
 type Statement struct {
-	RefTable        *schemas.Table
-	dialect         dialects.Dialect
-	defaultTimeZone *time.Location
-	tagParser       *tags.Parser
-	Start           int
-	LimitN          *int
-	idParam         schemas.PK
-	OrderStr        string
-	JoinStr         string
-	joinArgs        []interface{}
-	GroupByStr      string
-	HavingStr       string
-	SelectStr       string
-	useAllCols      bool
-	AltTableName    string
-	tableName       string
-	RawSQL          string
-	RawParams       []interface{}
-	UseCascade      bool
-	UseAutoJoin     bool
-	StoreEngine     string
-	Charset         string
-	UseCache        bool
-	UseAutoTime     bool
-	NoAutoCondition bool
-	IsDistinct      bool
-	IsForUpdate     bool
-	TableAlias      string
-	allUseBool      bool
-	CheckVersion    bool
-	unscoped        bool
-	ColumnMap       columnMap
-	OmitColumnMap   columnMap
-	MustColumnMap   map[string]bool
-	NullableMap     map[string]bool
-	IncrColumns     exprParams
-	DecrColumns     exprParams
-	ExprColumns     exprParams
-	cond            builder.Cond
-	BufferSize      int
-	Context         contexts.ContextCache
-	LastError       error
+	RefTable         *schemas.Table
+	dialect          dialects.Dialect
+	defaultTimeZone  *time.Location
+	tagParser        *tags.Parser
+	Start            int
+	LimitN           *int
+	idParam          schemas.PK
+	OrderStr         string
+	JoinStr          string
+	joinArgs         []interface{}
+	GroupByStr       string
+	HavingStr        string
+	SelectStr        string
+	useAllCols       bool
+	AltTableName     string
+	tableName        string
+	RawSQL           string
+	RawParams        []interface{}
+	UseCascade       bool
+	UseAutoJoin      bool
+	StoreEngine      string
+	Charset          string
+	UseCache         bool
+	UseAutoTime      bool
+	NoAutoCondition  bool
+	IsDistinct       bool
+	IsForUpdate      bool
+	TableAlias       string
+	allUseBool       bool
+	CheckVersion     bool
+	unscoped         bool
+	ColumnMap        columnMap
+	OmitColumnMap    columnMap
+	OmitConditionMap columnMap
+	MustColumnMap    map[string]bool
+	NullableMap      map[string]bool
+	IncrColumns      exprParams
+	DecrColumns      exprParams
+	ExprColumns      exprParams
+	cond             builder.Cond
+	BufferSize       int
+	Context          contexts.ContextCache
+	LastError        error
 }
 
 // NewStatement creates a new statement
@@ -136,6 +137,7 @@ func (statement *Statement) Reset() {
 	statement.HavingStr = ""
 	statement.ColumnMap = columnMap{}
 	statement.OmitColumnMap = columnMap{}
+	statement.OmitConditionMap = columnMap{}
 	statement.AltTableName = ""
 	statement.tableName = ""
 	statement.idParam = nil
@@ -268,6 +270,15 @@ func (statement *Statement) In(column string, args ...interface{}) *Statement {
 func (statement *Statement) NotIn(column string, args ...interface{}) *Statement {
 	notIn := builder.NotIn(statement.quote(column), args...)
 	statement.cond = statement.cond.And(notIn)
+	return statement
+}
+
+// OmitConditions omit condition when generate SQL condition from beans
+func (statement *Statement) OmitConditions(columns ...string) *Statement {
+	newColumns := col2NewCols(columns...)
+	for _, nc := range newColumns {
+		statement.OmitConditionMap = append(statement.OmitConditionMap, statement.quote(nc))
+	}
 	return statement
 }
 
@@ -717,6 +728,9 @@ func (statement *Statement) buildConds2(table *schemas.Table, bean interface{},
 			colName = statement.quote(nm) + "." + statement.quote(col.Name)
 		} else {
 			colName = statement.quote(col.Name)
+		}
+		if omit := statement.OmitConditionMap.Contain(colName); omit {
+			continue
 		}
 
 		fieldValuePtr, err := col.ValueOf(bean)
