@@ -321,16 +321,17 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 		if err != nil {
 			return false, err
 		}
-		defer rows.Close()
-
 		if rows.Next() {
 			err = rows.ScanSlice(&res)
 			if err != nil {
+				rows.Close()
 				return false, err
 			}
 		} else {
+			rows.Close()
 			return false, ErrCacheFailed
 		}
+		rows.Close()
 
 		var pk schemas.PK = make([]interface{}, len(table.PrimaryKeys))
 		for i, col := range table.PKColumns() {
