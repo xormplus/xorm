@@ -321,14 +321,14 @@ func (session *Session) cacheGet(bean interface{}, sqlStr string, args ...interf
 		if err != nil {
 			return false, err
 		}
-		defer rows.Close()
-
 		if rows.Next() {
 			err = rows.ScanSlice(&res)
+			rows.Close()
 			if err != nil {
 				return false, err
 			}
 		} else {
+			rows.Close()
 			return false, ErrCacheFailed
 		}
 
