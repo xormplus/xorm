@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/asppj/xorm"
-	"github.com/asppj/xorm/convert"
-	"github.com/asppj/xorm/internal/json"
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm"
+	"github.com/xormplus/xorm/convert"
+	"github.com/xormplus/xorm/internal/json"
+	"github.com/xormplus/xorm/schemas"
 
 	"github.com/stretchr/testify/assert"
 )

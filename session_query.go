@@ -13,9 +13,9 @@ import (
 	"time"
 
 	// "github.com/xormplus/builder"
-	"github.com/asppj/xorm/core"
-	"github.com/asppj/xorm/schemas"
-	// "github.com/asppj/xorm/internal/statements"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/schemas"
+	// "github.com/xormplus/xorm/internal/statements"
 )
 
 func (session *Session) QueryValue(sqlOrArgs ...interface{}) ([]map[string]Value, error) {

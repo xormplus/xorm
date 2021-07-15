@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asppj/xorm/contexts"
-	"github.com/asppj/xorm/convert"
-	"github.com/asppj/xorm/core"
-	"github.com/asppj/xorm/internal/json"
-	"github.com/asppj/xorm/internal/statements"
-	"github.com/asppj/xorm/log"
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/contexts"
+	"github.com/xormplus/xorm/convert"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/internal/json"
+	"github.com/xormplus/xorm/internal/statements"
+	"github.com/xormplus/xorm/log"
+	"github.com/xormplus/xorm/schemas"
 )
 
 type sessionType bool

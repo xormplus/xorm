@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/asppj/xorm"
+	"github.com/xormplus/xorm"
 
 	"github.com/stretchr/testify/assert"
 )

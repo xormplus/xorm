@@ -12,8 +12,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/asppj/xorm/core"
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/schemas"
 )
 
 var (

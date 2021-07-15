@@ -10,7 +10,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/asppj/xorm/contexts"
+	"github.com/xormplus/xorm/contexts"
 )
 
 // Stmt reprents a stmt objects

@@ -19,15 +19,15 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/asppj/xorm/caches"
-	"github.com/asppj/xorm/contexts"
-	"github.com/asppj/xorm/core"
-	"github.com/asppj/xorm/dialects"
-	"github.com/asppj/xorm/internal/utils"
-	"github.com/asppj/xorm/log"
-	"github.com/asppj/xorm/names"
-	"github.com/asppj/xorm/schemas"
-	"github.com/asppj/xorm/tags"
+	"github.com/xormplus/xorm/caches"
+	"github.com/xormplus/xorm/contexts"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/dialects"
+	"github.com/xormplus/xorm/internal/utils"
+	"github.com/xormplus/xorm/log"
+	"github.com/xormplus/xorm/names"
+	"github.com/xormplus/xorm/schemas"
+	"github.com/xormplus/xorm/tags"
 )
 
 // Engine is the major struct of xorm, it means a database manager.
@@ -1248,7 +1248,7 @@ func (engine *Engine) SetDefaultContext(ctx context.Context) {
 	engine.defaultContext = ctx
 }
 
-// SetSessionTimeout 设置session默认超时时间 秒
+// SetSessionTimeout set the default timeout for every session
 func (engine *Engine) SetSessionTimeout(timeout uint) {
 	engine.timeoutSecond = timeout
 }

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/asppj/xorm/schemas"
 	"github.com/stretchr/testify/assert"
+	"github.com/xormplus/xorm/schemas"
 )
 
 type IntId struct {

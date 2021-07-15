@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asppj/xorm/schemas"
 	"github.com/xormplus/builder"
+	"github.com/xormplus/xorm/schemas"
 )
 
 func quoteNeeded(a interface{}) bool {

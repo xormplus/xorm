@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/schemas"
 )
 
 func setColumnInt(bean interface{}, col *schemas.Column, t int64) {

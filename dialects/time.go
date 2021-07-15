@@ -7,7 +7,7 @@ package dialects
 import (
 	"time"
 
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/schemas"
 )
 
 // FormatTime format time as column type

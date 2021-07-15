@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/asppj/xorm/core"
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/core"
+	"github.com/xormplus/xorm/schemas"
 )
 
 // from http://www.postgresql.org/docs/current/static/sql-keywords-appendix.html

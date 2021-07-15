@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/asppj/xorm/schemas"
+	"github.com/xormplus/xorm/schemas"
 )
 
 const (
