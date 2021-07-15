@@ -52,7 +52,7 @@ type Engine struct {
 	DatabaseTZ *time.Location // The timezone of the database
 
 	logSessionID  bool // create session id
-	timeoutSecond uint // > 0 设置超时时间
+	timeoutSecond uint // if > 0 set default timeout for session
 }
 
 // EnableSessionID if enable session id
