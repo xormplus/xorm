@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xormplus/xorm/contexts"
-	"github.com/xormplus/xorm/convert"
-	"github.com/xormplus/xorm/core"
-	"github.com/xormplus/xorm/internal/json"
-	"github.com/xormplus/xorm/internal/statements"
-	"github.com/xormplus/xorm/log"
-	"github.com/xormplus/xorm/schemas"
+	"github.com/asppj/xorm/contexts"
+	"github.com/asppj/xorm/convert"
+	"github.com/asppj/xorm/core"
+	"github.com/asppj/xorm/internal/json"
+	"github.com/asppj/xorm/internal/statements"
+	"github.com/asppj/xorm/log"
+	"github.com/asppj/xorm/schemas"
 )
 
 type sessionType bool
@@ -61,7 +61,7 @@ type Session struct {
 	afterClosures   []func(interface{})
 	afterProcessors []executedProcessor
 
-	stmtCache map[uint32]*core.Stmt //key: hash.Hash32 of (queryStr, len(queryStr))
+	stmtCache map[uint32]*core.Stmt // key: hash.Hash32 of (queryStr, len(queryStr))
 
 	lastSQL     string
 	lastSQLArgs []interface{}
@@ -69,7 +69,9 @@ type Session struct {
 
 	rollbackSavePointID string
 
-	ctx         context.Context
+	ctx    context.Context
+	cancel context.CancelFunc // close时取消
+
 	sessionType sessionType
 
 	err error
@@ -93,9 +95,13 @@ func newSession(engine *Engine) *Session {
 	} else {
 		ctx = engine.defaultContext
 	}
-
+	var cancel context.CancelFunc
+	if engine.timeoutSecond > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Second*time.Duration(engine.timeoutSecond))
+	}
 	session := &Session{
 		ctx:    ctx,
+		cancel: cancel,
 		engine: engine,
 		tx:     nil,
 		statement: statements.NewStatement(
@@ -132,6 +138,9 @@ func newSession(engine *Engine) *Session {
 
 // Close release the connection from pool
 func (session *Session) Close() error {
+	if session.cancel != nil {
+		session.cancel()
+	}
 	for _, v := range session.stmtCache {
 		if err := v.Close(); err != nil {
 			return err

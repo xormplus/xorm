@@ -19,15 +19,15 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/xormplus/xorm/caches"
-	"github.com/xormplus/xorm/contexts"
-	"github.com/xormplus/xorm/core"
-	"github.com/xormplus/xorm/dialects"
-	"github.com/xormplus/xorm/internal/utils"
-	"github.com/xormplus/xorm/log"
-	"github.com/xormplus/xorm/names"
-	"github.com/xormplus/xorm/schemas"
-	"github.com/xormplus/xorm/tags"
+	"github.com/asppj/xorm/caches"
+	"github.com/asppj/xorm/contexts"
+	"github.com/asppj/xorm/core"
+	"github.com/asppj/xorm/dialects"
+	"github.com/asppj/xorm/internal/utils"
+	"github.com/asppj/xorm/log"
+	"github.com/asppj/xorm/names"
+	"github.com/asppj/xorm/schemas"
+	"github.com/asppj/xorm/tags"
 )
 
 // Engine is the major struct of xorm, it means a database manager.
@@ -51,7 +51,8 @@ type Engine struct {
 	TZLocation *time.Location // The timezone of the application
 	DatabaseTZ *time.Location // The timezone of the database
 
-	logSessionID bool // create session id
+	logSessionID  bool // create session id
+	timeoutSecond uint // > 0 设置超时时间
 }
 
 // EnableSessionID if enable session id
@@ -1245,6 +1246,15 @@ func (engine *Engine) Context(ctx context.Context) *Session {
 // SetDefaultContext set the default context
 func (engine *Engine) SetDefaultContext(ctx context.Context) {
 	engine.defaultContext = ctx
+}
+
+// SetSessionTimeout 设置session默认超时时间 秒
+func (engine *Engine) SetSessionTimeout(timeout uint) {
+	engine.timeoutSecond = timeout
+}
+
+func (engine *Engine) Timeout() uint {
+	return engine.timeoutSecond
 }
 
 // PingContext tests if database is alive

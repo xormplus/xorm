@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/xormplus/xorm/internal/utils"
+	"github.com/asppj/xorm/internal/utils"
 )
 
 type PK []interface{}

@@ -12,13 +12,13 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/xormplus/xorm/caches"
-	"github.com/xormplus/xorm/core"
-	"github.com/xormplus/xorm/dialects"
-	"github.com/xormplus/xorm/log"
-	"github.com/xormplus/xorm/names"
-	"github.com/xormplus/xorm/schemas"
-	"github.com/xormplus/xorm/tags"
+	"github.com/asppj/xorm/caches"
+	"github.com/asppj/xorm/core"
+	"github.com/asppj/xorm/dialects"
+	"github.com/asppj/xorm/log"
+	"github.com/asppj/xorm/names"
+	"github.com/asppj/xorm/schemas"
+	"github.com/asppj/xorm/tags"
 )
 
 const (

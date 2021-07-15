@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xormplus/xorm/caches"
-	"github.com/xormplus/xorm/schemas"
+	"github.com/asppj/xorm/caches"
+	"github.com/asppj/xorm/schemas"
 
 	"github.com/stretchr/testify/assert"
 )

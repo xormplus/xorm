@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/asppj/xorm/internal/utils"
+	"github.com/asppj/xorm/names"
+	"github.com/asppj/xorm/schemas"
 	"github.com/stretchr/testify/assert"
-	"github.com/xormplus/xorm/internal/utils"
-	"github.com/xormplus/xorm/names"
-	"github.com/xormplus/xorm/schemas"
 )
 
 type tempUser struct {

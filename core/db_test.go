@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/asppj/xorm/names"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/xormplus/xorm/names"
 )
 
 var (

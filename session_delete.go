@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/xormplus/xorm/caches"
-	"github.com/xormplus/xorm/schemas"
+	"github.com/asppj/xorm/caches"
+	"github.com/asppj/xorm/schemas"
 )
 
 func (session *Session) cacheDelete(table *schemas.Table, tableName, sqlStr string, args ...interface{}) error {

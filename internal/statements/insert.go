@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/asppj/xorm/schemas"
 	"github.com/xormplus/builder"
-	"github.com/xormplus/xorm/schemas"
 )
 
 func (statement *Statement) writeInsertOutput(buf *strings.Builder, table *schemas.Table) error {
