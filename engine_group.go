@@ -19,7 +19,7 @@ import (
 type EngineGroup struct {
 	*Engine
 	subordinates []*Engine
-	policy GroupPolicy
+	policy       GroupPolicy
 }
 
 // NewEngineGroup creates a new engine group

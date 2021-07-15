@@ -51,7 +51,8 @@ type Engine struct {
 	TZLocation *time.Location // The timezone of the application
 	DatabaseTZ *time.Location // The timezone of the database
 
-	logSessionID bool // create session id
+	logSessionID  bool // create session id
+	timeoutSecond uint // if > 0 set default timeout for session
 }
 
 // EnableSessionID if enable session id
@@ -1245,6 +1246,15 @@ func (engine *Engine) Context(ctx context.Context) *Session {
 // SetDefaultContext set the default context
 func (engine *Engine) SetDefaultContext(ctx context.Context) {
 	engine.defaultContext = ctx
+}
+
+// SetSessionTimeout set the default timeout for every session
+func (engine *Engine) SetSessionTimeout(timeout uint) {
+	engine.timeoutSecond = timeout
+}
+
+func (engine *Engine) Timeout() uint {
+	return engine.timeoutSecond
 }
 
 // PingContext tests if database is alive
