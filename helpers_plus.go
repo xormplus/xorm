@@ -3,6 +3,7 @@ package xorm
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/xormplus/xorm/core"
@@ -164,7 +165,9 @@ func reflect2object(rawValue *reflect.Value) (value interface{}, err error) {
 		value = vv.Int()
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		value = vv.Uint()
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float32:
+		value, _ = strconv.ParseFloat(fmt.Sprint(vv.Interface()), 61)
+	case reflect.Float64:
 		value = vv.Float()
 	case reflect.String:
 		value = vv.String()
