@@ -536,6 +536,7 @@ func (db *mysql) CreateTableSQL(table *schemas.Table, tableName string) ([]strin
 
 	if len(table.ColumnsSeq()) > 0 {
 		pkList := table.PrimaryKeys
+		inList := table.Indexes
 
 		for _, colName := range table.ColumnsSeq() {
 			col := table.GetColumn(colName)
@@ -552,6 +553,25 @@ func (db *mysql) CreateTableSQL(table *schemas.Table, tableName string) ([]strin
 			sql += "PRIMARY KEY ( "
 			sql += quoter.Join(pkList, ",")
 			sql += " ), "
+		}
+
+		if len(inList) > 0 {
+			for _, indexes := range inList {
+				if indexes.Type == 1 {
+					sql += "INDEX "
+				} else {
+					sql += "UNIQUE  INDEX "
+				}
+				sql += indexes.Name
+				sql += " ( "
+				for _, col := range indexes.Cols {
+					sql += col
+					sql += " , "
+				}
+				sql = strings.TrimRight(sql, " , ")
+				sql += " ) "
+				sql += " , "
+			}
 		}
 
 		sql = sql[:len(sql)-2]
