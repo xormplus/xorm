@@ -30,10 +30,10 @@ func (statement *Statement) genSelectSql(dialect dialects.Dialect, rownumber str
 			if pLimitN != nil {
 				sql = fmt.Sprintf("%v LIMIT %v OFFSET %v", sql, *pLimitN, statement.Start)
 			} else {
-				sql = fmt.Sprintf("%v LIMIT 0 OFFSET %v", sql, *pLimitN)
+				sql = fmt.Sprintf("%v LIMIT 0 OFFSET %v", sql, statement.Start)
 			}
 		} else if pLimitN != nil {
-			sql = fmt.Sprintf("%v LIMIT %v", sql, statement.LimitN)
+			sql = fmt.Sprintf("%v LIMIT %v", sql, *pLimitN)
 		}
 	} else if dialect.URI().DBType == schemas.ORACLE {
 		if statement.Start != 0 || pLimitN != nil {
