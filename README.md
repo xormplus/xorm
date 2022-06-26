@@ -1,5 +1,6 @@
 # xorm
 xorm是一个简单而强大的Go语言ORM库. 通过它可以使数据库操作非常简便。
+新的在维护版本： [https://gitea.com/xorm/xorm](https://gitea.com/xorm/xorm)
 
 ## 说明
 
